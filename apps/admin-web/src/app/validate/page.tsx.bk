@@ -1,0 +1,410 @@
+'use client'
+
+import React, { useEffect, useState } from 'react'
+import AdminLayout from '../layouts/AdminLayout'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { CheckCircle, XCircle, LogIn, RefreshCw, Clock } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { format, isAfter } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { createClient } from '@supabase/supabase-js'
+
+// ===== Supabase client (lado cliente) =====
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+// ===== Cooldown =====
+const COOLDOWN_MINUTES = 5
+const COOLDOWN_MS = COOLDOWN_MINUTES * 60 * 1000
+
+type MemberRow = {
+  user_id: string
+  full_name?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  email?: string | null
+  access_code?: string | null
+  status?: 'activo' | 'suspendido' | 'vencido' | string | null
+  next_payment_due?: string | null // fecha ISO
+}
+
+type ResultAllowed = { allowed: true; reason: string }
+type ResultDenied  = { allowed: false; reason: string }
+type AccessStatus  = ResultAllowed | ResultDenied
+
+export default function ValidatePage() {
+  const [isLoading, setIsLoading] = useState(true)
+  const [isValidating, setIsValidating] = useState(false)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [member, setMember] = useState<MemberRow | null>(null)
+  const [result, setResult] = useState<
+    | (MemberRow & { accessStatus: AccessStatus })
+    | { notFound: true; userEmail: string | null }
+    | null
+  >(null)
+  const [syncMsg, setSyncMsg] = useState<string | null>(null)
+
+  // cooldown
+  const [isInCooldown, setIsInCooldown] = useState(false)
+  const [cooldownRemaining, setCooldownRemaining] = useState(0)
+
+  // ===== helpers =====
+  const formatRemaining = (ms: number) => {
+    const m = Math.floor(ms / 60000)
+    const s = Math.floor((ms % 60000) / 1000)
+    return `${m}:${String(s).padStart(2, '0')}`
+  }
+
+  const getAccessStatus = (m: MemberRow): AccessStatus => {
+    if (m.status === 'suspendido') return { allowed: false, reason: 'Membresía suspendida' }
+    if (m.status === 'vencido')     return { allowed: false, reason: 'Cuota vencida' }
+
+    if (m.next_payment_due) {
+      const due = new Date(m.next_payment_due)
+      const now = new Date()
+      if (isAfter(now, due)) return { allowed: false, reason: 'Cuota vencida' }
+    }
+    return { allowed: true, reason: 'Acceso autorizado - ¡Bienvenido!' }
+  }
+
+  const loadAuthAndMember = async () => {
+    setIsLoading(true)
+    setSyncMsg('Cargando sesión...')
+    const { data: authData } = await supabase.auth.getUser()
+    const email = authData.user?.email ?? null
+    setUserEmail(email)
+
+    if (!email) {
+      setIsLoading(false)
+      return
+    }
+
+    setSyncMsg('Buscando miembro...')
+    const { data, error } = await supabase
+      .from('members_with_status')
+      .select('*')
+      .ilike('email', email)
+
+    if (error) {
+      console.error('[validate] error buscando miembro:', error)
+      setMember(null)
+      setIsLoading(false)
+      return
+    }
+
+    const row: MemberRow | undefined = (data as any[])?.[0]
+    if (!row) {
+      setMember(null)
+      setResult({ notFound: true, userEmail: email })
+      setIsLoading(false)
+      return
+    }
+
+    // normalizamos nombre
+    const full =
+      row.full_name ||
+      [row.first_name ?? '', row.last_name ?? ''].join(' ').trim() ||
+      undefined
+
+    const memberNorm: MemberRow = { ...row, full_name: full }
+    setMember(memberNorm)
+    setIsLoading(false)
+  }
+
+  // cooldown al entrar
+  useEffect(() => {
+    const last = localStorage.getItem('lastSuccessfulAccess')
+    if (last) {
+      const lastMs = parseInt(last, 10)
+      const delta = Date.now() - lastMs
+      if (delta < COOLDOWN_MS) {
+        setIsInCooldown(true)
+        setCooldownRemaining(COOLDOWN_MS - delta)
+      }
+    }
+    loadAuthAndMember()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // contador para cooldown
+  useEffect(() => {
+    if (!isInCooldown) return
+    const id = setInterval(() => {
+      setCooldownRemaining((prev) => {
+        const next = prev - 1000
+        if (next <= 0) {
+          clearInterval(id)
+          setIsInCooldown(false)
+          localStorage.removeItem('lastSuccessfulAccess')
+          return 0
+        }
+        return next
+      })
+    }, 1000)
+    return () => clearInterval(id)
+  }, [isInCooldown])
+
+  // ===== handlers =====
+  const handleLogin = async () => {
+    const redirectTo = window.location.href
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo }
+    })
+  }
+
+  // ✅ doValidate CON LOG EN access_logs
+  const doValidate = async () => {
+    setIsValidating(true)
+    setSyncMsg('Validando...')
+    try {
+      if (!member) {
+        setResult({ notFound: true, userEmail })
+        return
+      }
+
+      const accessStatus = getAccessStatus(member)
+
+      // Guardar el log (autorizado o denegado)
+      const { error: logErr } = await supabase
+        .from('access_logs')
+        .insert({
+          user_id: member.user_id,
+          // rotation_id: null, // completa si usás rotaciones
+          result: accessStatus.allowed ? 'autorizado' : 'denegado',
+          reason: accessStatus.reason,
+          scanned_at: new Date().toISOString(),
+        })
+
+      if (logErr) {
+        console.error('[validate] error insertando access_logs:', logErr)
+        // No frenamos la UX si el log falla
+      }
+
+      if (accessStatus.allowed) {
+        localStorage.setItem('lastSuccessfulAccess', Date.now().toString())
+      }
+      setResult({ ...member, accessStatus })
+    } finally {
+      setIsValidating(false)
+    }
+  }
+
+  const resetValidation = () => {
+    setResult(null)
+    setSyncMsg(null)
+  }
+
+  // ====== UI ======
+  // No logueado
+  if (!isLoading && !userEmail) {
+    return (
+      <AdminLayout active="/validate">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-6">
+          <Card className="max-w-md w-full shadow-2xl border-none bg-white">
+            <CardContent className="p-10 text-center">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <img src="/logo.png" alt="Beleza Dojo" className="w-20 h-20 object-contain" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">Inicia sesión</h2>
+              <p className="text-slate-600 mb-8">Debes iniciar sesión para validar tu acceso.</p>
+              <Button onClick={handleLogin} className="w-full bg-blue-600 hover:bg-blue-700">
+                <LogIn className="w-5 h-5 mr-2" />
+                Iniciar sesión
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </AdminLayout>
+    )
+  }
+
+  return (
+    <AdminLayout active="/validate">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
+        <div className="max-w-2xl mx-auto">
+
+          {/* Encabezado */}
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <img src="/logo.png" alt="Beleza Dojo" className="w-20 h-20 object-contain" />
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Beleza Dojo</h1>
+            <p className="text-slate-600">Validación de Acceso</p>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {/* Loading inicial o durante validación */}
+            {(isLoading || isValidating) && (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <Card className="shadow-2xl border-none bg-white">
+                  <CardContent className="p-12 text-center">
+                    <div className="flex items-center justify-center gap-2 text-slate-600">
+                      <RefreshCw className="w-5 h-5 animate-spin" />
+                      <span>{syncMsg ?? 'Cargando...'}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Cooldown */}
+            {!isLoading && !isValidating && isInCooldown && (
+              <motion.div
+                key="cooldown"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <Card className="shadow-2xl border-none bg-white">
+                  <CardContent className="p-12 text-center">
+                    <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Clock className="w-10 h-10 text-blue-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Ya validaste tu acceso</h2>
+                    {member?.full_name && (
+                      <p className="text-lg text-slate-700 font-semibold mb-4">{member.full_name}</p>
+                    )}
+                    <div className="bg-blue-50 rounded-xl p-6 mb-6 border border-blue-200">
+                      <p className="text-sm text-blue-700 mb-1">Tiempo restante</p>
+                      <p className="text-4xl font-bold text-blue-600 font-mono">
+                        {formatRemaining(cooldownRemaining)}
+                      </p>
+                    </div>
+                    <Button className="w-full" onClick={() => setIsInCooldown(false)}>
+                      Intentar de nuevo
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Resultado */}
+            {!isLoading && !isValidating && !isInCooldown && result && (
+              <motion.div
+                key="result"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+              >
+                {'notFound' in result ? (
+                  <Card className="shadow-2xl border-4 border-red-500 bg-white">
+                    <CardContent className="p-12 text-center">
+                      <div className="w-28 h-28 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <XCircle className="w-14 h-14 text-red-600" />
+                      </div>
+                      <h2 className="text-3xl font-bold text-slate-900 mb-3">ACCESO DENEGADO</h2>
+                      <p className="text-slate-700 mb-6">
+                        No se encontró un miembro registrado con el email <b>{result.userEmail}</b>.
+                      </p>
+                      <Button className="bg-red-600 hover:bg-red-700" onClick={resetValidation}>
+                        Intentar de nuevo
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card
+                    className={`shadow-2xl border-4 bg-white ${
+                      result.accessStatus.allowed ? 'border-green-500' : 'border-red-500'
+                    }`}
+                  >
+                    <CardContent className="p-10 text-center">
+                      <div
+                        className={`w-28 h-28 rounded-full flex items-center justify-center mx-auto mb-6 ${
+                          result.accessStatus.allowed ? 'bg-green-100' : 'bg-red-100'
+                        }`}
+                      >
+                        {result.accessStatus.allowed ? (
+                          <CheckCircle className="w-14 h-14 text-green-600" />
+                        ) : (
+                          <XCircle className="w-14 h-14 text-red-600" />
+                        )}
+                      </div>
+
+                      <h2 className="text-4xl font-bold text-slate-900 mb-4">
+                        {result.accessStatus.allowed ? '¡BIENVENIDO!' : 'ACCESO DENEGADO'}
+                      </h2>
+
+                      <p className="text-2xl font-semibold text-slate-900 mb-2">
+                        {result.full_name || 'Miembro'}
+                      </p>
+
+                      {result.access_code && (
+                        <p className="text-sm text-slate-500 mb-6 font-mono">Código: {result.access_code}</p>
+                      )}
+
+                      <p
+                        className={`text-xl font-semibold mb-8 ${
+                          result.accessStatus.allowed ? 'text-green-600' : 'text-red-600'
+                        }`}
+                      >
+                        {result.accessStatus.reason}
+                      </p>
+
+                      {!result.accessStatus.allowed && result.next_payment_due && (
+                        <div className="bg-slate-50 rounded-xl p-6 mb-6 border border-slate-200">
+                          <p className="text-sm text-slate-500 mb-1">Fecha de vencimiento</p>
+                          <p className="text-lg font-semibold text-slate-900">
+                            {format(new Date(result.next_payment_due), "d 'de' MMMM, yyyy", { locale: es })}
+                          </p>
+                        </div>
+                      )}
+
+                      <Button
+                        className={`text-lg px-8 py-6 ${
+                          result.accessStatus.allowed ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                        }`}
+                        onClick={() => {
+                          if (result.accessStatus.allowed) {
+                            window.location.href = '/profile'
+                          } else {
+                            resetValidation()
+                          }
+                        }}
+                      >
+                        {result.accessStatus.allowed ? 'Ver mi Perfil' : 'Intentar de nuevo'}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </motion.div>
+            )}
+
+            {/* Pantalla inicial */}
+            {!isLoading && !isValidating && !isInCooldown && !result && (
+              <motion.div
+                key="idle"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+              >
+                <Card className="shadow-2xl border-none bg-white">
+                  <CardContent className="p-10 text-center">
+                    <p className="text-slate-600 mb-6">
+                      Presioná el botón para validar tu acceso ahora.
+                    </p>
+                    <Button
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      size="lg"
+                      onClick={doValidate}
+                    >
+                      Validar ahora
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </AdminLayout>
+  )
+}

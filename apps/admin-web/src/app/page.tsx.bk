@@ -1,0 +1,579 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Instagram,
+  LogIn,
+  MessageCircle,
+  Menu,
+  X,
+} from 'lucide-react'
+
+export default function LandingPage() {
+  const whatsappUrl =
+    'https://wa.me/5491122334455?text=Hola%20quiero%20probar%20una%20clase%20en%20Beleza%20Dojo'
+  const instagramUrl = 'https://www.instagram.com/belezadojo/' // 
+
+  const [classSelected, setClassSelected] = useState('Grappling')
+  const [scheduleIndex, setScheduleIndex] = useState<0 | 1>(0) // 0 = Acond, 1 = BJJ/MMA
+  const [profStart, setProfStart] = useState(0)
+  const [itemsPerView, setItemsPerView] = useState(3)
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  // cuántas tarjetas de profesores se ven según el ancho
+  useEffect(() => {
+    const updateItemsPerView = () => {
+      const w = window.innerWidth
+      if (w < 640) setItemsPerView(1) // cel
+      else if (w < 1024) setItemsPerView(2) // tablet
+      else setItemsPerView(3) // desktop
+    }
+    updateItemsPerView()
+    window.addEventListener('resize', updateItemsPerView)
+    return () => window.removeEventListener('resize', updateItemsPerView)
+  }, [])
+
+  const classesInfo: Record<string, string> = {
+    Grappling:
+      'Combina derribos, control y sumisiones sin gi. Ideal para mejorar el juego de suelo y las transiciones rápidas.',
+    MMA: 'Entrenamientos completos de artes marciales mixtas: striking, grappling y trabajo de jaula, siempre con foco en la seguridad.',
+    Judo: 'Disciplina centrada en derribos, balance y control. Base técnica perfecta para complementar tu Jiu-Jitsu y tu defensa personal.',
+    JiuJitsu:
+      'Entrenamientos con gi enfocados en posiciones, escapes, sumisiones y drills técnicos. Clases para todos los niveles, desde cero.',
+    'Entrenamiento Físico':
+      'Fuerza, resistencia y movilidad enfocadas al rendimiento marcial. Circuitos y trabajo funcional adaptado a cada alumno.',
+  }
+
+  const profesores = [
+    {
+      nombre: 'Cristian',
+      descripcion:
+        'Faixa preta de Brazilian Jiu-Jitsu y fundador de Beleza Dojo. Apasionado por enseñar y crear un ambiente de respeto, disciplina y camaradería.',
+      foto: '/cristian.png',
+    },
+    {
+      nombre: 'Profesor Invitado',
+      descripcion:
+        'Instructor especializado en MMA y Grappling, con experiencia en competición y en la formación de alumnos de todos los niveles.',
+      foto: '/logo.png',
+    },
+    {
+      nombre: 'Profe BJJ Avanzado',
+      descripcion:
+        'Enfocado en Jiu-Jitsu competitivo, estrategia de combate y preparación para torneos nacionales e internacionales.',
+      foto: '/logo.png',
+    },
+    {
+      nombre: 'Profe Kids',
+      descripcion:
+        'Encargado de las clases de niños, trabajando disciplina, coordinación y confianza a través del juego y la técnica.',
+      foto: '/logo.png',
+    },
+    {
+      nombre: 'Preparador Físico',
+      descripcion:
+        'Responsable del acondicionamiento físico, fuerza y movilidad específica para deportes de combate.',
+      foto: '/logo.png',
+    },
+  ]
+
+  const nextProf = () =>
+    setProfStart((prev) => (prev + 1) % profesores.length)
+
+  const prevProf = () =>
+    setProfStart((prev) => (prev - 1 + profesores.length) % profesores.length)
+
+  const toggleSchedule = (dir: 'next' | 'prev') => {
+    setScheduleIndex((prev) => {
+      if (dir === 'next') return prev === 0 ? 1 : 0
+      return prev === 0 ? 1 : 0
+    })
+  }
+
+  const navLinks = [
+    { href: '#inicio', label: 'Inicio' },
+    { href: '#donde', label: 'Dónde estamos' },
+    { href: '#historia', label: 'Nuestra historia' },
+    { href: '#profesores', label: 'Profesores' },
+    { href: '#clases', label: 'Clases' },
+    { href: '#horarios', label: 'Horarios' },
+    { href: '#contacto', label: 'Contacto' },
+  ]
+
+  const visibleCount = Math.min(itemsPerView, profesores.length)
+
+  return (
+    <div className="relative min-h-screen overflow-x-hidden bg-slate-950 text-slate-50 pt-16 md:pt-20">
+      {/* Fondo */}
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.18),_transparent_60%),radial-gradient(circle_at_bottom,_rgba(37,99,235,0.4),_transparent_55%)] opacity-80" />
+      {/* Logo agua */}
+      <div className="pointer-events-none fixed inset-0 -z-10 flex items-center justify-center opacity-[0.04]">
+        <Image
+          src="/logo.png"
+          alt="Beleza Dojo"
+          width={600}
+          height={600}
+          className="select-none"
+        />
+      </div>
+
+      {/* NAVBAR */}
+      <header className="fixed inset-x-0 top-0 z-30 border-b border-neutral-800 bg-black/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-10">
+          {/* Logo + nombre */}
+          <div className="flex flex-shrink-0 items-center gap-3">
+            <Image
+              src="/logo.png"
+              alt="Beleza Dojo"
+              width={36}
+              height={36}
+              className="rounded-full"
+            />
+            <span className="text-base font-semibold text-white tracking-tight">
+              Beleza Dojo
+            </span>
+          </div>
+
+          {/* Nav desktop centrado */}
+          <nav className="hidden flex-1 items-center justify-center gap-2 md:flex">
+            {navLinks.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="group relative px-3 py-2 text-sm font-semibold text-slate-300 transition-colors hover:text-blue-500"
+              >
+                <span>{item.label}</span>
+                <span className="absolute bottom-0 left-0 h-[2px] w-0 bg-blue-500 transition-all duration-300 group-hover:w-full" />
+              </a>
+            ))}
+          </nav>
+
+          {/* Acceso + hamburguesa */}
+          <div className="flex flex-shrink-0 items-center gap-3">
+            {/* Botón login desktop */}
+            <Link
+              href="/login"
+              className="hidden items-center gap-1 rounded-full bg-blue-500 px-5 py-2 text-sm font-semibold text-slate-950 hover:bg-blue-400 md:flex"
+            >
+              <LogIn size={16} /> Acceso
+            </Link>
+
+            {/* Botón hamburguesa mobile */}
+            <button
+              onClick={() => setMobileOpen((o) => !o)}
+              className="inline-flex items-center justify-center rounded-full border border-slate-700 p-2 text-slate-200 md:hidden"
+              aria-label="Abrir menú"
+            >
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Menú mobile desplegable */}
+        {mobileOpen && (
+          <div className="border-t border-neutral-800 bg-black/95 md:hidden">
+            <nav className="mx-auto flex max-w-7xl flex-col gap-2 px-6 py-3 text-sm font-semibold text-slate-200">
+              {navLinks.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="py-1 hover:text-blue-400"
+                >
+                  {item.label}
+                </a>
+              ))}
+              <Link
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-blue-500 px-4 py-2 text-sm font-semibold text-slate-950"
+              >
+                <LogIn size={16} /> Acceso
+              </Link>
+            </nav>
+          </div>
+        )}
+      </header>
+
+      {/* HERO */}
+      <section
+        id="inicio"
+        className="bg-gradient-to-b from-black via-slate-950 to-blue-900 px-6 pt-16 pb-20"
+      >
+        <div className="mx-auto max-w-5xl text-center">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.3em] text-blue-300">
+            Quilmes · Zona Sur · Artes marciales
+          </p>
+
+          <h1 className="mb-4 text-4xl font-extrabold leading-tight tracking-tight text-white md:text-6xl">
+            Donde el entrenamiento
+            <br />
+            impulsa tu rendimiento
+          </h1>
+
+          <p className="mx-auto mb-8 max-w-2xl text-sm text-slate-200 md:text-lg">
+            En Beleza Dojo entrenás Jiu-Jitsu, Grappling, MMA, Judo y acondicionamiento físico
+            en un ambiente de respeto, camaradería y disciplina. Desde principiantes hasta
+            competidores.
+          </p>
+
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link
+              href={whatsappUrl}
+              className="rounded-full bg-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:bg-blue-400"
+            >
+              Quiero probar una clase
+            </Link>
+            <Link
+              href="#clases"
+              className="rounded-full border border-slate-700 bg-slate-900/80 px-6 py-3 text-sm font-semibold text-slate-100 hover:border-blue-400 hover:bg-slate-900"
+            >
+              Ver clases y horarios
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* DÓNDE ESTAMOS */}
+      <section id="donde" className="border-t border-slate-800 px-6 py-16">
+        <div className="mx-auto max-w-5xl text-center">
+          <h2 className="mb-2 text-3xl font-bold text-blue-300">Dónde estamos</h2>
+          <p className="mb-6 text-slate-200">
+            Av Calchaquí 4335, Quilmes, Buenos Aires.
+          </p>
+          <div className="overflow-hidden rounded-3xl border border-slate-800/80 bg-slate-900/60 shadow-xl shadow-slate-900/80">
+            <iframe
+              src="https://www.google.com/maps?q=Av+Calchaqui+4335,+Quilmes,+Buenos+Aires&output=embed"
+              width="100%"
+              height="380"
+              loading="lazy"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* NUESTRA HISTORIA */}
+      <section id="historia" className="border-t border-slate-800 px-6 py-16">
+        <div className="mx-auto max-w-5xl">
+          <h2 className="mb-8 text-center text-3xl font-bold text-blue-300">
+            Nuestra historia
+          </h2>
+
+          <div className="space-y-6 text-sm leading-relaxed text-slate-100 md:text-base">
+            <div className="rounded-3xl border border-slate-800/80 bg-slate-900/70 p-6 shadow-xl shadow-slate-900/70">
+              <p>
+                El dojo surgió en <span className="font-semibold text-blue-300">agosto de 2011</span>,
+                en un gimnasio de Quilmes donde se enseñaban artes marciales. Con el tiempo, el grupo
+                necesitó una identidad propia, algo que lo identificara como equipo. Después de muchas
+                deliberaciones surgieron el nombre y el logo.
+              </p>
+              <p className="mt-3">
+                <span className="font-semibold text-blue-300">“Beleza”</span> es una expresión muy
+                usada en Brasil para decir que “está todo bien”. Elegimos ese nombre para reflejar el
+                ambiente relajado y de camaradería que queremos en cada entrenamiento.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-slate-800/80 bg-slate-900/70 p-6 shadow-xl shadow-slate-900/70">
+              <p>
+                Como logo adoptamos el <span className="font-semibold">“shaka”</span>, que representa
+                amistad, comprensión, compasión y solidaridad: valores que queremos transmitir como
+                equipo dentro y fuera del tatami.
+              </p>
+              <p className="mt-3">
+                Con el tiempo surgió la necesidad de tener un <span className="font-semibold">lugar propio</span>,
+                con más horarios e instalaciones pensadas para brindar un entrenamiento integral a
+                nuestros socios. Así nació la idea de un centro de entrenamiento de artes marciales
+                especializado en el <span className="font-semibold text-blue-300">grappling</span>.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-slate-800/80 bg-slate-900/70 p-6 shadow-xl shadow-slate-900/70">
+              <p>
+                Llegó la mudanza a nuestro primer dojo, las primeras inversiones en pisos de goma y
+                materiales de entrenamiento, y la suma de nuevos alumnos y profesores. De a poco
+                fuimos construyendo un lugar donde cualquier entusiasta de las artes marciales pueda
+                encontrar su espacio.
+              </p>
+              <p className="mt-3">
+                Hoy, casi <span className="font-semibold text-blue-300">13 años</span> después, seguimos
+                dando lo mejor para hacer de Beleza el mejor dojo posible para aprender y entrenar
+                artes marciales y deportes de combate en toda Zona Sur.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PROFESORES  */}
+      <section
+        id="profesores"
+        className="scroll-mt-24 border-t border-slate-800 px-6 py-16"
+      >
+        <h2 className="mb-8 text-center text-3xl font-bold text-blue-300">
+          Profesores
+        </h2>
+
+        <div className="relative mx-auto max-w-6xl">
+          {/* Flecha izquierda */}
+          <button
+            onClick={prevProf}
+            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-slate-900/80 p-2 text-slate-200 shadow-md hover:bg-blue-500/30"
+          >
+            <ChevronLeft />
+          </button>
+
+          {/* Carrusel */}
+          <div className="flex justify-center gap-4 overflow-hidden px-10">
+            {Array.from({ length: visibleCount }).map((_, i) => {
+              const prof = profesores[(profStart + i) % profesores.length]
+
+              return (
+                <div
+                  key={prof.nombre + i}
+                  className="flex h-[420px] w-full max-w-xs flex-col overflow-hidden rounded-3xl border border-slate-800/80 bg-slate-950/80 shadow-xl shadow-slate-900/70 transition-transform hover:-translate-y-1 hover:shadow-blue-500/40 sm:max-w-sm lg:max-w-md"
+                >
+                  <div className="relative h-48 sm:h-56 md:h-64 w-full">
+                    <Image
+                      src={prof.foto}
+                      alt={prof.nombre}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex flex-1 flex-col justify-between p-5">
+                    <div>
+                      <h3 className="text-lg font-semibold text-blue-300">
+                        {prof.nombre}
+                      </h3>
+                      <p className="mt-3 text-xs text-slate-200 md:text-sm">
+                        {prof.descripcion}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Flecha derecha */}
+          <button
+            onClick={nextProf}
+            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full bg-slate-900/80 p-2 text-slate-200 shadow-md hover:bg-blue-500/30"
+          >
+            <ChevronRight />
+          </button>
+        </div>
+      </section>
+
+      {/* CLASES */}
+      <section id="clases" className="border-t border-slate-800 px-6 py-16">
+        <div className="mx-auto max-w-5xl text-center">
+          <h2 className="mb-6 text-3xl font-bold text-blue-300">Clases</h2>
+          <div className="mb-6 flex flex-wrap justify-center gap-3">
+            {Object.keys(classesInfo).map((cls) => (
+              <button
+                key={cls}
+                onClick={() => setClassSelected(cls)}
+                className={`rounded-full px-5 py-2 text-sm font
+-medium transition ${
+                  classSelected === cls
+                    ? 'bg-blue-500 text-slate-950 shadow-lg shadow-blue-500/40'
+                    : 'bg-slate-900/70 text-slate-100 border border-slate-700 hover:border-blue-400 hover:bg-blue-500/10'
+                }`}
+              >
+                {cls}
+              </button>
+            ))}
+          </div>
+          <p className="mx-auto max-w-3xl text-sm text-slate-100 md:text-base">
+            {classesInfo[classSelected]}
+          </p>
+        </div>
+      </section>
+
+      {/* HORARIOS (igual que ya tenías) */}
+      <section id="horarios" className="border-t border-slate-800 px-6 py-16">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="mb-6 text-center text-3xl font-bold text-blue-300">
+            Horarios Beleza
+          </h2>
+
+          <div className="mb-5 flex items-center justify-center gap-3 text-sm">
+            <button
+              onClick={() => toggleSchedule('prev')}
+              className="rounded-full bg-slate-900/80 p-2 text-slate-200 hover:bg-blue-500/20"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <div className="flex gap-2 rounded-full bg-slate-900/70 p-1">
+              <button
+                onClick={() => setScheduleIndex(0)}
+                className={`rounded-full px-4 py-1 text-xs md:text-sm ${
+                  scheduleIndex === 0
+                    ? 'bg-blue-500 text-slate-950'
+                    : 'text-slate-200'
+                }`}
+              >
+                Acondicionamiento físico
+              </button>
+              <button
+                onClick={() => setScheduleIndex(1)}
+                className={`rounded-full px-4 py-1 text-xs md:text-sm ${
+                  scheduleIndex === 1
+                    ? 'bg-blue-500 text-slate-950'
+                    : 'text-slate-200'
+                }`}
+              >
+                BJJ / Grappling / MMA / Judo
+              </button>
+            </div>
+            <button
+              onClick={() => toggleSchedule('next')}
+              className="rounded-full bg-slate-900/80 p-2 text-slate-200 hover:bg-blue-500/20"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+
+          <div className="rounded-3xl border border-slate-800/80 bg-slate-900/60 p-5 shadow-2xl shadow-slate-900/80">
+            {scheduleIndex === 0 ? (
+              <>
+                <h3 className="mb-1 text-center text-xl font-semibold text-blue-200">
+                  Acondicionamiento físico
+                </h3>
+                <p className="mb-5 text-center text-xs text-slate-300">
+                  Entrenamiento físico general orientado a fuerza, resistencia y movilidad.
+                </p>
+                <ScheduleTable
+                  headers={['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']}
+                  rows={[
+                    ['7:30', '8:30', '7:30', '8:30', '7:30'],
+                    ['8:30', '', '8:30', '', '8:30'],
+                    ['9:30', '', '9:30', '', '9:30'],
+                    ['15:00', '17:00', '15:00', '17:00', '15:00'],
+                    ['17:00', '18:00', '17:00', '18:00', '17:00'],
+                    ['18:00', '19:00', '18:00', '19:00', '18:00'],
+                    ['19:00', '20:00', '19:00', '20:00', '19:00'],
+                  ]}
+                />
+              </>
+            ) : (
+              <>
+                <h3 className="mb-1 text-center text-xl font-semibold text-blue-200">
+                  BJJ / Grappling / MMA / Judo
+                </h3>
+                <p className="mb-5 text-center text-xs text-slate-300">
+                  Horarios de Jiu-Jitsu (adultos y kids), Grappling, Judo y MMA. Sujetos a cambios por
+                  seminarios y competencias.
+                </p>
+                <ScheduleTable
+                  headers={['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']}
+                  rows={[
+                    ['BJJ 7:30–9:00', '', 'BJJ 7:30–9:00', '', '', 'Grappling/MMA 10:00–11:30'],
+                    ['', '', '', '', '', 'BJJ Competitivo 12:00–13:30'],
+                    ['BJJ 16:30–18:00', 'BJJ 16:30–18:00', 'BJJ 16:30–18:00', 'BJJ 16:30–18:00', 'BJJ 16:30–18:00', ''],
+                    ['BJJ Kids 18:00–19:00', 'BJJ Kids 18:00–19:00', 'BJJ Kids 18:00–19:00', 'BJJ Kids 18:00–19:00', 'BJJ Kids 18:00–19:00', ''],
+                    ['MMA 19:00–20:00', 'MMA 19:00–20:00', '', 'MMA 19:00–20:00', '', ''],
+                    ['BJJ 20:00–21:30', 'Grappling 19:00–20:30', 'BJJ 20:00–21:30', 'Grappling 19:00–20:30', 'BJJ 20:00–21:30', ''],
+                    ['', 'Judo 20:30–22:00', '', 'Judo 20:30–22:00', '', ''],
+                  ]}
+                />
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* CONTACTO */}
+      <section id="contacto" className="border-t border-slate-800 px-6 py-16">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="mb-4 text-3xl font-bold text-blue-300">Contacto</h2>
+          <p className="mb-8 text-sm text-slate-100 md:text-base">
+            Escribinos para coordinar tu clase de prueba, resolver dudas sobre horarios o conocer más sobre el dojo.
+          </p>
+          <div className="flex justify-center gap-6">
+            <Link
+              href={whatsappUrl}
+              className="flex items-center gap-2 rounded-full bg-blue-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-blue-500/40 hover:bg-blue-400"
+            >
+              <MessageCircle size={20} />
+              WhatsApp
+            </Link>
+            <Link
+              href={instagramUrl}
+              className="flex items-center gap-2 rounded-full border border-blue-400/60 px-6 py-3 text-sm font-semibold text-blue-100 hover:bg-blue-500/10"
+            >
+              <Instagram size={20} />
+              Instagram
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-slate-800 py-6 text-center text-[11px] text-slate-400">
+        © {new Date().getFullYear()} Beleza Dojo – Todos los derechos reservados
+      </footer>
+    </div>
+  )
+}
+
+/* Tabla de horarios */
+type ScheduleTableProps = {
+  headers: string[]
+  rows: string[][]
+}
+
+function ScheduleTable({ headers, rows }: ScheduleTableProps) {
+  return (
+    <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/40">
+      <table className="min-w-full text-xs text-slate-100 md:text-sm">
+        <thead className="bg-slate-900/90">
+          <tr>
+            {headers.map((h) => (
+              <th
+                key={h}
+                className="border border-slate-800 px-3 py-3 text-center align-middle"
+              >
+                <span className="inline-flex items-center justify-center rounded-full bg-slate-100 px-4 py-1 text-xs font-semibold text-slate-900">
+                  {h}
+                </span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr
+              key={i}
+              className={
+                i % 2 === 0
+                  ? 'bg-slate-900/40 hover:bg-blue-900/15'
+                  : 'bg-slate-900/20 hover:bg-blue-900/15'
+              }
+            >
+              {row.map((cell, j) => (
+                <td
+                  key={j}
+                  className="border border-slate-800 px-3 py-3 text-center align-middle"
+                >
+                  {cell ? (
+                    <span className="inline-flex min-w-[88px] items-center justify-center rounded-full bg-slate-100/95 px-3 py-1 text-[11px] font-semibold text-slate-900 md:text-xs">
+                      {cell}
+                    </span>
+                  ) : (
+                    <span className="text-slate-500 text-xs">—</span>
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}

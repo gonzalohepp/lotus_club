@@ -1,0 +1,6 @@
+node_modules/
+apps/admin-web/node_modules/
+apps/admin-web/.next/
+.next/
+dist/
+.vercel/
