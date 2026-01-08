@@ -26,15 +26,15 @@ export default function LoginPage() {
 
   const handleLogin = useCallback(async () => {
     const base =
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      (typeof window !== 'undefined' ? window.location.origin : '');
+      (typeof window !== 'undefined' ? window.location.origin : '') ||
+      process.env.NEXT_PUBLIC_SITE_URL;
 
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${base}/app`, 
+        redirectTo: `${base}/auth/callback`,
         queryParams: {
-          prompt: 'select_account', 
+          prompt: 'select_account',
           access_type: 'offline',
         },
       },

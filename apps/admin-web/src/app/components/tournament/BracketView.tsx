@@ -8,10 +8,11 @@ type Match = {
   round: number
   team_a?: Team | null
   team_b?: Team | null
-  team_a_id?: string | null
-  team_b_id?: string | null
+  team_a_id: string | null
+  team_b_id: string | null
   winner?: Team | null
-  winner_id?: string | null
+  winner_id: string | null
+  match_date: string | null
 }
 type Round = { round: number; matches: Match[] }
 

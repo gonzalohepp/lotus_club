@@ -18,10 +18,10 @@ export default function MemberFilters({
   classes: ClassOpt[]
 }) {
   return (
-    <div className="mb-6 flex flex-wrap gap-3">
+    <div className="flex flex-wrap gap-2">
       {/* Estado */}
       <select
-        className="h-10 rounded-lg border border-slate-300 bg-white px-3"
+        className="h-10 rounded-xl border border-slate-200 bg-white/50 backdrop-blur-sm px-4 text-xs font-bold uppercase tracking-wider text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer appearance-none hover:bg-white"
         value={value.status}
         onChange={(e) => onChange({ ...value, status: e.target.value as Filters['status'] })}
       >
@@ -32,7 +32,7 @@ export default function MemberFilters({
 
       {/* Membresía */}
       <select
-        className="h-10 rounded-lg border border-slate-300 bg-white px-3"
+        className="h-10 rounded-xl border border-slate-200 bg-white/50 backdrop-blur-sm px-4 text-xs font-bold uppercase tracking-wider text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer appearance-none hover:bg-white"
         value={value.membership}
         onChange={(e) => onChange({ ...value, membership: e.target.value as Filters['membership'] })}
       >
@@ -45,7 +45,7 @@ export default function MemberFilters({
 
       {/* Clase (dinámico) */}
       <select
-        className="h-10 rounded-lg border border-slate-300 bg-white px-3"
+        className="h-10 rounded-xl border border-slate-200 bg-white/50 backdrop-blur-sm px-4 text-xs font-bold uppercase tracking-wider text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer appearance-none hover:bg-white"
         value={value.className}
         onChange={(e) => onChange({ ...value, className: e.target.value as Filters['className'] })}
       >

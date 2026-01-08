@@ -1,8 +1,7 @@
-'use client'
-
 import { useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
-import { X, Save } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { X, Save, BookOpen, Clock, Calendar, Users, DollarSign, Type, Palette, AlignLeft, User } from 'lucide-react'
+import { supabase } from '@/lib/supabaseClient'
 
 export type ClassRow = {
   id?: number
@@ -22,15 +21,18 @@ export type ClassRow = {
 type Props = {
   initial?: ClassRow | null
   onCancel: () => void
-  onSaved?: () => void   // 👈 ahora es opcional
+  onSaved?: () => void
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
 const DAY_OPTIONS = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sáb', 'Dom']
+const COLOR_OPTIONS = [
+  { label: 'Azul', value: 'blue', bg: 'bg-blue-500' },
+  { label: 'Rojo', value: 'red', bg: 'bg-red-500' },
+  { label: 'Verde', value: 'green', bg: 'bg-emerald-500' },
+  { label: 'Violeta', value: 'purple', bg: 'bg-purple-500' },
+  { label: 'Naranja', value: 'orange', bg: 'bg-orange-500' },
+  { label: 'Rosa', value: 'pink', bg: 'bg-pink-500' },
+]
 
 export default function ClassForm({ initial, onCancel, onSaved }: Props) {
   const [form, setForm] = useState<ClassRow>({
@@ -73,14 +75,8 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
   }
 
   const save = async () => {
-    if (!form.name.trim()) {
-      alert('El nombre de la clase es obligatorio')
-      return
-    }
-    if (form.price === null || isNaN(Number(form.price))) {
-      alert('El precio mensual es obligatorio')
-      return
-    }
+    if (!form.name.trim()) return
+    if (form.price === null || isNaN(Number(form.price))) return
 
     setSaving(true)
 
@@ -91,183 +87,223 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
       start_time: form.start_time || null,
       end_time: form.end_time || null,
       capacity: form.capacity ?? form.max_students ?? null,
-      max_students: form.capacity ?? form.max_students ?? null, // sincronizamos
+      max_students: form.capacity ?? form.max_students ?? null,
       color: form.color || null,
       description: form.description?.trim() || null,
       price: Number(form.price),
     }
 
-    if (initial?.id) {
-      const { error } = await supabase.from('classes').update(payload).eq('id', initial.id)
-      setSaving(false)
-      if (error) return alert('Error actualizando clase: ' + error.message)
-      onSaved?.() // 👈 seguro
-    } else {
-      const { error } = await supabase.from('classes').insert(payload)
-      setSaving(false)
-      if (error) return alert('Error creando clase: ' + error.message)
-      onSaved?.() // 👈 seguro
-    }
+    const { error } = initial?.id
+      ? await supabase.from('classes').update(payload).eq('id', initial.id)
+      : await supabase.from('classes').insert(payload)
+
+    setSaving(false)
+    if (error) return alert('Error guardando clase: ' + error.message)
+    onSaved?.()
   }
 
+  const inputClass = "w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-4 pl-11 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all"
+
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">
-          {initial?.id ? 'Editar Clase' : 'Nueva Clase'}
-        </h3>
-        <button onClick={onCancel} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100" title="Cerrar">
+    <div className="bg-white overflow-hidden">
+      {/* Header Form */}
+      <div className="bg-slate-900 px-10 py-8 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-blue-400 border border-white/10">
+            <BookOpen className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-white tracking-tight uppercase leading-none">
+              {initial?.id ? 'Editar Clase' : 'Ficha de Clase'}
+            </h3>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">Gestión de Actividades</p>
+          </div>
+        </div>
+        <button
+          onClick={onCancel}
+          className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-all border border-white/10"
+        >
           <X className="h-5 w-5" />
         </button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Nombre */}
-        <div className="space-y-1.5">
-          <label className="text-sm text-slate-600">Nombre de la Clase *</label>
-          <input
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="Ej: BJJ Turno Noche"
-            className="h-11 w-full rounded-lg border border-slate-300 px-3"
-          />
+      <div className="p-10 space-y-10">
+        <div className="grid gap-10 md:grid-cols-2">
+          {/* General Section */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                <Type className="w-4 h-4" />
+              </div>
+              <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Información Base</h4>
+            </div>
+
+            <div className="space-y-4">
+              <div className="relative group">
+                <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                <input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Nombre de la clase (ej: BJJ No-Gi) *"
+                  className={inputClass}
+                />
+              </div>
+
+              <div className="relative group">
+                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                <input
+                  type="number"
+                  value={form.price ?? ''}
+                  onChange={(e) => setForm({ ...form, price: e.target.value === '' ? null : Number(e.target.value) })}
+                  placeholder="Precio mensual (inversión) *"
+                  className={inputClass}
+                />
+              </div>
+
+              <div className="relative group">
+                <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                <input
+                  type="number"
+                  value={form.capacity ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value === '' ? null : Number(e.target.value)
+                    setForm({ ...form, capacity: v, max_students: v })
+                  }}
+                  placeholder="Capacidad máxima de alumnos"
+                  className={inputClass}
+                />
+              </div>
+
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                <input
+                  value={form.instructor ?? ''}
+                  onChange={(e) => setForm({ ...form, instructor: e.target.value })}
+                  placeholder="Instructor principal"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Schedule Section */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                <Calendar className="w-4 h-4" />
+              </div>
+              <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Días y Horarios</h4>
+            </div>
+
+            <div className="space-y-5">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Seleccionar Días</p>
+                <div className="flex flex-wrap gap-2">
+                  {DAY_OPTIONS.map((d) => {
+                    const active = (form.days ?? []).includes(d)
+                    return (
+                      <motion.button
+                        key={d}
+                        type="button"
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => toggleDay(d)}
+                        className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${active
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                          : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-400'
+                          }`}
+                      >
+                        {d}
+                      </motion.button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="relative group">
+                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                  <input
+                    type="time"
+                    value={form.start_time ?? ''}
+                    onChange={(e) => setForm({ ...form, start_time: e.target.value })}
+                    className={inputClass}
+                  />
+                </div>
+                <div className="relative group">
+                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                  <input
+                    type="time"
+                    value={form.end_time ?? ''}
+                    onChange={(e) => setForm({ ...form, end_time: e.target.value })}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+
+              <div className="relative group p-4 rounded-2xl border border-slate-100">
+                <div className="flex items-center gap-2 mb-3">
+                  <Palette className="w-4 h-4 text-slate-400" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Cromática</span>
+                </div>
+                <div className="flex gap-2">
+                  {COLOR_OPTIONS.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onClick={() => setForm({ ...form, color: c.value })}
+                      className={`w-8 h-8 rounded-full ${c.bg} transition-all ${form.color === c.value ? 'ring-4 ring-offset-2 ring-slate-900 scale-110 shadow-lg' : 'opacity-40 hover:opacity-100 scale-90'
+                        }`}
+                      title={c.label}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Description Section */}
+          <section className="md:col-span-2 space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                <AlignLeft className="w-4 h-4" />
+              </div>
+              <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Presentación de la Actividad</h4>
+            </div>
+
+            <textarea
+              rows={4}
+              value={form.description ?? ''}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Describe los objetivos o requisitos de la clase..."
+              className="w-full bg-slate-50 border border-slate-200 rounded-[24px] px-6 py-5 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all resize-none italic"
+            />
+          </section>
         </div>
 
-        {/* Precio */}
-        <div className="space-y-1.5">
-          <label className="text-sm text-slate-600">Precio Mensual *</label>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            value={form.price ?? ''}
-            onChange={(e) =>
-              setForm({ ...form, price: e.target.value === '' ? null : Number(e.target.value) })
-            }
-            placeholder="40000"
-            className="h-11 w-full rounded-lg border border-slate-300 px-3"
-          />
-        </div>
-
-        {/* Instructor */}
-        <div className="space-y-1.5">
-          <label className="text-sm text-slate-600">Instructor</label>
-          <input
-            value={form.instructor ?? ''}
-            onChange={(e) => setForm({ ...form, instructor: e.target.value })}
-            placeholder="Nombre del instructor"
-            className="h-11 w-full rounded-lg border border-slate-300 px-3"
-          />
-        </div>
-
-        {/* Capacidad */}
-        <div className="space-y-1.5">
-          <label className="text-sm text-slate-600">Capacidad Máxima</label>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            value={form.capacity ?? ''}
-            onChange={(e) => {
-              const v = e.target.value === '' ? null : Number(e.target.value)
-              setForm({ ...form, capacity: v, max_students: v })
-            }}
-            placeholder="20"
-            className="h-11 w-full rounded-lg border border-slate-300 px-3"
-          />
-        </div>
-
-        {/* Color */}
-        <div className="space-y-1.5">
-          <label className="text-sm text-slate-600">Color Identificador</label>
-          <select
-            value={form.color ?? 'blue'}
-            onChange={(e) => setForm({ ...form, color: e.target.value })}
-            className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3"
+        {/* Footer Actions */}
+        <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-4">
+          <motion.button
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={save}
+            disabled={saving}
+            className="flex-1 h-16 bg-blue-600 text-white rounded-[24px] font-black uppercase tracking-widest text-sm shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all flex items-center justify-center gap-3"
           >
-            <option value="blue">Azul</option>
-            <option value="red">Rojo</option>
-            <option value="green">Verde</option>
-            <option value="purple">Violeta</option>
-            <option value="orange">Naranja</option>
-            <option value="pink">Rosa</option>
-          </select>
-        </div>
+            {saving ? (
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            ) : (
+              <Save className="h-5 w-5" />
+            )}
+            {saving ? 'Procesando...' : 'Confirmar Clase'}
+          </motion.button>
 
-        {/* DÍAS – Botones toggle */}
-        <div className="space-y-1.5">
-          <label className="text-sm text-slate-600">Días</label>
-          <div className="flex flex-wrap gap-2">
-            {DAY_OPTIONS.map((d) => {
-              const active = (form.days ?? []).includes(d)
-              return (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => toggleDay(d)}
-                  className={`rounded-full border px-3 py-1 text-sm ${
-                    active
-                      ? 'border-blue-600 bg-blue-50 text-blue-700'
-                      : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  {d}
-                </button>
-              )
-            })}
-          </div>
+          <button
+            onClick={onCancel}
+            className="h-16 px-10 rounded-[24px] border border-slate-200 text-slate-500 font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all"
+          >
+            Cancelar
+          </button>
         </div>
-
-        {/* Hora inicio */}
-        <div className="space-y-1.5">
-          <label className="text-sm text-slate-600">Hora Inicio</label>
-          <input
-            type="time"
-            value={form.start_time ?? ''}
-            onChange={(e) => setForm({ ...form, start_time: e.target.value })}
-            className="h-11 w-full rounded-lg border border-slate-300 px-3"
-          />
-        </div>
-
-        {/* Hora fin */}
-        <div className="space-y-1.5">
-          <label className="text-sm text-slate-600">Hora Fin</label>
-          <input
-            type="time"
-            value={form.end_time ?? ''}
-            onChange={(e) => setForm({ ...form, end_time: e.target.value })}
-            className="h-11 w-full rounded-lg border border-slate-300 px-3"
-          />
-        </div>
-
-        {/* Descripción */}
-        <div className="space-y-1.5 md:col-span-2">
-          <label className="text-sm text-slate-600">Descripción</label>
-          <textarea
-            rows={4}
-            value={form.description ?? ''}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            placeholder="Descripción de la clase"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2"
-          />
-        </div>
-      </div>
-
-      <div className="mt-5 flex justify-end gap-3">
-        <button
-          onClick={onCancel}
-          className="h-11 rounded-lg border border-slate-300 px-4 text-slate-700 hover:bg-slate-50"
-        >
-          Cancelar
-        </button>
-        <button
-          onClick={save}
-          disabled={saving}
-          className="inline-flex h-11 items-center gap-2 rounded-lg bg-blue-600 px-4 font-medium text-white hover:bg-blue-700 disabled:opacity-70"
-        >
-          <Save className="h-4 w-4" />
-          {saving ? 'Guardando…' : 'Guardar'}
-        </button>
       </div>
     </div>
   )

@@ -1,65 +1,15 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { createClient } from '@supabase/supabase-js';
+import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabaseClient';
 import AdminLayout from '../layouts/AdminLayout';
-import { Plus, Download, Check } from 'lucide-react';
+import { Plus, Download, Check, Receipt, CreditCard, ChevronLeft, ChevronRight, FileSpreadsheet, Search } from 'lucide-react';
 
 import PaymentFilters from '../components/payments/PaymentFilters';
 import PaymentModal from '../components/payments/PaymentModal';
 
-// ===================== Overlay de éxito (reutilizable) =====================
-function CenterSuccessOverlay({
-  message,
-  onClose,
-  showIcon = true,
-}: {
-  message: string;
-  onClose: () => void;
-  showIcon?: boolean;
-}) {
-  const [mounted, setMounted] = useState(false);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    const t1 = setTimeout(() => setVisible(true), 10);      // fade in
-    const t2 = setTimeout(() => setVisible(false), 1800);   // fade out
-    const t3 = setTimeout(onClose, 2000);                   // desmontar
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, [onClose]);
-
-  const node = (
-    <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-200 ${
-        visible ? 'opacity-100' : 'opacity-0'
-      }`}
-      aria-live="polite"
-      aria-atomic="true"
-    >
-      <div className="absolute inset-0 bg-black/20" />
-      <div
-        className={`relative mx-4 w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-2xl transition-transform duration-200 ${
-          visible ? 'scale-100' : 'scale-95'
-        }`}
-      >
-        {showIcon && (
-          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
-            <Check className="h-10 w-10 text-emerald-600" strokeWidth={3} />
-          </div>
-        )}
-        <h3 className="text-xl font-extrabold tracking-tight text-slate-900">
-          {message}
-        </h3>
-      </div>
-    </div>
-  );
-
-  return mounted ? createPortal(node, document.body) : null;
-}
-
-// ===================== helpers =====================
+// ===================== Helpers =====================
 const fmtARS = (v: number) =>
   v.toLocaleString('es-AR', { style: 'currency', currency: 'ARS' });
 
@@ -90,15 +40,12 @@ type PaymentRow = {
   notes: string | null;
 };
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const ITEMS_PER_PAGE = 5;
 
-// ===================== page =====================
 export default function PaymentsPage() {
   const [rows, setRows] = useState<PaymentRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // filtros
   const [memberOpts, setMemberOpts] = useState<{ value: string; label: string }[]>([]);
@@ -108,9 +55,7 @@ export default function PaymentsPage() {
 
   // modal
   const [open, setOpen] = useState(false);
-
-  // overlay éxito
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const monthKey = (d: string | null) => {
     if (!d) return '';
@@ -125,7 +70,6 @@ export default function PaymentsPage() {
   const load = async () => {
     setLoading(true);
 
-    // pagos
     const { data: pays, error: payErr } = await supabase
       .from('payments')
       .select('id,user_id,amount,method,paid_at,period_from,period_to,notes')
@@ -138,7 +82,6 @@ export default function PaymentsPage() {
       return;
     }
 
-    // perfiles (para nombres)
     const ids = Array.from(new Set((pays ?? []).map((p: any) => p.user_id)));
     const nameById: Record<string, string> = {};
     if (ids.length) {
@@ -165,18 +108,15 @@ export default function PaymentsPage() {
     }));
     setRows(mapped);
 
-    // opciones de miembros
     setMemberOpts(
       Object.entries(nameById)
         .map(([value, label]) => ({ value, label }))
         .sort((a, b) => a.label.localeCompare(b.label, 'es'))
     );
 
-    // opciones de clases
     const { data: classes } = await supabase.from('classes').select('id,name').order('name', { ascending: true });
     setClassOpts((classes ?? []).map((c: any) => ({ value: String(c.id), label: c.name })));
 
-    // meses disponibles (por paid_at)
     const monthMap: Record<string, string> = {};
     mapped.forEach((r) => {
       const mk = monthKey(r.paid_at);
@@ -196,25 +136,30 @@ export default function PaymentsPage() {
     setLoading(false);
   };
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
-  // filtrado
   const filtered = useMemo(() => {
     const mk = (d: string | null) => monthKey(d);
     return rows.filter((r) => {
       const okMember = !filters.member || r.user_id === filters.member;
       const okMonth = !filters.month || mk(r.paid_at) === filters.month;
-
-      // por ahora, filtro de clase “abierto” (si querés precisión, cruzamos con class_enrollments)
       const okClass = !filters.classId || true;
-
       return okMember && okMonth && okClass;
     });
   }, [rows, filters]);
 
-  // export CSV (según lo filtrado)
+  // Pagination Logic
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  const paginatedItems = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(start, start + ITEMS_PER_PAGE);
+  }, [filtered, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
   const onExport = () => {
     const header = ['Fecha', 'Miembro', 'Monto', 'Método', 'Periodo Desde', 'Periodo Hasta', 'Notas'];
     const lines = filtered.map((r) => [
@@ -227,11 +172,7 @@ export default function PaymentsPage() {
       (r.notes ?? '').replace(/\r?\n/g, ' '),
     ]);
 
-    const csv =
-      header.join(';') +
-      '\n' +
-      lines.map((row) => row.map((c) => (typeof c === 'string' ? `"${c.replace(/"/g, '""')}"` : String(c))).join(';')).join('\n');
-
+    const csv = header.join(';') + '\n' + lines.map((row) => row.map((c) => (typeof c === 'string' ? `"${c.replace(/"/g, '""')}"` : String(c))).join(';')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -242,107 +183,249 @@ export default function PaymentsPage() {
   };
 
   return (
-    <AdminLayout>
-      {/* Header (sin total) */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Registro de Pagos</h1>
-          <p className="text-slate-600">Historial completo de cuotas</p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onExport}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-slate-700 hover:bg-slate-50"
-            title="Exportar CSV"
-          >
-            <Download className="h-4 w-4" />
-            Exportar
-          </button>
-
-          <button
-            onClick={() => setOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white shadow hover:bg-blue-700"
-            title="Registrar Pago"
-          >
-            <Plus className="h-5 w-5" />
-            Registrar Pago
-          </button>
-        </div>
+    <AdminLayout active="/payments">
+      {/* Background Decor */}
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute -left-[10%] -top-[10%] h-[40%] w-[40%] rounded-full bg-emerald-500/5 blur-[120px]" />
+        <div className="absolute -right-[5%] bottom-[5%] h-[30%] w-[30%] rounded-full bg-blue-500/5 blur-[100px]" />
       </div>
 
-      {/* Filtros */}
-      <PaymentFilters
-        members={memberOpts}
-        classes={classOpts}
-        months={months}
-        value={filters}
-        onChange={setFilters}
-      />
+      <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Header Section */}
+        <header className="mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="space-y-1"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-black uppercase tracking-widest text-emerald-600 ring-1 ring-inset ring-emerald-600/20">
+                Finanzas
+              </span>
+            </div>
+            <h1 className="text-4xl font-black tracking-tight text-slate-900 md:text-5xl">
+              Registro de <span className="text-emerald-600">Pagos</span>
+            </h1>
+            <p className="max-w-md text-slate-500 font-medium italic">
+              "El orden financiero es el cimiento de la disciplina."
+            </p>
+          </motion.div>
 
-      {/* Tabla */}
-      <div className="overflow-hidden rounded-xl border bg-white">
-        <table className="w-full table-auto">
-          <thead className="bg-slate-50 text-left text-slate-600">
-            <tr>
-              <th className="px-4 py-3">Fecha</th>
-              <th className="px-4 py-3">Miembro</th>
-              <th className="px-4 py-3">Monto</th>
-              <th className="px-4 py-3">Método</th>
-              <th className="px-4 py-3">Período</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td className="px-4 py-6 text-slate-400" colSpan={5}>
-                  Cargando…
-                </td>
-              </tr>
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td className="px-4 py-6 text-slate-400" colSpan={5}>
-                  Sin resultados
-                </td>
-              </tr>
-            ) : (
-              filtered.map((row) => (
-                <tr key={row.id} className="border-t">
-                  <td className="px-4 py-3">{fmtDate(row.paid_at)}</td>
-                  <td className="px-4 py-3">{row.member_name}</td>
-                  <td className="px-4 py-3 font-medium text-green-700">{fmtARS(row.amount)}</td>
-                  <td className="px-4 py-3">
-                    <span className="rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs text-green-700">
-                      {row.method}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {fmtDate(row.period_from)} - {fmtDate(row.period_to)}
-                  </td>
+          <div className="flex items-center gap-4">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onExport}
+              className="group flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-4 text-sm font-black uppercase tracking-widest text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:border-slate-300"
+            >
+              <Download className="h-5 w-5 text-slate-400 group-hover:text-slate-600 transition-colors" />
+              Exportar
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setOpen(true)}
+              className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-emerald-600 px-8 py-4 text-white shadow-xl shadow-emerald-500/25 transition-all hover:bg-emerald-700 font-black uppercase tracking-widest text-sm"
+            >
+              <Plus className="h-6 w-6" />
+              Registrar Pago
+            </motion.button>
+          </div>
+        </header>
+
+        {/* Filters Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8"
+        >
+          <PaymentFilters
+            members={memberOpts}
+            classes={classOpts}
+            months={months}
+            value={filters}
+            onChange={setFilters}
+          />
+        </motion.div>
+
+        {/* Data Table */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="overflow-hidden rounded-[32px] border border-slate-200 bg-white/80 backdrop-blur-xl shadow-2xl relative"
+        >
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-slate-900">
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Fecha</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Miembro</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Monto</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Método de Pago</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Período de Cobertura</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="px-8 py-20 text-center">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500/20 border-t-emerald-500" />
+                        <p className="text-sm font-black uppercase tracking-widest text-slate-400">Actualizando Libros...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : paginatedItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-8 py-20 text-center">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300">
+                          <Receipt className="w-8 h-8" />
+                        </div>
+                        <p className="text-sm font-black uppercase tracking-widest text-slate-400">Sin movimientos registrados</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedItems.map((row, idx) => (
+                    <motion.tr
+                      key={row.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.03 }}
+                      className="group transition-colors hover:bg-slate-50/50"
+                    >
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-white group-hover:text-emerald-500 transition-colors">
+                            <Receipt className="w-4 h-4" />
+                          </div>
+                          <span className="text-sm font-bold text-slate-900">{fmtDate(row.paid_at)}</span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <span className="text-sm font-bold text-slate-600 group-hover:text-slate-900 transition-colors">{row.member_name}</span>
+                      </td>
+                      <td className="px-8 py-6">
+                        <span className="text-lg font-black text-emerald-600">{fmtARS(row.amount)}</span>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-2">
+                          {row.method === 'mercadopago' ? (
+                            <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                          ) : row.method === 'transferencia' ? (
+                            <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                          ) : (
+                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                          )}
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{row.method}</span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-2 text-slate-400 font-medium text-xs">
+                          <span>{fmtDate(row.period_from)}</span>
+                          <ChevronRight className="w-3 h-3" />
+                          <span>{fmtDate(row.period_to)}</span>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination Controls */}
+          {totalItems > 0 && (
+            <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-8 py-5">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                  Resultados: <span className="text-slate-900">{(currentPage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)}</span> de <span className="text-slate-900">{totalItems}</span>
+                </p>
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-40 disabled:pointer-events-none transition-all shadow-sm"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }).map((_, i) => {
+                      // Logic to show limited page numbers if there are too many
+                      if (totalPages > 7) {
+                        if (i + 1 !== 1 && i + 1 !== totalPages && Math.abs(i + 1 - currentPage) > 1) {
+                          if (i + 1 === currentPage - 2 || i + 1 === currentPage + 2) return <span key={i} className="px-1 text-slate-400">...</span>;
+                          return null;
+                        }
+                      }
+
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => setCurrentPage(i + 1)}
+                          className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${currentPage === i + 1
+                            ? 'bg-slate-900 text-white shadow-lg'
+                            : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-400'
+                            }`}
+                        >
+                          {i + 1}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-40 disabled:pointer-events-none transition-all shadow-sm"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </motion.div>
       </div>
 
-      {/* Modal registrar pago */}
       <PaymentModal
         open={open}
         onClose={() => setOpen(false)}
         onSaved={() => {
           setOpen(false);
-          setSuccessMsg('Pago registrado exitosamente'); // 👈 Overlay
+          setShowSuccess(true);
+          setTimeout(() => setShowSuccess(false), 3000);
           load();
         }}
       />
 
-      {successMsg && (
-        <CenterSuccessOverlay
-          message={successMsg}
-          onClose={() => setSuccessMsg(null)}
-        />
-      )}
+      {/* Success Toast */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            className="fixed bottom-10 left-1/2 z-[200] -translate-x-1/2"
+          >
+            <div className="flex items-center gap-3 rounded-2xl bg-slate-900 px-8 py-4 text-white shadow-2xl">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500">
+                <Check className="h-4 w-4 text-white" />
+              </div>
+              <p className="text-sm font-black uppercase tracking-widest text-white">Pago Registrado</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AdminLayout>
   );
 }

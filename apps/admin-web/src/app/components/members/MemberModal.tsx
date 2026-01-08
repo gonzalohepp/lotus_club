@@ -1,50 +1,68 @@
-'use client'
-
-import { X } from 'lucide-react'
+import { X, UserPlus, UserCircle2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import MemberForm from './MemberForm'
 
-type Row = {
-  user_id: string
-  first_name: string | null
-  last_name: string | null
-  email: string | null
-  phone: string | null
-  emergency_phone: string | null
-  notes: string | null
-  access_code: string | null
-  membership_type: 'monthly'|'quarterly'|'semiannual'|'annual'|null
-  end_date: string | null
-  class_ids?: number[]
-}
+import { MemberRow } from '@/types/member'
 
 export default function MemberModal({
   open, onClose, member, onSubmit,
 }: {
   open: boolean
   onClose: () => void
-  member: Row | null
+  member: MemberRow | null
   onSubmit: (payload: any) => Promise<void>
 }) {
-  if (!open) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 md:p-8">
-      <div className="w-full max-w-5xl rounded-2xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b px-6 py-4">
-          <h2 className="text-xl font-semibold">{member ? 'Editar Miembro' : 'Nuevo Miembro'}</h2>
-          <button onClick={onClose} className="rounded p-2 hover:bg-slate-100">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="max-h-[75vh] overflow-auto px-6 py-5">
-          <MemberForm
-            member={member}
-            onCancel={onClose}
-            onSubmit={async (data) => { await onSubmit(data); onClose() }}
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
           />
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="relative w-full max-w-4xl overflow-hidden rounded-[32px] bg-white shadow-2xl"
+          >
+            {/* Header Header */}
+            <div className="relative h-32 bg-slate-900 flex items-center px-10 overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl -mr-32 -mt-32" />
+              <div className="relative flex items-center gap-5">
+                <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-blue-400 border border-white/10 group-hover:scale-110 transition-transform">
+                  {member ? <UserCircle2 className="w-8 h-8" /> : <UserPlus className="w-8 h-8" />}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black text-white tracking-tight uppercase">
+                    {member ? 'Editar Alumno' : 'Nuevo Alumno'}
+                  </h2>
+                  <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">Panel de Registro</p>
+                </div>
+              </div>
+
+              <button
+                onClick={onClose}
+                className="absolute top-8 right-8 w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-all border border-white/10"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="max-h-[70vh] overflow-y-auto custom-scrollbar px-10 py-8">
+              <MemberForm
+                member={member}
+                onCancel={onClose}
+                onSubmit={async (data) => { await onSubmit(data); onClose() }}
+              />
+            </div>
+          </motion.div>
         </div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   )
 }

@@ -1,14 +1,17 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import AdminLayout from '../layouts/AdminLayout'
 import { supabase } from '@/lib/supabaseClient'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { CheckCircle, XCircle, RefreshCw, Camera } from 'lucide-react'
+import { CheckCircle, XCircle, RefreshCw, Camera, ShieldCheck, Zap } from 'lucide-react'
 import QRScannerHtml5 from '@/components/QRScannerHtml5'
+import { motion, AnimatePresence } from 'framer-motion'
+
+export const dynamic = 'force-dynamic'
 
 type MemberRow = {
   user_id: string
@@ -33,7 +36,7 @@ function getAllowedOrigins(): string[] {
     try {
       const o = new URL(process.env.NEXT_PUBLIC_SITE_URL).origin
       origins.add(o)
-    } catch {}
+    } catch { }
   }
   return Array.from(origins)
 }
@@ -54,7 +57,7 @@ function parseSiteToken(raw: string): { ok: boolean; token?: string } {
   }
 }
 
-export default function ValidatePage() {
+function ValidateContent() {
   const router = useRouter()
   const qp = useSearchParams()
 
@@ -78,7 +81,7 @@ export default function ValidatePage() {
 
   // ========= Sesión y preload del miembro ========
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       const { data } = await supabase.auth.getUser()
       const email = data.user?.email ?? null
       setUserEmail(email)
@@ -167,7 +170,7 @@ export default function ValidatePage() {
           reason,
           scanned_at: new Date().toISOString(),
           // opcional: token: site.token
-        }).then().catch(() => {})
+        }).then(() => { }, (err) => console.error('[validate] log error', err))
 
         setAllowed(ok)
         setResultMsg(reason)
@@ -217,91 +220,166 @@ export default function ValidatePage() {
 
   return (
     <AdminLayout active="/validate">
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-8">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-6">
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Validación de Acceso</h1>
-            <p className="text-slate-600">Escaneá el QR para validar tu acceso.</p>
-          </div>
+      <div className="relative min-h-[calc(100vh-4rem)] bg-slate-950 overflow-hidden">
+        {/* Decoración de fondo futurista */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600 rounded-full blur-[120px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600 rounded-full blur-[120px]" />
+        </div>
 
-          <Card className="shadow-2xl border-none bg-white">
-            <CardContent className="p-6 md:p-8">
-              {cameraError && (
-                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                  {cameraError}
-                </div>
-              )}
-
-              <div className="flex items-center gap-2 mb-4">
-                <Button variant="outline" onClick={() => setPaused(p => !p)} className="inline-flex items-center gap-2">
-                  <Camera className="w-4 h-4" />
-                  {paused ? 'Reanudar cámara' : 'Pausar cámara'}
-                </Button>
-                <Button variant="outline" onClick={retryCamera} className="inline-flex items-center gap-2">
-                  <RefreshCw className="w-4 h-4" />
-                  Reintentar cámara
-                </Button>
-              </div>
-
-              <div className="flex justify-center">
-                <QRScannerHtml5
-                  paused={paused}
-                  onDecode={handleDecode}
-                  onError={(e) => {
-                    const msg = String(e?.message || e)
-                    if (
-                      msg.includes('scanner is not paused') ||
-                      msg.includes('scanner is not scanning') ||
-                      msg.includes('NotFoundError') ||
-                      msg.includes('AbortError')
-                    ) {
-                      console.debug('[QRScannerHtml5] Ignored warning:', msg)
-                      return
-                    }
-                    console.error('[QRScannerHtml5] Camera error:', msg)
-                    setCameraError('No se pudo iniciar la cámara. Reintentá.')
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Dialog
-            open={openResult}
-            onOpenChange={(o) => {
-              setOpenResult(o)
-              if (!o && allowed === false) setPaused(false) // Reintentar sólo si fue denegado
-            }}
+        <div className="relative z-10 max-w-xl mx-auto px-4 pt-8 pb-12 flex flex-col min-h-full items-center">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-8"
           >
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader><DialogTitle className="sr-only">Resultado</DialogTitle></DialogHeader>
-              <div className="text-center py-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold tracking-widest uppercase mb-4">
+              <ShieldCheck className="w-3 h-3" />
+              SISTEMA DE ACCESO
+            </div>
+            <h1 className="text-4xl font-extrabold text-white tracking-tight mb-2">
+              Validar <span className="text-blue-500">Acceso</span>
+            </h1>
+            <p className="text-slate-400">Escanea tu código QR para ingresar al Dojo</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="w-full relative"
+          >
+            {/* Contenedor del Scanner con brillo perimetral */}
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-[2rem] blur opacity-30 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+              <div className="relative bg-slate-900 rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
+                <div className="p-4">
+                  {cameraError && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400 flex items-center gap-3"
+                    >
+                      <XCircle className="w-5 h-5 shrink-0" />
+                      {cameraError}
+                    </motion.div>
+                  )}
+
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                    <button
+                      onClick={() => setPaused(p => !p)}
+                      className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border transition-all font-medium text-sm ${paused
+                        ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20 active:scale-95'
+                        : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
+                        }`}
+                    >
+                      {paused ? <Zap className="w-4 h-4 fill-current" /> : <Camera className="w-4 h-4" />}
+                      {paused ? 'Reanudar' : 'Pausar'}
+                    </button>
+                    <button
+                      onClick={retryCamera}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all font-medium text-sm"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      Reintentar
+                    </button>
+                  </div>
+
+                  <QRScannerHtml5
+                    paused={paused}
+                    onDecode={handleDecode}
+                    onError={(e: any) => {
+                      const msg = String(e?.message || e)
+                      if (
+                        msg.includes('scanner is not paused') ||
+                        msg.includes('scanner is not scanning') ||
+                        msg.includes('NotFoundError') ||
+                        msg.includes('AbortError')
+                      ) return
+                      console.error('[QRScannerHtml5] Camera error:', msg)
+                      setCameraError('Error de cámara. Por favor reintenta.')
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Footer decorativo */}
+          <div className="mt-auto pt-12 text-center opacity-40">
+            <p className="text-xs text-slate-500 font-medium tracking-widest uppercase">Beleza Dojo Access Protocol v2.0</p>
+          </div>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {openResult && (
+          <Dialog open={openResult} onOpenChange={(o) => {
+            setOpenResult(o)
+            if (!o && allowed === false) setPaused(false)
+          }}>
+            <DialogContent className="sm:max-w-md bg-slate-900 border-white/10 text-white rounded-3xl overflow-hidden p-0">
+              <div className="relative p-8 text-center bg-gradient-to-b from-transparent to-black/40">
+                <DialogHeader><DialogTitle className="sr-only">Resultado</DialogTitle></DialogHeader>
+
                 {allowed ? (
-                  <>
-                    <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
-                      <CheckCircle className="w-14 h-14 text-green-600" />
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="space-y-4"
+                  >
+                    <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-green-500/20 flex items-center justify-center border border-green-500/30 relative">
+                      <div className="absolute inset-0 bg-green-500 blur-2xl opacity-20 animate-pulse" />
+                      <CheckCircle className="w-14 h-14 text-green-500 relative z-10" />
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2">¡ACCESO AUTORIZADO!</h2>
-                    <p className="text-slate-700 mb-1">{fullName(member)}</p>
-                    <p className="text-green-600 font-medium">{resultMsg}</p>
-                  </>
+                    <h2 className="text-3xl font-black text-white tracking-tight uppercase">Acceso Autorizado</h2>
+                    <div className="space-y-1">
+                      <p className="text-xl font-bold text-slate-200">{fullName(member)}</p>
+                      <p className="text-green-500 font-semibold tracking-wide">{resultMsg}</p>
+                    </div>
+                  </motion.div>
                 ) : (
-                  <>
-                    <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-                      <XCircle className="w-14 h-14 text-red-600" />
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="space-y-4"
+                  >
+                    <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-red-500/20 flex items-center justify-center border border-red-500/30 relative">
+                      <div className="absolute inset-0 bg-red-500 blur-2xl opacity-20 animate-pulse" />
+                      <XCircle className="w-14 h-14 text-red-500 relative z-10" />
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2">ACCESO DENEGADO</h2>
-                    <p className="text-red-600 font-medium">{resultMsg || 'No autorizado'}</p>
-                    <div className="mt-4">
-                      <Button onClick={() => setOpenResult(false)}>Cerrar</Button>
+                    <h2 className="text-3xl font-black text-white tracking-tight uppercase">Acceso Denegado</h2>
+                    <p className="text-red-400 font-medium text-lg">{resultMsg || 'No autorizado'}</p>
+                    <div className="pt-6">
+                      <Button
+                        onClick={() => setOpenResult(false)}
+                        className="w-full py-6 rounded-2xl bg-white/10 border border-white/10 hover:bg-white/20 text-white font-bold"
+                      >
+                        REINTENTAR
+                      </Button>
                     </div>
-                  </>
+                  </motion.div>
                 )}
               </div>
             </DialogContent>
           </Dialog>
+        )}
+      </AnimatePresence>
+    </AdminLayout>
+  )
+}
+
+export default function ValidatePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="w-12 h-12 bg-blue-600/20 rounded-full mb-4" />
+          <p className="text-xs uppercase tracking-widest text-slate-500">Cargando Validacón...</p>
         </div>
       </div>
-    </AdminLayout>
+    }>
+      <ValidateContent />
+    </Suspense>
   )
 }

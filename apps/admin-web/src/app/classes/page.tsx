@@ -1,33 +1,28 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { motion, AnimatePresence } from 'framer-motion'
 import AdminLayout from '../layouts/AdminLayout'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, BookOpen, Layers } from 'lucide-react'
 import ClassForm, { ClassRow } from '../components/classes/ClassForm'
 import ClassCard from '../components/classes/ClassCard'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { supabase } from '@/lib/supabaseClient'
 
 export default function ClassesPage() {
   const [items, setItems] = useState<ClassRow[]>([])
   const [loading, setLoading] = useState(true)
-
   const [query, setQuery] = useState('')
-  const [color, setColor] = useState<'all' | 'blue' | 'red' | 'green' | 'purple' | 'orange' | 'pink'>('all')
-
+  const [colorFilter, setColorFilter] = useState<'all' | 'blue' | 'red' | 'green' | 'purple' | 'orange' | 'pink'>('all')
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<ClassRow | null>(null)
+  const [showSuccess, setShowSuccess] = useState(false)
 
   const load = async () => {
     setLoading(true)
     const { data, error } = await supabase
       .from('classes')
       .select('id,name,instructor,days,start_time,end_time,capacity,max_students,color,description,price,created_at')
-      .order('created_at', { ascending: false })
+      .order('name', { ascending: true })
     if (!error && data) setItems(data as ClassRow[])
     setLoading(false)
   }
@@ -42,10 +37,10 @@ export default function ClassesPage() {
         c.name?.toLowerCase().includes(q) ||
         (c.instructor ?? '').toLowerCase().includes(q) ||
         (c.description ?? '').toLowerCase().includes(q)
-      const colorOk = color === 'all' || (c.color ?? 'blue') === color
+      const colorOk = colorFilter === 'all' || (c.color ?? 'blue') === colorFilter
       return inQuery && colorOk
     })
-  }, [items, query, color])
+  }, [items, query, colorFilter])
 
   const onCreate = () => { setEditing(null); setShowForm(true) }
   const onEdit = (row: ClassRow) => { setEditing(row); setShowForm(true) }
@@ -61,79 +56,193 @@ export default function ClassesPage() {
   }
 
   return (
-    <AdminLayout>
-      {/* Encabezado */}
-      <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-        <div>
-          <h1 className="mb-2 text-3xl font-bold text-slate-900">Gestión de Clases</h1>
-          <p className="text-slate-600">Administra las clases disponibles en el gimnasio</p>
-        </div>
-        <button
-          onClick={onCreate}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-medium text-white shadow hover:bg-blue-700"
-        >
-          <Plus className="h-5 w-5" />
-          Nueva Clase
-        </button>
+    <AdminLayout active="/classes">
+      {/* Background Decor */}
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute -left-[10%] -top-[10%] h-[40%] w-[40%] rounded-full bg-blue-500/5 blur-[120px]" />
+        <div className="absolute -right-[5%] bottom-[5%] h-[30%] w-[30%] rounded-full bg-indigo-500/5 blur-[100px]" />
       </div>
 
-      {/* Filtros */}
-      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center">
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
-          <input
-            className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3"
-            placeholder="Buscar por nombre o instructor…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
+      <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Header Section */}
+        <header className="mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="space-y-1"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-black uppercase tracking-widest text-blue-600 ring-1 ring-inset ring-blue-600/20">
+                Administración
+              </span>
+            </div>
+            <h1 className="text-4xl font-black tracking-tight text-slate-900 md:text-5xl">
+              Gestión de <span className="text-blue-600">Clases</span>
+            </h1>
+            <p className="max-w-md text-slate-500 font-medium">
+              Horarios, instructores y disponibilidad de las actividades del Dojo.
+            </p>
+          </motion.div>
 
-        <select
-          value={color}
-          onChange={(e) => setColor(e.target.value as any)}
-          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 md:w-56"
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onCreate}
+            className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-blue-600 px-8 py-4 text-white shadow-xl shadow-blue-500/25 transition-all hover:bg-blue-700"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+            <Plus className="h-6 w-6" />
+            <span className="text-sm font-black uppercase tracking-widest">Nueva Clase</span>
+          </motion.button>
+        </header>
+
+        {/* Filters Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-12 flex flex-col gap-5 md:flex-row md:items-center"
         >
-          <option value="all">Todos los colores</option>
-          <option value="blue">Azul</option>
-          <option value="red">Rojo</option>
-          <option value="green">Verde</option>
-          <option value="purple">Violeta</option>
-          <option value="orange">Naranja</option>
-          <option value="pink">Rosa</option>
-        </select>
-      </div>
+          <div className="relative flex-1 group">
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+            <input
+              type="text"
+              className="h-14 w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-4 text-slate-900 font-medium shadow-sm outline-none ring-blue-500/10 transition-all focus:border-blue-500/50 focus:ring-4"
+              placeholder="Buscar por nombre, instructor o descripción..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
 
-      {/* Grid */}
-      {loading ? (
-        <div className="text-slate-500">Cargando…</div>
-      ) : filtered.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center text-slate-500">
-          No hay clases para mostrar.
-        </div>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((c) => (
-            <ClassCard key={c.id} classItem={c} onEdit={() => onEdit(c)} onDelete={() => onDelete(c.id!)} />
-          ))}
-        </div>
-      )}
-
-      {/* Modal Form */}
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-slate-900/40" onClick={() => setShowForm(false)} />
-          <div className="relative z-10 w-full max-w-4xl p-4">
-            <div className="rounded-2xl bg-white p-4 shadow-2xl">
-              <ClassForm
-                initial={editing}
-                onCancel={() => setShowForm(false)}
-                onSaved={async () => { setShowForm(false); await load() }}
-              />
+          <div className="flex gap-4">
+            <div className="relative min-w-[200px]">
+              <Layers className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <select
+                value={colorFilter}
+                onChange={(e) => setColorFilter(e.target.value as any)}
+                className="h-14 w-full appearance-none rounded-2xl border border-slate-200 bg-white pl-11 pr-10 text-sm font-bold text-slate-700 outline-none ring-blue-500/10 transition-all focus:border-blue-500/50 focus:ring-4"
+              >
+                <option value="all">Todos los colores</option>
+                <option value="blue">Azul</option>
+                <option value="red">Rojo</option>
+                <option value="green">Verde</option>
+                <option value="purple">Violeta</option>
+                <option value="orange">Naranja</option>
+                <option value="pink">Rosa</option>
+              </select>
+              <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+                <svg className="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        </motion.div>
+
+        {/* Data Grid */}
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex h-64 flex-col items-center justify-center rounded-[32px] border border-dashed border-slate-200 bg-white/50 backdrop-blur-sm"
+            >
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500/20 border-t-blue-500" />
+              <p className="mt-4 text-sm font-black uppercase tracking-widest text-slate-400">Actualizando Clases...</p>
+            </motion.div>
+          ) : filtered.length === 0 ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex h-64 flex-col items-center justify-center rounded-[32px] border border-dashed border-slate-200 bg-white/50 backdrop-blur-sm px-6 text-center"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 mb-4">
+                <BookOpen className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900">No se encontraron clases</h3>
+              <p className="text-slate-500 max-w-xs mt-1">Ajusta los filtros o crea una nueva clase para empezar.</p>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="grid"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"
+            >
+              {filtered.map((item, idx) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                >
+                  <ClassCard
+                    classItem={item}
+                    onEdit={() => onEdit(item)}
+                    onDelete={() => onDelete(item.id!)}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Modal View */}
+      <AnimatePresence>
+        {showForm && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowForm(false)}
+              className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden"
+            >
+              <div className="h-full overflow-y-auto custom-scrollbar rounded-[32px] bg-white shadow-2xl">
+                <ClassForm
+                  initial={editing}
+                  onCancel={() => setShowForm(false)}
+                  onSaved={async () => {
+                    setShowForm(false)
+                    await load()
+                    setShowSuccess(true)
+                    setTimeout(() => setShowSuccess(false), 3000)
+                  }}
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Success Toast */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            className="fixed bottom-10 left-1/2 z-[200] -translate-x-1/2"
+          >
+            <div className="flex items-center gap-3 rounded-2xl bg-slate-900 px-8 py-4 text-white shadow-2xl">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500">
+                <Plus className="h-4 w-4 text-white" />
+              </div>
+              <p className="text-sm font-black uppercase tracking-widest text-white">¡Clase Guardada!</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AdminLayout>
   )
 }

@@ -37,7 +37,7 @@ export default function TournamentDetailPage() {
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
-  const [tab, setTab] = useState<'teams'|'bracket'>('teams')
+  const [tab, setTab] = useState<'teams' | 'bracket'>('teams')
 
   const load = async () => {
     setLoading(true)
@@ -59,7 +59,16 @@ export default function TournamentDetailPage() {
 
     setTournament(t as Tournament | null)
     setTeams((ts ?? []) as Team[])
-    setMatches((ms ?? []) as Match[])
+
+    // Fix: Supabase might return relations as arrays. We flatten them here.
+    const formattedMatches = (ms ?? []).map((m: any) => ({
+      ...m,
+      team_a: Array.isArray(m.team_a) ? m.team_a[0] : m.team_a,
+      team_b: Array.isArray(m.team_b) ? m.team_b[0] : m.team_b,
+      winner: Array.isArray(m.winner) ? m.winner[0] : m.winner
+    }))
+
+    setMatches(formattedMatches as Match[])
     setLoading(false)
   }
 
@@ -72,7 +81,7 @@ export default function TournamentDetailPage() {
       byRound[m.round].push(m)
     })
     return Object.entries(byRound)
-      .sort(([a],[b]) => Number(a)-Number(b))
+      .sort(([a], [b]) => Number(a) - Number(b))
       .map(([r, list]) => ({ round: Number(r), matches: list }))
   }, [matches])
 
@@ -87,7 +96,7 @@ export default function TournamentDetailPage() {
     const inserts: any[] = []
     for (let i = 0; i < shuffled.length; i += 2) {
       const a = shuffled[i]
-      const b = shuffled[i+1]
+      const b = shuffled[i + 1]
       inserts.push({
         tournament_id: id,
         round: 1,
@@ -129,7 +138,7 @@ export default function TournamentDetailPage() {
         const inserts: any[] = []
         for (let i = 0; i < winners.length; i += 2) {
           const a = winners[i]
-          const b = winners[i+1]
+          const b = winners[i + 1]
           inserts.push({
             tournament_id: id,
             round: m.round + 1,
