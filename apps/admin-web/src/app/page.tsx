@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -44,10 +44,33 @@ export default function HomeLandingPage() {
   }
 
   // 🔹 Punto único de entrada al sistema:
-  // podés cambiar "/app" por "/validate" o "/login" si preferís.
   const handleAccess = () => {
     router.push("/app")
   }
+
+  // 🔹 Tracking
+  const trackEvent = async (eventType: string, metadata?: any) => {
+    try {
+      // Import dinámico o usar el del contexto si fuera posible, 
+      // pero aquí importamos directo para asegurar simplicidad.
+      const { createClient } = await import('@supabase/supabase-js')
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      const _supabase = createClient(supabaseUrl, supabaseKey)
+
+      await _supabase.from('landing_events').insert({
+        event_type: eventType,
+        metadata
+      })
+    } catch (e) {
+      console.error('Error tracking', e)
+    }
+  }
+
+  useEffect(() => {
+    // Track visita inicial
+    trackEvent('visit', { referrer: document.referrer })
+  }, [])
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -78,7 +101,10 @@ export default function HomeLandingPage() {
                 </button>
               ))}
               <Button
-                onClick={handleAccess}
+                onClick={() => {
+                  trackEvent('click_access')
+                  handleAccess()
+                }}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6"
                 type="button"
               >
@@ -116,7 +142,10 @@ export default function HomeLandingPage() {
                 </button>
               ))}
               <Button
-                onClick={handleAccess}
+                onClick={() => {
+                  trackEvent('click_access')
+                  handleAccess()
+                }}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 type="button"
               >
@@ -170,6 +199,7 @@ export default function HomeLandingPage() {
                 asChild
                 className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-6 rounded-xl shadow-lg shadow-blue-600/50"
                 size="lg"
+                onClick={() => trackEvent('click_wsp_hero')}
               >
                 <a
                   href="https://www.instagram.com/belezadojo"
@@ -193,7 +223,7 @@ export default function HomeLandingPage() {
           </motion.div>
         </div>
 
-        
+
       </section>
 
       {/* DÓNDE ESTAMOS */}
@@ -249,6 +279,7 @@ export default function HomeLandingPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow-lg transition-colors duration-200"
+                      onClick={() => trackEvent('click_maps')}
                     >
                       <ExternalLink className="w-4 h-4" />
                       Abrir en Maps
@@ -407,7 +438,7 @@ export default function HomeLandingPage() {
 
           <div className="flex flex-col sm:flex-row justify-center gap-6">
             <motion.a
-              href="https://wa.me/5491234567890"
+              href="https://wa.me/5491124041132"
               target="_blank"
               rel="noopener noreferrer"
               initial={{ opacity: 0, scale: 0.9 }}
@@ -415,6 +446,7 @@ export default function HomeLandingPage() {
               viewport={{ once: true }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => trackEvent('click_whatsapp')}
               className="flex items-center justify-center gap-3 bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg shadow-green-600/50 transition-all duration-200"
             >
               <MessageCircle className="w-6 h-6" />
@@ -431,6 +463,7 @@ export default function HomeLandingPage() {
               transition={{ delay: 0.1 }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => trackEvent('click_instagram')}
               className="flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg shadow-purple-600/50 transition-all duration-200"
             >
               <Instagram className="w-6 h-6" />
@@ -470,6 +503,7 @@ export default function HomeLandingPage() {
               asChild
               className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-6 rounded-xl shadow-lg shadow-blue-600/50"
               size="lg"
+              onClick={() => trackEvent('click_wsp_footer')}
             >
               <a
                 href="https://www.instagram.com/belezadojo"

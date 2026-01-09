@@ -55,6 +55,11 @@ type Access = { user_id: string; scanned_at: string; result: string }
 type ClassRow = { id: number; name: string }
 type EnrollmentRow = { user_id: string; class_id: number }
 
+type LandingEvent = {
+  event_type: string
+  created_at: string
+}
+
 /* =============== página =============== */
 export default function MetricasPage() {
   const [loading, setLoading] = useState(true)
@@ -64,6 +69,7 @@ export default function MetricasPage() {
   const [totalMembers, setTotalMembers] = useState(0)
   const [accessLogsToday, setAccessLogsToday] = useState<number>(0)
   const [recentAccesses, setRecentAccesses] = useState<Access[]>([])
+  const [landingEvents, setLandingEvents] = useState<LandingEvent[]>([])
 
   const [classes, setClasses] = useState<ClassRow[]>([])
   const [enrollments, setEnrollments] = useState<EnrollmentRow[]>([])
@@ -116,6 +122,12 @@ export default function MetricasPage() {
         .from('class_enrollments')
         .select('user_id,class_id')
       setEnrollments((enr ?? []) as EnrollmentRow[])
+
+      const { data: lnd } = await supabase
+        .from('landing_events')
+        .select('event_type,created_at')
+        .gte('created_at', ninetyDaysAgo.toISOString()) // Reusamos la fecha de 90 días
+      setLandingEvents((lnd ?? []) as LandingEvent[])
 
       setLoading(false)
     }
@@ -377,35 +389,8 @@ export default function MetricasPage() {
 
         {/* Secondary Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* New Members Bars */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="rounded-[32px] border border-slate-200 bg-white/80 backdrop-blur-xl p-8 shadow-2xl"
-          >
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Nuevas Altas</h3>
-                <p className="text-xs font-black uppercase tracking-widest text-slate-400 mt-1">Histórico 6 Meses</p>
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                <TrendingUp className="w-6 h-6" />
-              </div>
-            </div>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={performanceBars}>
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
-                  <Tooltip
-                    cursor={{ fill: '#f1f5f9', radius: 10 }}
-                    contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Bar dataKey="altas" fill="#10b981" radius={[10, 10, 10, 10]} barSize={30} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </motion.div>
+          {/* Landing Metrics (Nuevo) */}
+          <LandingMetricsCard events={landingEvents} loading={loading} />
 
           {/* Quick Stats Summary */}
           <motion.div
@@ -498,3 +483,61 @@ function StatLine({ label, value, icon }: any) {
 function ClockIcon() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> }
 function ZapIcon() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> }
 function UsersIcon() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg> }
+
+function LandingMetricsCard({ events, loading }: { events: any[], loading: boolean }) {
+  // Calculos
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const visitsTotal = events.filter(e => e.event_type === 'visit').length
+  const visitsToday = events.filter(e => e.event_type === 'visit' && new Date(e.created_at) >= today).length
+
+  const clicksWsp = events.filter(e => e.event_type === 'click_whatsapp').length
+  const clicksInsta = events.filter(e => e.event_type === 'click_instagram').length
+  const clicksContact = clicksWsp + clicksInsta
+
+  const conversionRate = visitsTotal > 0 ? ((clicksContact / visitsTotal) * 100).toFixed(1) : '0.0'
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      className="rounded-[32px] border border-slate-200 bg-white/80 backdrop-blur-xl p-8 shadow-2xl space-y-6"
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Landing Page</h3>
+          <p className="text-xs font-black uppercase tracking-widest text-slate-400 mt-1">Tráfico & Conversión</p>
+        </div>
+        <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
+          <Activity className="w-6 h-6" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-slate-50 rounded-2xl p-4">
+          <p className="text-[10px] uppercase font-black text-slate-400 mb-1">Visitas Hoy</p>
+          <p className="text-2xl font-black text-slate-900">{loading ? '-' : visitsToday}</p>
+        </div>
+        <div className="bg-slate-50 rounded-2xl p-4">
+          <p className="text-[10px] uppercase font-black text-slate-400 mb-1">Total (90d)</p>
+          <p className="text-2xl font-black text-slate-900">{loading ? '-' : visitsTotal}</p>
+        </div>
+        <div className="bg-green-50 rounded-2xl p-4">
+          <p className="text-[10px] uppercase font-black text-green-600 mb-1">Clicks WhatsApp</p>
+          <p className="text-2xl font-black text-green-700">{loading ? '-' : clicksWsp}</p>
+        </div>
+        <div className="bg-purple-50 rounded-2xl p-4">
+          <p className="text-[10px] uppercase font-black text-purple-600 mb-1">Clicks Instagram</p>
+          <p className="text-2xl font-black text-purple-700">{loading ? '-' : clicksInsta}</p>
+        </div>
+      </div>
+
+      <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+        <span className="text-sm font-bold text-slate-500">Tasa de Conversión</span>
+        <span className="text-xl font-black text-blue-600">{conversionRate}%</span>
+      </div>
+    </motion.div>
+  )
+}
