@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { X, Save, BookOpen, Clock, Calendar, Users, DollarSign, Type, Palette, AlignLeft, User } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
@@ -14,7 +14,9 @@ export type ClassRow = {
   max_students: number | null
   color: string | null
   description: string | null
-  price: number | null
+  price_principal: number | null
+  price_additional: number | null
+  price?: number | null
   created_at?: string | null
 }
 
@@ -34,8 +36,24 @@ const COLOR_OPTIONS = [
   { label: 'Rosa', value: 'pink', bg: 'bg-pink-500' },
 ]
 
-export default function ClassForm({ initial, onCancel, onSaved }: Props) {
-  const [form, setForm] = useState<ClassRow>({
+function getInitialForm(initial?: ClassRow | null): ClassRow {
+  if (initial) {
+    return {
+      name: initial.name ?? '',
+      instructor: initial.instructor ?? '',
+      days: initial.days ?? [],
+      start_time: initial.start_time ?? '',
+      end_time: initial.end_time ?? '',
+      capacity: initial.capacity ?? initial.max_students ?? null,
+      max_students: initial.max_students ?? initial.capacity ?? null,
+      color: initial.color ?? 'blue',
+      description: initial.description ?? '',
+      price_principal: initial.price_principal ?? initial.price ?? null,
+      price_additional: initial.price_additional ?? null,
+      id: initial.id,
+    }
+  }
+  return {
     name: '',
     instructor: '',
     days: [],
@@ -45,27 +63,15 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
     max_students: null,
     color: 'blue',
     description: '',
-    price: null,
-  })
-  const [saving, setSaving] = useState(false)
+    price_principal: null,
+    price_additional: null,
+  }
+}
 
-  useEffect(() => {
-    if (initial) {
-      setForm({
-        name: initial.name ?? '',
-        instructor: initial.instructor ?? '',
-        days: initial.days ?? [],
-        start_time: initial.start_time ?? '',
-        end_time: initial.end_time ?? '',
-        capacity: initial.capacity ?? initial.max_students ?? null,
-        max_students: initial.max_students ?? initial.capacity ?? null,
-        color: initial.color ?? 'blue',
-        description: initial.description ?? '',
-        price: initial.price ?? null,
-        id: initial.id,
-      })
-    }
-  }, [initial])
+export default function ClassForm({ initial, onCancel, onSaved }: Props) {
+  const initialForm = useMemo(() => getInitialForm(initial), [initial])
+  const [form, setForm] = useState<ClassRow>(initialForm)
+  const [saving, setSaving] = useState(false)
 
   const toggleDay = (d: string) => {
     const curr = new Set(form.days ?? [])
@@ -76,7 +82,7 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
 
   const save = async () => {
     if (!form.name.trim()) return
-    if (form.price === null || isNaN(Number(form.price))) return
+    if (form.price_principal === null || isNaN(Number(form.price_principal))) return
 
     setSaving(true)
 
@@ -90,7 +96,9 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
       max_students: form.capacity ?? form.max_students ?? null,
       color: form.color || null,
       description: form.description?.trim() || null,
-      price: Number(form.price),
+      price_principal: Number(form.price_principal),
+      price_additional: form.price_additional === null ? null : Number(form.price_additional),
+      price: Number(form.price_principal), // fallback for old views
     }
 
     const { error } = initial?.id
@@ -105,9 +113,9 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
   const inputClass = "w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-4 pl-11 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all"
 
   return (
-    <div className="bg-white overflow-hidden">
+    <div className="flex flex-col h-full bg-white">
       {/* Header Form */}
-      <div className="bg-slate-900 px-10 py-8 flex items-center justify-between">
+      <div className="shrink-0 bg-slate-900 px-10 py-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-blue-400 border border-white/10">
             <BookOpen className="w-6 h-6" />
@@ -127,7 +135,8 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
         </button>
       </div>
 
-      <div className="p-10 space-y-10">
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-10 space-y-10">
         <div className="grid gap-10 md:grid-cols-2">
           {/* General Section */}
           <section className="space-y-6">
@@ -149,15 +158,30 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
                 />
               </div>
 
-              <div className="relative group">
-                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                <input
-                  type="number"
-                  value={form.price ?? ''}
-                  onChange={(e) => setForm({ ...form, price: e.target.value === '' ? null : Number(e.target.value) })}
-                  placeholder="Precio mensual (inversión) *"
-                  className={inputClass}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="relative group">
+                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                  <input
+                    type="number"
+                    value={form.price_principal ?? ''}
+                    onChange={(e) => setForm({ ...form, price_principal: e.target.value === '' ? null : Number(e.target.value) })}
+                    placeholder="Precio Principal *"
+                    className={inputClass}
+                  />
+                  <div className="absolute -bottom-5 left-1 text-[10px] font-bold text-blue-500 uppercase tracking-widest opacity-0 group-focus-within:opacity-100 transition-opacity">Valor Mensual Base</div>
+                </div>
+
+                <div className="relative group">
+                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                  <input
+                    type="number"
+                    value={form.price_additional ?? ''}
+                    onChange={(e) => setForm({ ...form, price_additional: e.target.value === '' ? null : Number(e.target.value) })}
+                    placeholder="Precio Adicional"
+                    className={inputClass}
+                  />
+                  <div className="absolute -bottom-5 left-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest opacity-0 group-focus-within:opacity-100 transition-opacity">Si se toma como 2da clase</div>
+                </div>
               </div>
 
               <div className="relative group">
@@ -279,31 +303,31 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
             />
           </section>
         </div>
+      </div>
 
-        {/* Footer Actions */}
-        <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-4">
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={save}
-            disabled={saving}
-            className="flex-1 h-16 bg-blue-600 text-white rounded-[24px] font-black uppercase tracking-widest text-sm shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all flex items-center justify-center gap-3"
-          >
-            {saving ? (
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-            ) : (
-              <Save className="h-5 w-5" />
-            )}
-            {saving ? 'Procesando...' : 'Confirmar Clase'}
-          </motion.button>
+      {/* Footer Actions - Sticky */}
+      <div className="shrink-0 p-8 border-t border-slate-100 bg-white flex flex-col sm:flex-row gap-4">
+        <motion.button
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={save}
+          disabled={saving}
+          className="flex-1 h-16 bg-blue-600 text-white rounded-[24px] font-black uppercase tracking-widest text-sm shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all flex items-center justify-center gap-3"
+        >
+          {saving ? (
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          ) : (
+            <Save className="h-5 w-5" />
+          )}
+          {saving ? 'Procesando...' : 'Confirmar Clase'}
+        </motion.button>
 
-          <button
-            onClick={onCancel}
-            className="h-16 px-10 rounded-[24px] border border-slate-200 text-slate-500 font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all"
-          >
-            Cancelar
-          </button>
-        </div>
+        <button
+          onClick={onCancel}
+          className="h-16 px-10 rounded-[24px] border border-slate-200 text-slate-500 font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all"
+        >
+          Cancelar
+        </button>
       </div>
     </div>
   )

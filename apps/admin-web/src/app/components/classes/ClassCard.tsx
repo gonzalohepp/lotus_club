@@ -7,13 +7,13 @@ type Props =
   | { classItem: ClassRow; data?: never; onEdit: () => void; onDelete: () => void }
   | { data: ClassRow; classItem?: never; onEdit: () => void; onDelete: () => void }
 
-const colorSchemes: Record<string, { bg: string, text: string, border: string, glow: string, icon: string }> = {
-  blue: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', glow: 'shadow-blue-500/20', icon: 'text-blue-500' },
-  red: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', glow: 'shadow-red-500/20', icon: 'text-red-500' },
-  green: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', glow: 'shadow-emerald-500/20', icon: 'text-emerald-500' },
-  purple: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', glow: 'shadow-purple-500/20', icon: 'text-purple-500' },
-  orange: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', glow: 'shadow-orange-500/20', icon: 'text-orange-500' },
-  pink: { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200', glow: 'shadow-pink-500/20', icon: 'text-pink-500' },
+const colorSchemes: Record<string, { bg: string, text: string, border: string, glow: string, icon: string, color: string }> = {
+  blue: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', glow: 'shadow-blue-500/40', icon: 'text-blue-500', color: '#3b82f6' },
+  red: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', glow: 'shadow-red-500/40', icon: 'text-red-500', color: '#ef4444' },
+  green: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', glow: 'shadow-emerald-500/40', icon: 'text-emerald-500', color: '#10b981' },
+  purple: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', glow: 'shadow-purple-500/40', icon: 'text-purple-500', color: '#8b5cf6' },
+  orange: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200', glow: 'shadow-orange-500/40', icon: 'text-orange-500', color: '#f97316' },
+  pink: { bg: 'bg-pink-50', text: 'text-pink-700', border: 'border-pink-200', glow: 'shadow-pink-500/40', icon: 'text-pink-500', color: '#ec4899' },
 }
 
 function fmtTime(t?: string | null) {
@@ -31,19 +31,27 @@ export default function ClassCard(props: Props) {
 
   return (
     <motion.div
-      whileHover={{ y: -5 }}
-      className={`group relative overflow-hidden rounded-[32px] border bg-white p-6 shadow-sm transition-all hover:shadow-2xl ${scheme.glow} ${scheme.border} border-opacity-50`}
+      whileHover={{
+        y: -12,
+        boxShadow: `0 25px 60px -12px ${scheme.color}BB`,
+        borderColor: `${scheme.color}AA`
+      }}
+      initial={{ boxShadow: `0 0 0px 0px ${scheme.color}00` }}
+      animate={{
+        boxShadow: `0 12px 40px -5px ${scheme.color}BB`
+      }}
+      style={{ borderColor: `${scheme.color}55` }}
+      className="group relative rounded-[32px] border-2 bg-white p-7 transition-all"
     >
-      {/* Decorative Glow */}
-      <div className={`absolute -right-16 -top-16 h-32 w-32 rounded-full transition-opacity opacity-0 group-hover:opacity-10 blur-3xl ${scheme.bg.replace('50', '500')}`} />
+      {/* Decorative Glow - Moved into a separate absolute container to avoid clipping issue */}
+      <div className="absolute inset-0 rounded-[32px] overflow-hidden pointer-events-none">
+        <div className={`absolute -right-16 -top-16 h-32 w-32 rounded-full transition-opacity opacity-0 group-hover:opacity-15 blur-3xl ${scheme.bg.replace('50', '500')}`} />
+      </div>
 
       {/* Header Area */}
       <div className="flex items-start justify-between mb-6">
         <div className="space-y-1">
-          <div className={`inline-flex items-center rounded-lg ${scheme.bg} px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${scheme.text} ring-1 ring-inset ${scheme.border}`}>
-            Inscripciones Abiertas
-          </div>
-          <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none pt-2">
+          <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none">
             {item?.name}
           </h3>
         </div>
@@ -69,21 +77,20 @@ export default function ClassCard(props: Props) {
         <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
           <div className="flex items-center gap-2 mb-1 text-slate-400">
             <DollarSign className="w-3 h-3" />
-            <span className="text-[10px] font-black uppercase tracking-widest">Inversión</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">Base (P)</span>
           </div>
           <p className="text-lg font-black text-slate-900 leading-none">
-            ${(Number(item?.price) || 0).toLocaleString()}
-            <span className="text-[10px] font-bold text-slate-400 ml-1">/MES</span>
+            ${(Number(item?.price_principal) || 0).toLocaleString()}
           </p>
         </div>
 
         <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
           <div className="flex items-center gap-2 mb-1 text-slate-400">
-            <Users className="w-3 h-3" />
-            <span className="text-[10px] font-black uppercase tracking-widest">Cupos</span>
+            <DollarSign className="w-3 h-3" />
+            <span className="text-[10px] font-black uppercase tracking-widest">Extra (A)</span>
           </div>
           <p className="text-lg font-black text-slate-900 leading-none">
-            {item?.capacity ?? item?.max_students ?? '—'}
+            {item?.price_additional ? `$${Number(item.price_additional).toLocaleString()}` : '—'}
           </p>
         </div>
       </div>
@@ -125,25 +132,12 @@ export default function ClassCard(props: Props) {
       {item?.description && (
         <div className="pt-4 border-t border-slate-100">
           <p className="text-sm text-slate-500 font-medium leading-relaxed line-clamp-2 italic">
-            "{item.description}"
+            &ldquo;{item.description}&rdquo;
           </p>
         </div>
       )}
 
-      {/* Detail Anchor */}
-      <div className="mt-8 flex items-center justify-between">
-        <div className="flex -space-x-2">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="w-7 h-7 rounded-full border-2 border-white bg-slate-200" />
-          ))}
-          <div className="w-7 h-7 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400">
-            +8
-          </div>
-        </div>
-        <button className={`flex items-center gap-1 text-xs font-black uppercase tracking-widest ${scheme.text} hover:translate-x-1 transition-transform`}>
-          Detalles <ChevronRight className="w-3 h-3" />
-        </button>
-      </div>
+      {/* No Footer actions needed per user request */}
     </motion.div>
   )
 }

@@ -65,6 +65,7 @@ export default function QRScannerHtml5({ onDecode, onError, paused = false }: Pr
               qrbox: { width: 280, height: 280 },
               aspectRatio: 1,
               formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } as any,
             (decodedText) => {
               if (lockedRef.current) return

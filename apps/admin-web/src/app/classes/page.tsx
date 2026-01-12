@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import AdminLayout from '../layouts/AdminLayout'
 import { Plus, Search, BookOpen, Layers } from 'lucide-react'
@@ -17,17 +17,19 @@ export default function ClassesPage() {
   const [editing, setEditing] = useState<ClassRow | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true)
     const { data, error } = await supabase
       .from('classes')
-      .select('id,name,instructor,days,start_time,end_time,capacity,max_students,color,description,price,created_at')
+      .select('id,name,instructor,days,start_time,end_time,capacity,max_students,color,description,price,price_principal,price_additional,created_at')
       .order('name', { ascending: true })
     if (!error && data) setItems(data as ClassRow[])
     setLoading(false)
-  }
+  }, [])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+  }, [load])
 
   const filtered = useMemo(() => {
     return items.filter((c) => {
@@ -63,7 +65,7 @@ export default function ClassesPage() {
         <div className="absolute -right-[5%] bottom-[5%] h-[30%] w-[30%] rounded-full bg-indigo-500/5 blur-[100px]" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="relative mx-auto max-w-7xl p-6 md:p-8">
         {/* Header Section */}
         <header className="mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
           <motion.div
@@ -72,14 +74,14 @@ export default function ClassesPage() {
             className="space-y-1"
           >
             <div className="flex items-center gap-2 mb-1">
-              <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-black uppercase tracking-widest text-blue-600 ring-1 ring-inset ring-blue-600/20">
+              <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-900/20 px-2.5 py-0.5 text-xs font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 ring-1 ring-inset ring-blue-600/20 dark:ring-blue-400/20">
                 Administración
               </span>
             </div>
-            <h1 className="text-4xl font-black tracking-tight text-slate-900 md:text-5xl">
-              Gestión de <span className="text-blue-600">Clases</span>
+            <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white md:text-5xl">
+              Gestión de <span className="text-blue-600 dark:text-blue-400">Clases</span>
             </h1>
-            <p className="max-w-md text-slate-500 font-medium">
+            <p className="max-w-md text-slate-500 dark:text-slate-400 font-medium">
               Horarios, instructores y disponibilidad de las actividades del Dojo.
             </p>
           </motion.div>
@@ -109,7 +111,7 @@ export default function ClassesPage() {
             <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
             <input
               type="text"
-              className="h-14 w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-4 text-slate-900 font-medium shadow-sm outline-none ring-blue-500/10 transition-all focus:border-blue-500/50 focus:ring-4"
+              className="h-14 w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white pl-12 pr-4 font-medium shadow-sm outline-none ring-blue-500/10 transition-all focus:border-blue-500/50 focus:ring-4"
               placeholder="Buscar por nombre, instructor o descripción..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -121,8 +123,8 @@ export default function ClassesPage() {
               <Layers className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 pointer-events-none" />
               <select
                 value={colorFilter}
-                onChange={(e) => setColorFilter(e.target.value as any)}
-                className="h-14 w-full appearance-none rounded-2xl border border-slate-200 bg-white pl-11 pr-10 text-sm font-bold text-slate-700 outline-none ring-blue-500/10 transition-all focus:border-blue-500/50 focus:ring-4"
+                onChange={(e) => setColorFilter(e.target.value as typeof colorFilter)}
+                className="h-14 w-full appearance-none rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-11 pr-10 text-sm font-bold text-slate-700 dark:text-slate-200 outline-none ring-blue-500/10 transition-all focus:border-blue-500/50 focus:ring-4"
               >
                 <option value="all">Todos los colores</option>
                 <option value="blue">Azul</option>
@@ -206,9 +208,9 @@ export default function ClassesPage() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden"
+              className="relative w-full max-w-4xl h-full max-h-[85vh] flex flex-col"
             >
-              <div className="h-full overflow-y-auto custom-scrollbar rounded-[32px] bg-white shadow-2xl">
+              <div className="flex-1 rounded-[32px] bg-white shadow-2xl overflow-hidden">
                 <ClassForm
                   initial={editing}
                   onCancel={() => setShowForm(false)}

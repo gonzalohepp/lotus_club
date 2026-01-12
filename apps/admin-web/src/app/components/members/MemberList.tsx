@@ -95,7 +95,12 @@ export default function MemberList({
                   </div>
                   <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-500 border border-slate-100 text-[10px] font-black uppercase tracking-widest">
                     <Shield className="w-3 h-3" />
-                    {m.membership_type || 'Manual'}
+                    {(m.membership_type && ({
+                      monthly: 'MENSUAL',
+                      quarterly: 'TRIMESTRAL',
+                      semiannual: 'SEMESTRAL',
+                      annual: 'ANUAL'
+                    } as Record<string, string>)[m.membership_type]) || 'MANUAL'}
                   </div>
                 </div>
 

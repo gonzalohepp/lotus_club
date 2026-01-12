@@ -26,11 +26,12 @@ export const AccessLog = {
 
     if (error) {
       // Log entendible (a veces viene {} si no tenés permiso)
+      const pgError = error as { message?: string; details?: string; hint?: string; code?: string }
       console.error('[AccessLog.list] supabase error:', {
-        message: (error as any)?.message,
-        details: (error as any)?.details,
-        hint: (error as any)?.hint,
-        code: (error as any)?.code
+        message: pgError.message,
+        details: pgError.details,
+        hint: pgError.hint,
+        code: pgError.code
       })
       return []
     }

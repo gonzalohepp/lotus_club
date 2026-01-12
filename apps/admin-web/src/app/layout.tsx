@@ -30,33 +30,42 @@ export const metadata: Metadata = {
       : undefined,
 }
 
+import { Providers } from "./providers"
+
+// ... imports
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es" suppressHydrationWarning={true}>
       <head>
+        {/* ... script ... */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              (function() {
-                try {
-                  var theme = localStorage.getItem('theme');
-                  var supportDark = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
-                  if (theme === 'dark' || (!theme && supportDark)) {
-                    document.documentElement.classList.add('dark');
-                  }
-                } catch (e) {}
-              })();
-            `,
+               (function() {
+                 try {
+                   var theme = localStorage.getItem('theme');
+                   var supportDark = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+                   if (theme === 'dark' || (!theme && supportDark)) {
+                     document.documentElement.classList.add('dark');
+                   }
+                 } catch (e) {}
+               })();
+             `,
           }}
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-blue-500/30`}>
-        {/* El fondo decorativo ahora se gestiona mejor en cada layout o con variables de CSS */}
-        <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-          {children}
-        </div>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-blue-500/30`}
+        suppressHydrationWarning
+      >
+        <Providers>
+          <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+            {children}
+          </div>
+        </Providers>
       </body>
     </html>
   )

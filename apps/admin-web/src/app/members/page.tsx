@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { supabase } from '@/lib/supabaseClient'
 import AdminLayout from '../layouts/AdminLayout'
 import { Plus, Search, Check, Users, UserPlus, Filter, X } from 'lucide-react'
@@ -11,7 +10,7 @@ import MemberFilters from '../components/members/MemberFilters'
 import MemberList from '../components/members/MemberList'
 import MemberModal from '../components/members/MemberModal'
 
-import { MemberRow as Row, ClassRow } from '@/types/member'
+import { MemberRow as Row, ClassRow, MemberPayload } from '@/types/member'
 
 function SuccessToast({ message, onClose }: { message: string, onClose: () => void }) {
   useEffect(() => {
@@ -147,18 +146,7 @@ export default function MembersPage() {
   }
 
   /** Paso 4.2: upsert de membresía con onConflict: 'member_id' */
-  const onSubmit = async (payload: {
-    full_name: string
-    email: string
-    phone?: string
-    emergency_contact?: string
-    notes?: string
-    membership_type: 'mensual' | 'trimestral' | 'semestral' | 'anual'
-    last_payment_date?: string
-    next_payment_due?: string
-    classes: number[]
-    access_code?: string
-  }) => {
+  const onSubmit = async (payload: MemberPayload) => {
     const typeMap: Record<string, 'monthly' | 'quarterly' | 'semiannual' | 'annual'> = {
       mensual: 'monthly',
       trimestral: 'quarterly',
@@ -215,7 +203,11 @@ export default function MembersPage() {
       if (payload.classes?.length) {
         await supabase
           .from('class_enrollments')
-          .insert(payload.classes.map((class_id) => ({ user_id: userId, class_id })))
+          .insert(payload.classes.map((c) => ({
+            user_id: userId,
+            class_id: c.class_id,
+            is_principal: c.is_principal
+          })))
       }
 
       setOpen(false)
@@ -225,51 +217,36 @@ export default function MembersPage() {
     }
 
     // CREAR
-    const { data: created, error } = await supabase
-      .from('profiles')
-      .insert({
-        user_id: crypto.randomUUID(),
-        role: 'member',
-        first_name,
-        last_name,
-        email: payload.email,
-        phone: payload.phone ?? null,
-        emergency_phone: payload.emergency_contact ?? null,
-        notes: payload.notes ?? null,
-        access_code
+    try {
+      const res = await fetch('/api/members/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          first_name,
+          last_name,
+          email: payload.email,
+          phone: payload.phone ?? null,
+          emergency_phone: payload.emergency_contact ?? null,
+          notes: payload.notes ?? null,
+          access_code,
+          membership_type: payload.membership_type,
+          last_payment_date: payload.last_payment_date,
+          next_payment_due: payload.next_payment_due,
+          classes: payload.classes
+        })
       })
-      .select('user_id')
-      .maybeSingle()
 
-    if (error || !created) {
-      alert('Error creando miembro: ' + (error?.message ?? 'desconocido'))
-      return
-    }
-    const userId = created.user_id as string
+      const data = await res.json()
 
-    // membresía (upsert garantiza una por miembro)
-    const { error: memErr } = await supabase
-      .from('memberships')
-      .upsert(
-        {
-          member_id: userId,
-          type: typeMap[payload.membership_type],
-          start_date:
-            payload.last_payment_date ?? new Date().toISOString().slice(0, 10),
-          end_date: payload.next_payment_due ?? null
-        },
-        { onConflict: 'member_id' }
-      )
-    if (memErr) {
-      alert('Error guardando membresía: ' + memErr.message)
-      return
-    }
+      if (!res.ok) {
+        throw new Error(data.error || 'Error desconocido')
+      }
 
-    // clases
-    if (payload.classes?.length) {
-      await supabase
-        .from('class_enrollments')
-        .insert(payload.classes.map((class_id) => ({ user_id: userId, class_id })))
+      setOpen(false)
+      await load()
+      setSuccessMsg('Usuario creado correctamente')
+    } catch (error: any) {
+      alert('Error creando miembro: ' + error.message)
     }
 
     setOpen(false)
@@ -284,17 +261,17 @@ export default function MembersPage() {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none" />
 
-        <div className="relative z-10">
+        <div className="relative z-10 p-6 md:p-8">
           <header className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 text-xs font-bold tracking-widest uppercase mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-bold tracking-widest uppercase mb-4">
                 <Users className="w-3 h-3" />
                 ADMINISTRACIÓN
               </div>
-              <h1 className="text-4xl font-black text-slate-900 tracking-tight md:text-5xl">
-                Gestión de <span className="text-blue-600">Miembros</span>
+              <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight md:text-5xl">
+                Gestión de <span className="text-blue-600 dark:text-blue-400">Miembros</span>
               </h1>
-              <p className="mt-2 text-slate-500 font-medium">
+              <p className="mt-2 text-slate-500 dark:text-slate-400 font-medium">
                 Visualiza, filtra y gestiona todos los alumnos del Dojo al instante.
               </p>
             </div>
@@ -317,16 +294,16 @@ export default function MembersPage() {
           <div className="mb-8 space-y-4">
             <div className="group relative">
               <div className="absolute inset-0 bg-blue-500/5 rounded-2xl blur-xl group-focus-within:bg-blue-500/10 transition-colors" />
-              <div className="relative flex items-center bg-white/70 backdrop-blur-md border border-slate-200 rounded-2xl p-2 shadow-sm focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/5 transition-all">
+              <div className="relative flex items-center bg-white/70 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-2xl p-2 shadow-sm focus-within:border-blue-500/50 focus-within:ring-4 focus-within:ring-blue-500/5 transition-all">
                 <Search className="ml-4 h-6 w-6 text-slate-400" />
                 <input
                   placeholder="Buscar por nombre, email, teléfono o código…"
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  className="h-12 w-full bg-transparent border-none px-4 focus:ring-0 text-slate-900 placeholder:text-slate-400 font-medium"
+                  className="h-12 w-full bg-transparent border-none px-4 focus:ring-0 text-slate-900 dark:text-white placeholder:text-slate-400 font-medium"
                 />
                 {q && (
-                  <button onClick={() => setQ('')} className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 transition-colors mr-2">
+                  <button onClick={() => setQ('')} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-slate-400 transition-colors mr-2">
                     <X className="w-5 h-5" />
                   </button>
                 )}
@@ -334,7 +311,7 @@ export default function MembersPage() {
             </div>
 
             <div className="flex items-center gap-3 overflow-x-auto pb-2 custom-scrollbar">
-              <div className="flex items-center gap-2 px-3 py-2 bg-slate-100/50 border border-slate-200/50 rounded-xl text-slate-500">
+              <div className="flex items-center gap-2 px-3 py-2 bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700 rounded-xl text-slate-500 dark:text-slate-400">
                 <Filter className="w-4 h-4" />
                 <span className="text-xs font-bold uppercase tracking-widest">Filtros</span>
               </div>

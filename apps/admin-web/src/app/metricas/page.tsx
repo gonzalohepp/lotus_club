@@ -6,11 +6,11 @@ import { supabase } from '@/lib/supabaseClient'
 import AdminLayout from '../layouts/AdminLayout'
 import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, AreaChart, Area, Legend
+  PieChart, Pie, Cell, AreaChart, Area, Legend, BarChart, Bar
 } from 'recharts'
 import {
   TrendingUp, Users, DollarSign, Wallet, AlertTriangle,
-  Activity, Receipt
+  Activity, Receipt, ArrowUpRight, ArrowDownRight, Info
 } from 'lucide-react'
 
 /* =============== helpers fecha / número =============== */
@@ -195,7 +195,7 @@ export default function MetricasPage() {
 
   /* ================= Gráficos ================= */
 
-  const revenueDaily = useMemo(() => {
+  const revenueTrend = useMemo(() => {
     const start = addDays(today(), -30)
     const map = new Map<string, number>()
     for (let i = 0; i <= 30; i++) {
@@ -210,30 +210,23 @@ export default function MetricasPage() {
       }
     })
     return Array.from(map.entries()).map(([k, v]) => ({
-      day: shortDay(new Date(k + 'T00:00:00')),
-      revenue: v,
+      date: shortDay(new Date(k + 'T00:00:00')),
+      amount: v,
     }))
   }, [payments])
 
-  const monthSeq = useMemo(() => {
-    const now = startOfMonth()
-    const out: Date[] = []
-    for (let i = 5; i >= 0; i--) {
-      out.push(new Date(now.getFullYear(), now.getMonth() - i, 1))
-    }
-    return out
-  }, [])
-
-  /*
-  const performanceBars = useMemo(() => {
-    return monthSeq.map(m => {
-      const s = startOfMonth(m)
-      const e = addDays(endOfMonth(m), 1)
-      const altas = memberships.filter(x => x.start_date && tzDate(x.start_date) >= s && tzDate(x.start_date) < e)
-      return { month: monthLabel(m), altas: altas.length }
+  const attendanceByClass = useMemo(() => {
+    const actives: Record<number, number> = {}
+    enrollments.forEach(e => {
+      if (activeUserIds.has(e.user_id)) {
+        actives[e.class_id] = (actives[e.class_id] ?? 0) + 1
+      }
     })
-  }, [memberships, monthSeq])
-  */
+    return classes.map(c => ({
+      className: c.name,
+      count: actives[c.id] ?? 0,
+    })).filter(c => c.count > 0)
+  }, [classes, enrollments, activeUserIds])
 
   const studentsByClass = useMemo(() => {
     const actives: Record<number, number> = {}
@@ -252,108 +245,171 @@ export default function MetricasPage() {
 
   return (
     <AdminLayout active="/metricas">
-      {/* Background Decor */}
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -left-[10%] -top-[10%] h-[40%] w-[40%] rounded-full bg-indigo-500/5 blur-[120px]" />
-        <div className="absolute -right-[5%] bottom-[5%] h-[30%] w-[30%] rounded-full bg-purple-500/5 blur-[100px]" />
-      </div>
-
-      <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Header */}
-        <header className="mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-1"
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-black uppercase tracking-widest text-indigo-600 ring-1 ring-inset ring-indigo-600/20">
-                Performance
-              </span>
-            </div>
-            <h1 className="text-4xl font-black tracking-tight text-slate-900 md:text-5xl">
-              Dashboard de <span className="text-indigo-600">Métricas</span>
-            </h1>
-            <p className="max-w-md text-slate-500 font-medium italic">
-              &quot;Lo que no se mide, no se puede mejorar.&quot;
-            </p>
-          </motion.div>
-        </header>
-
-        {/* KPI Grid */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 mb-10">
-          <KpiCard
-            label="Socios Activos"
-            value={activeMembers}
-            icon={<Users />}
-            loading={loading}
-            color="indigo"
-          />
-          <KpiCard
-            label="Recaudación Mes"
-            value={fmtMoney(revenueThisMonth)}
-            icon={<DollarSign />}
-            loading={loading}
-            color="emerald"
-            trend={growth}
-          />
-          <KpiCard
-            label="Alumnos en Riesgo"
-            value={membersAtRisk}
-            icon={<AlertTriangle />}
-            loading={loading}
-            color="rose"
-            description="Sin asistencia en 10 días"
-          />
-          <KpiCard
-            label="Promedio x Socio"
-            value={fmtMoney(averagePerMember)}
-            icon={<Wallet />}
-            loading={loading}
-            color="blue"
-          />
+      <div className="relative isolate min-h-screen bg-[#FDFDFD] dark:bg-[#0a0a0a] overflow-hidden transition-colors duration-500">
+        {/* Background Elements */}
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[100px] opacity-50 dark:opacity-20" />
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px] opacity-50 dark:opacity-20" />
         </div>
 
-        {/* Main Content Sections */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-          {/* Revenue Chart */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="lg:col-span-2 rounded-[32px] border border-slate-200 bg-white/80 backdrop-blur-xl p-8 shadow-2xl"
-          >
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Evolución de Ingresos</h3>
-                <p className="text-xs font-black uppercase tracking-widest text-slate-400 mt-1">Últimos 30 días</p>
+        <div className="relative mx-auto max-w-7xl p-6 md:p-8">
+          {/* Header Section */}
+          <header className="mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-1"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <span className="inline-flex items-center rounded-full bg-indigo-50 dark:bg-indigo-900/20 px-2.5 py-0.5 text-xs font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 ring-1 ring-inset ring-indigo-600/20 dark:ring-indigo-400/20">
+                  Analytics
+                </span>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                <Activity className="w-6 h-6" />
-              </div>
-            </div>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={revenueDaily}>
-                  <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1} />
-                      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-                    formatter={(v: any) => [fmtMoney(Number(v)), 'Ingresos']}
-                  />
-                  <Area type="monotone" dataKey="revenue" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </motion.div>
+              <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white md:text-5xl">
+                Dashboard de <span className="text-indigo-600 dark:text-indigo-400">Métricas</span>
+              </h1>
+              <p className="max-w-md text-slate-500 dark:text-slate-400 font-medium italic">
+                "Lo que no se mide, no se puede mejorar."
+              </p>
+            </motion.div>
 
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-3"
+            >
+              <div className="px-4 py-2 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                  En tiempo real
+                </span>
+              </div>
+            </motion.div>
+          </header>
+
+          {/* Quick Stats Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+            <KpiCard
+              label="Socios Activos"
+              value={activeMembers}
+              icon={<Users />}
+              color="indigo"
+              loading={loading}
+            />
+            <KpiCard
+              label="Recaudación Mes"
+              value={fmtMoney(revenueThisMonth)}
+              icon={<DollarSign />}
+              loading={loading}
+              color="emerald"
+              trend={growth}
+            />
+            <KpiCard
+              label="Alumnos en Riesgo"
+              value={membersAtRisk}
+              icon={<AlertTriangle />}
+              loading={loading}
+              color="rose"
+              description="Sin asistencia en 10 días"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            {/* Class Attendance Chart */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="p-8 rounded-[32px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl"
+            >
+              <h3 className="text-lg font-black text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                  <TrendingUp className="w-5 h-5" />
+                </span>
+                Asistencia por Clase (Últimos 30 días)
+              </h3>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={attendanceByClass}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.5} />
+                    <XAxis
+                      dataKey="className"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#64748B', fontSize: 11, fontWeight: 700 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#64748B', fontSize: 11, fontWeight: 700 }}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar
+                      dataKey="count"
+                      fill="#6366f1"
+                      radius={[6, 6, 0, 0]}
+                      barSize={40}
+                    >
+                      {attendanceByClass.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={['#6366F1', '#8B5CF6', '#EC4899'][index % 3]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </motion.div>
+
+            {/* Revenue Trend Chart */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="p-8 rounded-[32px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl"
+            >
+              <h3 className="text-lg font-black text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+                  <DollarSign className="w-5 h-5" />
+                </span>
+                Ingresos vs Mes Anterior
+              </h3>
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={revenueTrend}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.5} />
+                    <XAxis
+                      dataKey="date"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#64748B', fontSize: 11, fontWeight: 700 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#64748B', fontSize: 11, fontWeight: 700 }}
+                      tickFormatter={(value) => `$${value}`}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area
+                      type="monotone"
+                      dataKey="amount"
+                      stroke="#10B981"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorRevenue)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </motion.div>
+          </div>
           {/* Distribution Pie */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -431,38 +487,125 @@ export default function MetricasPage() {
   )
 }
 
-/* =============== subcomponentes =============== */
+/* ======================== Components ======================== */
 
-function KpiCard({ label, value, icon, trend, description, color, loading }: any) {
+function KpiCard({ label, value, icon, color, loading, trend, description }: any) {
   const colors: any = {
-    indigo: 'bg-indigo-50 text-indigo-600 ring-indigo-500/10',
-    emerald: 'bg-emerald-50 text-emerald-600 ring-emerald-500/10',
-    rose: 'bg-rose-50 text-rose-600 ring-rose-500/10',
-    blue: 'bg-blue-50 text-blue-600 ring-blue-500/10'
+    indigo: 'bg-indigo-50 text-indigo-600 ring-indigo-500/10 dark:bg-indigo-900/30 dark:text-indigo-400 dark:ring-indigo-500/30',
+    emerald: 'bg-emerald-50 text-emerald-600 ring-emerald-500/10 dark:bg-emerald-900/30 dark:text-emerald-400 dark:ring-emerald-500/30',
+    rose: 'bg-rose-50 text-rose-600 ring-rose-500/10 dark:bg-rose-900/30 dark:text-rose-400 dark:ring-rose-500/30'
   }
 
   return (
     <motion.div
       whileHover={{ y: -5 }}
-      className="group relative overflow-hidden rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-2xl"
+      className="group relative overflow-hidden rounded-[32px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-8 shadow-sm transition-all hover:shadow-2xl"
     >
       <div className="flex items-start justify-between mb-4">
-        <div className={`p-3 rounded-2xl ${colors[color]} ring-1 ring-inset`}>
+        <div className={`p-4 rounded-2xl ${colors[color]} ring-1 ring-inset transition-colors`}>
           {icon}
         </div>
-        {trend !== undefined && (
-          <div className={`flex items-center gap-1 text-xs font-black ${trend >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-            <TrendingUp className={`w-3 h-3 ${trend < 0 ? 'rotate-180' : ''}`} />
-            {Math.abs(trend).toFixed(0)}%
+        {trend && (
+          <div className={`flex items-center gap-1 text-xs font-black uppercase tracking-wider px-2 py-1 rounded-full ${trend > 0
+            ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
+            : 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400'
+            }`}>
+            {trend > 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+            {Math.abs(trend)}%
           </div>
         )}
       </div>
+
       <div>
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{label}</p>
-        <div className="text-2xl font-black text-slate-900">
-          {loading ? <div className="h-8 w-24 bg-slate-100 animate-pulse rounded-lg" /> : value}
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">{label}</p>
+        <div className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+          {loading ? <div className="h-10 w-32 bg-slate-100 dark:bg-slate-700 animate-pulse rounded-xl" /> : value}
         </div>
-        {description && <p className="text-[10px] font-medium text-slate-500 mt-1 italic">{description}</p>}
+        {description && (
+          <p className="mt-2 text-xs font-bold text-slate-400 flex items-center gap-1">
+            <Info className="w-3 h-3" />
+            {description}
+          </p>
+        )}
+      </div>
+    </motion.div>
+  )
+}
+
+function CustomTooltip({ active, payload, label }: any) {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-xl">
+        <p className="opacity-50 uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-lg">
+          {typeof payload[0].value === 'number' && payload[0].value > 1000
+            ? fmtMoney(payload[0].value)
+            : payload[0].value}
+        </p>
+      </div>
+    )
+  }
+  return null
+}
+
+function LandingMetricsCard({ events, loading }: any) {
+  if (loading) return (
+    <div className="w-full h-40 bg-slate-100 dark:bg-slate-800 animate-pulse rounded-[32px]" />
+  )
+
+  const todayStr = new Date().toISOString().slice(0, 10)
+
+  const visitorCount = events.filter((e: any) => e.event_type === 'page_view').length
+  const clickCount = events.filter((e: any) => e.event_type === 'cta_click' || e.event_type === 'click_whatsapp' || e.event_type === 'click_instagram').length
+  const conversionRate = visitorCount > 0 ? ((clickCount / visitorCount) * 100).toFixed(1) : 0
+
+  const visitsToday = events.filter((e: any) => e.event_type === 'page_view' && e.created_at.startsWith(todayStr)).length
+  const visitsTotal = visitorCount
+  const clicksWsp = events.filter((e: any) => e.event_type === 'click_whatsapp').length
+  const clicksInsta = events.filter((e: any) => e.event_type === 'click_instagram').length
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-slate-900 to-slate-800 p-8 text-white shadow-2xl"
+    >
+      <div className="absolute top-0 right-0 p-3 opacity-10">
+        <Activity className="w-64 h-64" />
+      </div>
+
+      <div className="relative z-10">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="px-3 py-1 rounded-full bg-white/10 text-[10px] font-black uppercase tracking-widest border border-white/10">
+            Marketing
+          </span>
+        </div>
+        <h3 className="text-2xl font-black tracking-tight mb-1">Landing Page Performance</h3>
+        <p className="text-slate-400 font-medium text-sm mb-8">Métricas de conversión y tráfico web</p>
+
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="bg-slate-50 rounded-2xl p-4">
+            <p className="text-[10px] uppercase font-black text-slate-400 mb-1">Visitas Hoy</p>
+            <p className="text-2xl font-black text-slate-900">{visitsToday}</p>
+          </div>
+          <div className="bg-slate-50 rounded-2xl p-4">
+            <p className="text-[10px] uppercase font-black text-slate-400 mb-1">Total (90d)</p>
+            <p className="text-2xl font-black text-slate-900">{visitsTotal}</p>
+          </div>
+          <div className="bg-green-50 rounded-2xl p-4">
+            <p className="text-[10px] uppercase font-black text-green-600 mb-1">Clicks WhatsApp</p>
+            <p className="text-2xl font-black text-green-700">{clicksWsp}</p>
+          </div>
+          <div className="bg-purple-50 rounded-2xl p-4">
+            <p className="text-[10px] uppercase font-black text-purple-600 mb-1">Clicks Instagram</p>
+            <p className="text-2xl font-black text-purple-700">{clicksInsta}</p>
+          </div>
+        </div>
+
+        <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+          <span className="text-sm font-bold text-slate-500">Tasa de Conversión</span>
+          <span className="text-xl font-black text-blue-600">{conversionRate}%</span>
+        </div>
       </div>
     </motion.div>
   )
@@ -485,61 +628,3 @@ function StatLine({ label, value, icon }: any) {
 function ClockIcon() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> }
 function ZapIcon() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> }
 function UsersIcon() { return <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg> }
-
-function LandingMetricsCard({ events, loading }: { events: LandingEvent[], loading: boolean }) {
-  // Calculos
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  const visitsTotal = events.filter(e => e.event_type === 'visit').length
-  const visitsToday = events.filter(e => e.event_type === 'visit' && new Date(e.created_at) >= today).length
-
-  const clicksWsp = events.filter(e => e.event_type === 'click_whatsapp').length
-  const clicksInsta = events.filter(e => e.event_type === 'click_instagram').length
-  const clicksContact = clicksWsp + clicksInsta
-
-  const conversionRate = visitsTotal > 0 ? ((clicksContact / visitsTotal) * 100).toFixed(1) : '0.0'
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 }}
-      className="rounded-[32px] border border-slate-200 bg-white/80 backdrop-blur-xl p-8 shadow-2xl space-y-6"
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Landing Page</h3>
-          <p className="text-xs font-black uppercase tracking-widest text-slate-400 mt-1">Tráfico & Conversión</p>
-        </div>
-        <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
-          <Activity className="w-6 h-6" />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-slate-50 rounded-2xl p-4">
-          <p className="text-[10px] uppercase font-black text-slate-400 mb-1">Visitas Hoy</p>
-          <p className="text-2xl font-black text-slate-900">{loading ? '-' : visitsToday}</p>
-        </div>
-        <div className="bg-slate-50 rounded-2xl p-4">
-          <p className="text-[10px] uppercase font-black text-slate-400 mb-1">Total (90d)</p>
-          <p className="text-2xl font-black text-slate-900">{loading ? '-' : visitsTotal}</p>
-        </div>
-        <div className="bg-green-50 rounded-2xl p-4">
-          <p className="text-[10px] uppercase font-black text-green-600 mb-1">Clicks WhatsApp</p>
-          <p className="text-2xl font-black text-green-700">{loading ? '-' : clicksWsp}</p>
-        </div>
-        <div className="bg-purple-50 rounded-2xl p-4">
-          <p className="text-[10px] uppercase font-black text-purple-600 mb-1">Clicks Instagram</p>
-          <p className="text-2xl font-black text-purple-700">{loading ? '-' : clicksInsta}</p>
-        </div>
-      </div>
-
-      <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-        <span className="text-sm font-bold text-slate-500">Tasa de Conversión</span>
-        <span className="text-xl font-black text-blue-600">{conversionRate}%</span>
-      </div>
-    </motion.div>
-  )
-}

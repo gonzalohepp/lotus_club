@@ -19,4 +19,28 @@ export type MemberRow = {
 export type ClassRow = {
     id: number
     name: string
+    is_principal?: boolean
+    price_principal?: number
+    price_additional?: number
+}
+
+export type MemberPayload = {
+    full_name: string
+    email: string
+    phone?: string
+    access_code?: string
+    classes: { class_id: number; is_principal: boolean }[]
+    membership_type: 'mensual' | 'trimestral' | 'semestral' | 'anual'
+    last_payment_date?: string
+    next_payment_due?: string
+    emergency_contact?: string
+    notes?: string
+}
+
+export type ClassOption = {
+    id: number
+    name: string
+    price_principal: number | null
+    price_additional: number | null
+    color: string | null
 }

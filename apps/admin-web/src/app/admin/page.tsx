@@ -6,8 +6,8 @@ import StatsCard from '../components/dashboard/StatsCard'
 import RecentActivity from '../components/dashboard/RecentActivity'
 import ExpiringMembers from '../components/dashboard/ExpiringMembers'
 import RecentAccess from '../components/dashboard/RecentAccess'
-import { Users, UserCheck, UserX, DollarSign, ClipboardCheck, Plus, Zap, ArrowRight, Activity } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { Users, UserCheck, UserX, DollarSign, ClipboardCheck, Plus, Clock, ArrowRight, Activity } from 'lucide-react'
+import { motion } from 'framer-motion'
 import Link from 'next/link'
 
 
@@ -80,20 +80,37 @@ export default function AdminDashboard() {
 
       setStats(s as Stats)
 
-      const mappedPayments = (p ?? []).map((r: any) => ({
-        ...r,
-        profiles: Array.isArray(r.profiles) ? r.profiles[0] : r.profiles
-      })) as PayRow[]
+      const mappedPayments = (p ?? []).map((r) => {
+        const row = r as {
+          amount: number
+          method: string | null
+          paid_at: string
+          profiles: Record<string, unknown> | Record<string, unknown>[] | null
+        }
+        return {
+          ...row,
+          profiles: Array.isArray(row.profiles) ? row.profiles[0] : row.profiles
+        }
+      }) as PayRow[]
       setPayments(mappedPayments)
 
-      const normalized = (a ?? []).map((row: any) => ({
-        ...row,
-        profiles: Array.isArray(row.profiles) ? row.profiles[0] : row.profiles,
-        result: normalizeResult(row.result),
-      })) as AccessRow[]
+      const normalized = (a ?? []).map((row) => {
+        const r = row as {
+          scanned_at: string
+          result: string | null
+          reason: string | null
+          profiles: Record<string, unknown> | Record<string, unknown>[] | null
+        }
+        return {
+          ...r,
+          profiles: Array.isArray(r.profiles) ? r.profiles[0] : r.profiles,
+          result: normalizeResult(r.result),
+        }
+      }) as AccessRow[]
       setAccess(normalized)
-    } catch (e: any) {
-      setError(e?.message ?? 'Error cargando dashboard')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Error cargando dashboard'
+      setError(msg)
     } finally {
       setLoading(false)
     }
@@ -158,7 +175,7 @@ export default function AdminDashboard() {
                 Dashboard general - <span className="text-blue-600 dark:text-blue-400">Beleza Dojo</span>
               </h1>
               <p className="text-slate-500 text-lg font-medium flex items-center gap-2">
-                <Zap className="w-4 h-4 text-amber-500 fill-current" />
+                <Clock className="w-4 h-4 text-blue-500" />
                 Actualizado en tiempo real • {new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}
               </p>
             </div>

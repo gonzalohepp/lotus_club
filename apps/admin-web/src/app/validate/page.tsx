@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import AdminLayout from '../layouts/AdminLayout'
 import { supabase } from '@/lib/supabaseClient'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { CheckCircle, XCircle, RefreshCw, Camera, ShieldCheck, Zap } from 'lucide-react'
@@ -288,8 +287,8 @@ function ValidateContent() {
                   <QRScannerHtml5
                     paused={paused}
                     onDecode={handleDecode}
-                    onError={(e: any) => {
-                      const msg = String(e?.message || e)
+                    onError={(e: unknown) => {
+                      const msg = String(e instanceof Error ? e.message : e)
                       if (
                         msg.includes('scanner is not paused') ||
                         msg.includes('scanner is not scanning') ||

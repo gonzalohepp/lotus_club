@@ -73,38 +73,36 @@ export function ScheduleGrid() {
   const martialDays =
     currentSchedule.type === "martiales"
       ? currentSchedule.days.map((day, dayIndex) => {
-          const classes = currentSchedule.rows
-            .map((row) => row[dayIndex])
-            .filter((cell) => cell && cell.trim().length > 0)
-          return { day, classes }
-        })
+        const classes = currentSchedule.rows
+          .map((row) => row[dayIndex])
+          .filter((cell) => cell && cell.trim().length > 0)
+        return { day, classes }
+      })
       : []
 
   return (
     <div>
       {/* Tabs */}
-      <div className="flex justify-center gap-4 mb-8 flex-wrap">
+      <div className="flex justify-center gap-2 md:gap-4 mb-6 md:mb-8 flex-wrap">
         <Button
           onClick={() => setActiveTab("martiales")}
-          className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300 ${
-            activeTab === "martiales"
-              ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
-              : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-          }`}
+          className={`flex-1 sm:flex-none px-4 md:px-8 py-2 md:py-3 rounded-xl text-xs md:text-base font-semibold transition-all duration-300 ${activeTab === "martiales"
+            ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
+            : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+            }`}
           type="button"
         >
-          BJJ / Grappling / MMA / Judo
+          BJJ / MMA / Judo
         </Button>
         <Button
           onClick={() => setActiveTab("acondicionamiento")}
-          className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300 ${
-            activeTab === "acondicionamiento"
-              ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
-              : "bg-slate-800 text-slate-300 hover:bg-slate-700"
-          }`}
+          className={`flex-1 sm:flex-none px-4 md:px-8 py-2 md:py-3 rounded-xl text-xs md:text-base font-semibold transition-all duration-300 ${activeTab === "acondicionamiento"
+            ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
+            : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+            }`}
           type="button"
         >
-          Acondicionamiento Físico
+          Acondicionamiento
         </Button>
       </div>
 
@@ -115,10 +113,10 @@ export function ScheduleGrid() {
         transition={{ duration: 0.3 }}
       >
         <Card className="bg-slate-900/60 backdrop-blur-sm border-slate-800 overflow-hidden">
-          <CardContent className="p-8">
+          <CardContent className="p-4 md:p-8">
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-white mb-2">{currentSchedule.title}</h3>
-              <p className="text-slate-400">{currentSchedule.description}</p>
+              <h3 className="text-xl md:text-2xl font-bold text-white mb-2">{currentSchedule.title}</h3>
+              <p className="text-sm md:text-base text-slate-400">{currentSchedule.description}</p>
             </div>
 
             {/* ACONDICIONAMIENTO: queda en tabla como antes */}

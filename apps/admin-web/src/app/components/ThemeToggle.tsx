@@ -1,31 +1,34 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useLayoutEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sun, Moon } from 'lucide-react'
 
+function getInitialTheme(): boolean {
+    if (typeof window === 'undefined') return false
+    const theme = localStorage.getItem('theme')
+    return theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+}
+
 export default function ThemeToggle() {
-    const [isDark, setIsDark] = useState(false)
+    const [isDark, setIsDark] = useState(getInitialTheme)
 
-    useEffect(() => {
-        // Check initial theme
-        const theme = localStorage.getItem('theme')
-        const dark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)
-        setIsDark(dark)
-        if (dark) document.documentElement.classList.add('dark')
-    }, [])
-
-    const toggleTheme = () => {
-        const next = !isDark
-        setIsDark(next)
-        if (next) {
+    useLayoutEffect(() => {
+        // Sync DOM with state (this is allowed - updating external system)
+        if (isDark) {
             document.documentElement.classList.add('dark')
-            localStorage.setItem('theme', 'dark')
         } else {
             document.documentElement.classList.remove('dark')
-            localStorage.setItem('theme', 'light')
         }
-    }
+    }, [isDark])
+
+    const toggleTheme = useCallback(() => {
+        setIsDark(prev => {
+            const next = !prev
+            localStorage.setItem('theme', next ? 'dark' : 'light')
+            return next
+        })
+    }, [])
 
     return (
         <button

@@ -1,7 +1,6 @@
 'use client';
 
-import { User, Layers, CalendarDays, Search } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { User, Layers, CalendarDays } from 'lucide-react';
 
 type Opt = { value: string; label: string };
 type Props = {

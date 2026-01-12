@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { X, Save, User, DollarSign, Calendar, CreditCard, AlignLeft, Receipt, Clock } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -44,7 +44,7 @@ export default function PaymentModal({
         console.error('Error cargando miembros:', error);
         setMembers([]);
       } else {
-        const opts = (data ?? []).map((p: any) => ({
+        const opts = (data ?? []).map((p: { user_id: string; first_name?: string | null; last_name?: string | null }) => ({
           user_id: p.user_id,
           name: [p.first_name, p.last_name].filter(Boolean).join(' ').trim(),
         }));
@@ -221,7 +221,7 @@ export default function PaymentModal({
                     <select
                       className={`${inputClass} appearance-none cursor-pointer pr-10`}
                       value={method}
-                      onChange={e => setMethod(e.target.value as any)}
+                      onChange={e => setMethod(e.target.value as typeof method)}
                     >
                       <option value="efectivo">Efectivo 💵</option>
                       <option value="transferencia">Transferencia Bancaria 🏦</option>

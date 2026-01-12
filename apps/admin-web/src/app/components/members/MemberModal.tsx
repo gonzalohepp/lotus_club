@@ -2,7 +2,7 @@ import { X, UserPlus, UserCircle2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import MemberForm from './MemberForm'
 
-import { MemberRow } from '@/types/member'
+import { MemberRow, MemberPayload } from '@/types/member'
 
 export default function MemberModal({
   open, onClose, member, onSubmit,
@@ -10,7 +10,7 @@ export default function MemberModal({
   open: boolean
   onClose: () => void
   member: MemberRow | null
-  onSubmit: (payload: any) => Promise<void>
+  onSubmit: (payload: MemberPayload) => Promise<void>
 }) {
   return (
     <AnimatePresence>

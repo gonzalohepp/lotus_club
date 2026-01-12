@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { addMonths } from 'date-fns'
 import { motion } from 'framer-motion'
-import { User, Mail, Phone, Hash, Shield, Calendar, BookOpen, AlertCircle, Save, X as XIcon } from 'lucide-react'
+import { User, Mail, Phone, Hash, Shield, Calendar, BookOpen, AlertCircle, Save, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
-import { MemberRow } from '@/types/member'
+import { MemberRow, MemberPayload, ClassOption } from '@/types/member'
 
 export default function MemberForm({
   member,
@@ -13,17 +13,18 @@ export default function MemberForm({
   onCancel,
 }: {
   member: MemberRow | null
-  onSubmit: (payload: any) => Promise<void>
+  onSubmit: (payload: MemberPayload) => Promise<void>
   onCancel: () => void
 }) {
-  const [classes, setClasses] = useState<any[]>([])
+  const [classes, setClasses] = useState<ClassOption[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [form, setForm] = useState({
     full_name: '',
     email: '',
     phone: '',
     access_code: '',
-    classes: [] as number[],
+    principal_class: null as number | null,
+    additional_classes: [] as number[],
     membership_type: 'mensual',
     last_payment_date: new Date().toISOString().slice(0, 10),
     next_payment_due: new Date(addMonths(new Date(), 1)).toISOString().slice(0, 10),
@@ -33,7 +34,7 @@ export default function MemberForm({
   const [manualCode, setManualCode] = useState(false)
 
   useEffect(() => {
-    supabase.from('classes').select('id,name,price,color').then(({ data }) => setClasses(data ?? []))
+    supabase.from('classes').select('id,name,price_principal,price_additional,color').then(({ data }) => setClasses(data as any ?? []))
   }, [])
 
   useEffect(() => {
@@ -44,10 +45,11 @@ export default function MemberForm({
         email: member.email ?? '',
         phone: member.phone ?? '',
         access_code: member.access_code ?? '',
-        classes: member.class_ids ?? [],
+        principal_class: member.class_ids?.[0] ?? null, // Fallback: first one as principal for old data
+        additional_classes: member.class_ids?.slice(1) ?? [],
         membership_type: (member.membership_type ? ({
           monthly: 'mensual', quarterly: 'trimestral', semiannual: 'semestral', annual: 'anual'
-        } as any)[member.membership_type] : 'mensual'),
+        } as Record<string, string>)[member.membership_type] : 'mensual'),
         next_payment_due: member.end_date ? new Date(member.end_date).toISOString().slice(0, 10) : new Date(addMonths(new Date(), 1)).toISOString().slice(0, 10),
         emergency_contact: member.emergency_phone ?? '',
         notes: member.notes ?? '',
@@ -77,18 +79,53 @@ export default function MemberForm({
     }))
   }
 
-  const toggleClass = (id: number) => {
+  const setPrincipalClass = (id: number) => {
     setForm(s => ({
       ...s,
-      classes: s.classes.includes(id) ? s.classes.filter(x => x !== id) : [...s.classes, id]
+      principal_class: id,
+      // Ensure it's not in additional
+      additional_classes: s.additional_classes.filter(x => x !== id)
     }))
   }
 
+  const toggleAdditionalClass = (id: number) => {
+    if (id === form.principal_class) return
+    setForm(s => ({
+      ...s,
+      additional_classes: s.additional_classes.includes(id)
+        ? s.additional_classes.filter(x => x !== id)
+        : [...s.additional_classes, id]
+    }))
+  }
+
+  const totalFee = useMemo(() => {
+    let total = 0
+    if (form.principal_class) {
+      const p = classes.find(c => c.id === form.principal_class)
+      total += Number(p?.price_principal || 0)
+    }
+    form.additional_classes.forEach(id => {
+      const a = classes.find(c => c.id === id)
+      total += Number(a?.price_additional || a?.price_principal || 0)
+    })
+    return total
+  }, [form.principal_class, form.additional_classes, classes])
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!form.principal_class) return alert('Debes seleccionar una clase principal')
     setIsSubmitting(true)
     try {
-      await onSubmit(form)
+      // Map to the new format expected by members/page.tsx
+      const payload = {
+        ...form,
+        classes: [
+          { class_id: form.principal_class, is_principal: true },
+          ...form.additional_classes.map(id => ({ class_id: id, is_principal: false }))
+        ]
+      }
+      // @ts-ignore - updating types later
+      await onSubmit(payload)
     } finally {
       setIsSubmitting(false)
     }
@@ -195,6 +232,7 @@ export default function MemberForm({
             <input
               className={`${inputClass} focus:ring-emerald-500/10 focus:border-emerald-500/50`}
               type="date"
+              lang="es"
               value={form.last_payment_date}
               onChange={(e) => setForm({ ...form, last_payment_date: e.target.value })}
             />
@@ -205,6 +243,7 @@ export default function MemberForm({
             <input
               className={`${inputClass} focus:ring-emerald-500/10 focus:border-emerald-500/50`}
               type="date"
+              lang="es"
               value={form.next_payment_due}
               onChange={(e) => setForm({ ...form, next_payment_due: e.target.value })}
             />
@@ -221,31 +260,102 @@ export default function MemberForm({
           <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Inscripción a Clases</h4>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {classes.map(c => (
-            <label
-              key={c.id}
-              className={`flex items-center gap-4 p-4 rounded-2xl border transition-all cursor-pointer ${form.classes.includes(c.id)
-                ? 'bg-blue-50 border-blue-200 shadow-sm'
-                : 'bg-white border-slate-100 hover:border-slate-300'
-                }`}
-            >
-              <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${form.classes.includes(c.id) ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-300'
-                }`}>
-                {form.classes.includes(c.id) && <CheckIcon className="w-3 h-3" strokeWidth={4} />}
-              </div>
-              <input
-                type="checkbox"
-                className="hidden"
-                checked={form.classes.includes(c.id)}
-                onChange={() => toggleClass(c.id)}
-              />
-              <div className="flex-1">
-                <p className="text-sm font-bold text-slate-900 leading-none">{c.name}</p>
-                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">${Number(c.price).toLocaleString()}</p>
-              </div>
-            </label>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Clase Principal */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Shield className="w-3 h-3 text-blue-500" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Clase Principal (Obligatoria)</p>
+            </div>
+            <div className="space-y-2">
+              {classes.map(c => (
+                <label
+                  key={`p-${c.id}`}
+                  className={`flex items-center gap-4 p-4 rounded-2xl border transition-all cursor-pointer ${form.principal_class === c.id
+                    ? 'bg-blue-600 border-blue-600 shadow-xl shadow-blue-500/20'
+                    : 'bg-white border-slate-100 hover:border-slate-300'
+                    }`}
+                >
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${form.principal_class === c.id ? 'bg-white border-white text-blue-600' : 'bg-white border-slate-300'
+                    }`}>
+                    {form.principal_class === c.id && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
+                  </div>
+                  <input
+                    type="radio"
+                    name="principal_class"
+                    className="hidden"
+                    checked={form.principal_class === c.id}
+                    onChange={() => setPrincipalClass(c.id)}
+                  />
+                  <div className="flex-1">
+                    <p className={`text-sm font-bold leading-none ${form.principal_class === c.id ? 'text-white' : 'text-slate-900'}`}>{c.name}</p>
+                    <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${form.principal_class === c.id ? 'text-blue-100' : 'text-slate-500'}`}>
+                      ${Number(c.price_principal).toLocaleString()}
+                    </p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Clases Adicionales */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Plus className="w-3 h-3 text-emerald-500" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Clases Adicionales (Opcional)</p>
+            </div>
+            <div className="space-y-2">
+              {classes.map(c => {
+                const isSelected = form.additional_classes.includes(c.id)
+                const isPrincipal = form.principal_class === c.id
+                return (
+                  <label
+                    key={`a-${c.id}`}
+                    className={`flex items-center gap-4 p-4 rounded-2xl border transition-all cursor-pointer ${isSelected
+                      ? 'bg-emerald-50 border-emerald-200'
+                      : isPrincipal ? 'opacity-40 cursor-not-allowed bg-slate-50' : 'bg-white border-slate-100 hover:border-slate-300'
+                      }`}
+                  >
+                    <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${isSelected ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-300'
+                      }`}>
+                      {isSelected && <CheckIcon className="w-3 h-3" strokeWidth={4} />}
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="hidden"
+                      checked={isSelected}
+                      disabled={isPrincipal}
+                      onChange={() => toggleAdditionalClass(c.id)}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-slate-900 leading-none">{c.name}</p>
+                      <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">
+                        + ${Number(c.price_additional || c.price_principal).toLocaleString()}
+                      </p>
+                    </div>
+                  </label>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Total Fee Indicator */}
+        <div className="mt-8 p-6 rounded-3xl bg-slate-950 text-white flex items-center justify-between shadow-2xl border border-white/5 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all" />
+          <div className="relative">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Cuota Mensual Estimada</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-black text-white">${totalFee.toLocaleString()}</span>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">ARS / Mes</span>
+            </div>
+          </div>
+          <div className="relative flex flex-col items-end">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Cálculo Automático</span>
+            </div>
+          </div>
         </div>
       </section>
 
