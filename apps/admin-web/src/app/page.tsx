@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { InstructorCarousel } from "./components/landing/InstructorCarousel"
 import { ScheduleGrid } from "./components/landing/ScheduleGrid"
 import AcademiesMapSection from "@/components/landing/AcademiesMapSection"
+import { createClient } from "@supabase/supabase-js"
 
 type NavItem = {
   label: string
@@ -73,7 +74,6 @@ export default function HomeLandingPage() {
 
   const trackEvent = async (eventType: string, metadata?: Record<string, unknown>) => {
     try {
-      const { createClient } = await import('@supabase/supabase-js')
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       const _supabase = createClient(supabaseUrl, supabaseKey)
