@@ -49,11 +49,11 @@ const createCustomIcon = (isSelected: boolean) => {
         className: 'custom-marker',
         html: `
             <div class="relative flex items-center justify-center">
-                ${isSelected ? '<div class="absolute w-14 h-14 bg-blue-500/40 rounded-full animate-ping"></div>' : ''}
-                <div class="relative w-12 h-12 ${isSelected ? 'scale-110 z-10' : ''} bg-blue-600 rounded-full border-[3px] border-white shadow-xl flex items-center justify-center transition-all duration-300 overflow-hidden">
+                ${isSelected ? '<div class="absolute w-14 h-14 bg-red-500/40 rounded-full animate-ping"></div>' : ''}
+                <div class="relative w-12 h-12 ${isSelected ? 'scale-110 z-10' : ''} bg-red-600 rounded-full border-[3px] border-white shadow-xl flex items-center justify-center transition-all duration-300 overflow-hidden">
                     <span class="text-2xl leading-none pt-1">🥋</span>
                 </div>
-                ${isSelected ? '<div class="absolute -bottom-2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-blue-600"></div>' : ''}
+                ${isSelected ? '<div class="absolute -bottom-2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-red-600"></div>' : ''}
             </div>
         `,
         iconSize: [48, 48],
@@ -67,8 +67,8 @@ const createUserIcon = () => {
         className: 'user-marker',
         html: `
             <div class="relative flex items-center justify-center w-6 h-6">
-                <div class="absolute w-full h-full bg-blue-500/50 rounded-full animate-ping"></div>
-                <div class="relative w-4 h-4 bg-blue-600 border-2 border-white rounded-full shadow-lg"></div>
+                <div class="absolute w-full h-full bg-red-500/50 rounded-full animate-ping"></div>
+                <div class="relative w-4 h-4 bg-red-600 border-2 border-white rounded-full shadow-lg"></div>
             </div>
         `,
         iconSize: [24, 24],
@@ -85,8 +85,8 @@ const createClusterIcon = (cluster: any) => {
         className: 'custom-cluster-marker',
         html: `
             <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px;">
-                <div style="position: absolute; width: 40px; height: 40px; background: rgba(59, 130, 246, 0.3); border-radius: 50%; animation: pulse 2s infinite;"></div>
-                <div style="position: relative; width: 36px; height: 36px; background: #2563eb; border: 3px solid white; border-radius: 50%; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 14px; letter-spacing: -0.5px;">
+                <div style="position: absolute; width: 40px; height: 40px; background: rgba(239, 68, 68, 0.3); border-radius: 50%; animation: pulse 2s infinite;"></div>
+                <div style="position: relative; width: 36px; height: 36px; background: #dc2626; border: 3px solid white; border-radius: 50%; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 14px; letter-spacing: -0.5px;">
                    +${count}
                 </div>
             </div>
@@ -233,15 +233,19 @@ export default function PublicMap({ academies }: { academies: Academy[] }) {
             <div className="lg:hidden flex p-2 gap-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                 <button
                     onClick={() => setViewMode('list')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'list' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500'}`}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'list' ? 'bg-red-600 text-white shadow-lg' : 'text-slate-500'}`}
                 >
-                    <Info className="w-4 h-4" /> Lista
+                    <div className="flex items-center gap-2">
+                        <Info className="w-4 h-4" /> Lista
+                    </div>
                 </button>
                 <button
                     onClick={() => setViewMode('map')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'map' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500'}`}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'map' ? 'bg-red-600 text-white shadow-lg' : 'text-slate-500'}`}
                 >
-                    <MapPin className="w-4 h-4" /> Mapa
+                    <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4" /> Mapa
+                    </div>
                 </button>
             </div>
 
@@ -250,7 +254,7 @@ export default function PublicMap({ academies }: { academies: Academy[] }) {
                 <div className="p-6 space-y-4">
                     <div className="flex items-center justify-between">
                         <h3 className="font-black text-lg text-slate-800 dark:text-white tracking-tight">Academias</h3>
-                        <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-wider">
+                        <span className="bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-wider">
                             Argentina
                         </span>
                     </div>
@@ -258,7 +262,7 @@ export default function PublicMap({ academies }: { academies: Academy[] }) {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input
                             placeholder="Buscar por ciudad..."
-                            className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-sm font-medium focus:ring-2 ring-blue-500/20 outline-none transition-all"
+                            className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-sm font-medium focus:ring-2 ring-red-500/20 outline-none transition-all"
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                         />
@@ -268,10 +272,10 @@ export default function PublicMap({ academies }: { academies: Academy[] }) {
                     <button
                         onClick={handleLocateMe}
                         disabled={isLocating}
-                        className="w-full h-10 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 border border-blue-100 dark:border-blue-800/30 transition-all active:scale-95"
+                        className="w-full h-10 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 border border-red-100 dark:border-red-800/30 transition-all active:scale-95"
                     >
                         {isLocating ? (
-                            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                            <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
                         ) : (
                             <LocateFixed className="w-4 h-4" />
                         )}
@@ -288,14 +292,14 @@ export default function PublicMap({ academies }: { academies: Academy[] }) {
                             className={`
                                 p-4 rounded-xl cursor-pointer border transition-all duration-300 group
                                 ${selected?.id === academy.id
-                                    ? 'bg-blue-600 border-blue-500 shadow-lg shadow-blue-900/20'
+                                    ? 'bg-red-600 border-red-500 shadow-lg shadow-red-900/20'
                                     : 'bg-slate-50 dark:bg-slate-800/30 border-transparent hover:border-slate-200 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800'}
                             `}
                         >
-                            <h4 className={`font-bold text-sm mb-1 ${selected?.id === academy.id ? 'text-white' : 'text-slate-800 dark:text-slate-200 group-hover:text-blue-500'}`}>
+                            <h4 className={`font-bold text-sm mb-1 ${selected?.id === academy.id ? 'text-white' : 'text-slate-800 dark:text-slate-200 group-hover:text-red-500'}`}>
                                 {academy.name}
                             </h4>
-                            <div className={`flex items-start gap-1.5 text-[10px] font-medium leading-tight ${selected?.id === academy.id ? 'text-blue-100' : 'text-slate-500'}`}>
+                            <div className={`flex items-start gap-1.5 text-[10px] font-medium leading-tight ${selected?.id === academy.id ? 'text-red-100' : 'text-slate-500'}`}>
                                 <MapPin className="w-3 h-3 shrink-0" />
                                 <span>{academy.city} • {academy.address}</span>
                             </div>
@@ -374,7 +378,7 @@ export default function PublicMap({ academies }: { academies: Academy[] }) {
                                 onClick={() => setSelected(null)}
                                 className="absolute top-4 left-4 z-10 p-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur rounded-full shadow-lg border border-slate-100 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700 transition-colors group"
                             >
-                                <X className="w-5 h-5 text-slate-500 group-hover:text-blue-500" />
+                                <X className="w-5 h-5 text-slate-500 group-hover:text-red-500" />
                             </button>
 
                             {/* Drawer Content */}
@@ -390,7 +394,7 @@ export default function PublicMap({ academies }: { academies: Academy[] }) {
                                     )}
                                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
                                     <div className="absolute bottom-6 left-6 right-6">
-                                        <p className="text-blue-400 text-[10px] font-black uppercase tracking-[0.3em] mb-1">Dojo Sede Oficial</p>
+                                        <p className="text-red-400 text-[10px] font-black uppercase tracking-[0.3em] mb-1">Sede Oficial</p>
                                         <h3 className="text-white font-black text-2xl tracking-tight leading-none">{selected.name}</h3>
                                     </div>
                                 </div>
@@ -400,7 +404,7 @@ export default function PublicMap({ academies }: { academies: Academy[] }) {
                                     {selected.description && (
                                         <div className="space-y-3">
                                             <div className="flex items-center gap-2 text-slate-400">
-                                                <Info className="w-4 h-4 text-blue-500" />
+                                                <Info className="w-4 h-4 text-red-500" />
                                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Acerca de</h4>
                                             </div>
                                             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed italic">
@@ -412,8 +416,8 @@ export default function PublicMap({ academies }: { academies: Academy[] }) {
                                     {/* Info Grid */}
                                     <div className="space-y-6">
                                         <div className="flex gap-4">
-                                            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-800/30">
-                                                <MapPin className="w-5 h-5 text-blue-500" />
+                                            <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center shrink-0 border border-red-100 dark:border-red-800/30">
+                                                <MapPin className="w-5 h-5 text-red-500" />
                                             </div>
                                             <div>
                                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Dirección</h4>
@@ -424,8 +428,8 @@ export default function PublicMap({ academies }: { academies: Academy[] }) {
 
                                         {selected.schedules && (
                                             <div className="flex gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 flex items-center justify-center shrink-0 border border-cyan-100 dark:border-cyan-800/30">
-                                                    <Clock className="w-5 h-5 text-cyan-500" />
+                                                <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center shrink-0 border border-rose-100 dark:border-rose-800/30">
+                                                    <Clock className="w-5 h-5 text-rose-500" />
                                                 </div>
                                                 <div className="flex-1">
                                                     <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Horarios</h4>
@@ -436,8 +440,8 @@ export default function PublicMap({ academies }: { academies: Academy[] }) {
 
                                         {selected.classes && (
                                             <div className="flex gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center shrink-0 border border-purple-100 dark:border-purple-800/30">
-                                                    <Dumbbell className="w-5 h-5 text-purple-500" />
+                                                <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center shrink-0 border border-red-100 dark:border-red-800/30">
+                                                    <Dumbbell className="w-5 h-5 text-red-500" />
                                                 </div>
                                                 <div>
                                                     <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Clases</h4>
@@ -448,8 +452,8 @@ export default function PublicMap({ academies }: { academies: Academy[] }) {
 
                                         {selected.professors && (
                                             <div className="flex gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center shrink-0 border border-orange-100 dark:border-orange-800/30">
-                                                    <GraduationCap className="w-5 h-5 text-orange-500" />
+                                                <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center shrink-0 border border-red-100 dark:border-red-800/30">
+                                                    <GraduationCap className="w-5 h-5 text-red-500" />
                                                 </div>
                                                 <div>
                                                     <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Profesores</h4>
@@ -467,7 +471,7 @@ export default function PublicMap({ academies }: { academies: Academy[] }) {
                                     href={`https://www.google.com/maps/dir/?api=1&destination=${selected.lat},${selected.lng}`}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="flex items-center justify-center gap-3 w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs uppercase tracking-[0.2em] shadow-xl shadow-blue-500/20 transition-all hover:-translate-y-0.5"
+                                    className="flex items-center justify-center gap-3 w-full h-12 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl text-xs uppercase tracking-[0.2em] shadow-xl shadow-red-500/20 transition-all hover:-translate-y-0.5"
                                 >
                                     <Navigation className="w-4 h-4" /> Cómo llegar
                                 </a>

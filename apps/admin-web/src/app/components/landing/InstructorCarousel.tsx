@@ -12,9 +12,9 @@ const instructors = [
     name: "Cristian Hein",
     role: "Fundador y Head Coach",
     photo:
-      "cristian.png",
+      "/cristian.png",
     description:
-      "Faixa preta de Brazilian Jiu-Jitsu y fundador de Beleza Dojo. Apasionado por enseñar y crear un ambiente de respeto, disciplina y camaradería.",
+      "Faixa preta de Brazilian Jiu-Jitsu y fundador de Lotus Club. Apasionado por enseñar y crear un ambiente de respeto, disciplina y camaradería.",
     specialties: ["Brazilian Jiu-Jitsu", "Grappling", "Judo"],
   },
   {
@@ -22,7 +22,7 @@ const instructors = [
     name: "Profesor Invitado",
     role: "Instructor de MMA",
     photo:
-      "/beleza_fondo1.png",
+      "/lotus_fondo1.png",
     description:
       "Instructor especializado en MMA  con experiencia en campeonatos y en la formación de alumnos desde niveles iniciales.",
     specialties: ["MMA"],
@@ -32,7 +32,7 @@ const instructors = [
     name: "Profe Grappling",
     role: "Instructor de Grappling",
     photo:
-      "/beleza_fondo2.png",
+      "/lotus_fondo2.png",
     description:
       "Enfocado en Grappling competitivo, estrategias de combate y preparación para torneos nacionales e internacionales.",
     specialties: ["Grappling", "Defensa Personal", "Técnicas Avanzadas"],
@@ -111,25 +111,30 @@ export function InstructorCarousel() {
             }}
             className="w-full"
           >
-            <Card className="bg-slate-900/60 backdrop-blur-sm border-slate-800 overflow-hidden">
-              <CardContent className="p-0">
+            <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] overflow-hidden shadow-2xl">
+              <div className="p-0">
                 <div className="grid md:grid-cols-2 gap-0">
                   {/* Foto */}
                   <div className="relative h-80 md:h-96 overflow-hidden">
                     <div
-                      className="absolute inset-0 bg-cover bg-center transform transition-transform duration-700 hover:scale-110"
-                      style={{
-                        backgroundImage: `url(${current.photo})`,
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+                      className="absolute inset-0 bg-black transform transition-transform duration-700 hover:scale-110 flex items-center justify-center"
+                    >
+                      {current.photo && !current.photo.includes('fondo') ? (
+                        <img src={current.photo} alt={current.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-zinc-950 flex items-center justify-center text-zinc-800">
+                          <span className="text-6xl">🥋</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
 
                     {/* Especialidades */}
                     <div className="absolute bottom-4 left-4 right-4 flex flex-wrap gap-2">
                       {current.specialties.map((specialty, idx) => (
                         <span
                           key={idx}
-                          className="px-3 py-1 bg-blue-600/90 backdrop-blur-sm text-white text-xs font-semibold rounded-full"
+                          className="px-3 py-1 bg-red-600/90 backdrop-blur-sm text-white text-xs font-semibold rounded-full"
                         >
                           {specialty}
                         </span>
@@ -146,7 +151,7 @@ export function InstructorCarousel() {
                     >
                       <div className="mb-4">
                         <h3 className="text-3xl font-bold text-white mb-2">{current.name}</h3>
-                        <p className="text-blue-400 font-semibold text-lg">{current.role}</p>
+                        <p className="text-red-400 font-semibold text-lg">{current.role}</p>
                       </div>
 
                       <p className="text-slate-300 text-lg leading-relaxed mb-6">
@@ -162,11 +167,10 @@ export function InstructorCarousel() {
                               setDirection(index > currentIndex ? 1 : -1)
                               setCurrentIndex(index)
                             }}
-                            className={`h-2 rounded-full transition-all duration-300 ${
-                              index === currentIndex
-                                ? "w-8 bg-blue-500"
-                                : "w-2 bg-slate-600 hover:bg-slate-500"
-                            }`}
+                            className={`h-2 rounded-full transition-all duration-300 ${index === currentIndex
+                              ? "w-8 bg-red-500"
+                              : "w-2 bg-slate-600 hover:bg-slate-500"
+                              }`}
                             aria-label={`Ver instructor ${index + 1}`}
                             type="button"
                           />
@@ -175,8 +179,8 @@ export function InstructorCarousel() {
                     </motion.div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>
@@ -186,20 +190,20 @@ export function InstructorCarousel() {
         variant="ghost"
         size="icon"
         onClick={() => paginate(-1)}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-slate-900/80 backdrop-blur-sm hover:bg-slate-800 text-white border border-slate-700 w-12 h-12 rounded-full shadow-xl"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-black/60 backdrop-blur-xl hover:bg-red-600 text-white border border-white/10 w-14 h-14 rounded-full shadow-2xl transition-all"
         type="button"
       >
-        <ChevronLeft className="w-6 h-6" />
+        <ChevronLeft className="w-8 h-8" />
       </Button>
 
       <Button
         variant="ghost"
         size="icon"
         onClick={() => paginate(1)}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-slate-900/80 backdrop-blur-sm hover:bg-slate-800 text-white border border-slate-700 w-12 h-12 rounded-full shadow-xl"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-black/60 backdrop-blur-xl hover:bg-red-600 text-white border border-white/10 w-14 h-14 rounded-full shadow-2xl transition-all"
         type="button"
       >
-        <ChevronRight className="w-6 h-6" />
+        <ChevronRight className="w-8 h-8" />
       </Button>
     </div>
   )

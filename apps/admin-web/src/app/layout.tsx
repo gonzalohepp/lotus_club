@@ -13,12 +13,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: {
-    default: "Beleza Dojo — Panel",
-    template: "%s | Beleza Dojo",
-  },
+  title: "Lotus Club",
   description:
-    "Panel administrativo y portal de alumnos para el control de acceso del dojo.",
+    "Sitio oficial de Lotus Club. Jiu-Jitsu, Grappling, MMA y Judo.",
   icons: {
     icon: "/logo.png", // poné logo.png en /public
     shortcut: "/logo.png",
@@ -58,7 +55,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-blue-500/30`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-red-500/30`}
         suppressHydrationWarning
       >
         <Providers>

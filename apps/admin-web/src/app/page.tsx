@@ -13,83 +13,43 @@ import {
   MessageCircle,
   Instagram,
   Star,
-  ArrowUp
+  ArrowUp,
+  Shield,
+  Zap,
+  Target,
+  Trophy
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { InstructorCarousel } from "./components/landing/InstructorCarousel"
 import { ScheduleGrid } from "./components/landing/ScheduleGrid"
 import AcademiesMapSection from "@/components/landing/AcademiesMapSection"
-import { createClient } from "@supabase/supabase-js"
 
-type NavItem = {
-  label: string
-  id: string
-}
-
-const navItems: NavItem[] = [
+const navItems = [
   { label: "Inicio", id: "inicio" },
-  { label: "Dónde estamos", id: "donde-estamos" },
-  { label: "Nuestra historia", id: "historia" },
-  { label: "Profesores", id: "profesores" },
+  { label: "Academia", id: "academy" },
+  { label: "Programas", id: "programs" },
+  { label: "Profesores", id: "instructors" },
   { label: "Horarios", id: "horarios" },
-  { label: "Contacto", id: "contacto" },
-  { label: "Afiliación", id: "afiliacion" },
+  { label: "Sedes", id: "locations" },
 ]
 
 export default function HomeLandingPage() {
-  const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [activeTab, setActiveTab] = useState("infantil")
   const [showScrollTop, setShowScrollTop] = useState(false)
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId)
     if (element) {
       const navbarHeight = 80
-
-      const doScroll = () => {
-        const elementPosition = element.getBoundingClientRect().top
-        const offsetPosition = elementPosition + window.scrollY - navbarHeight
-
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: "smooth"
-        })
-      }
-
-      if (isMenuOpen) {
-        setIsMenuOpen(false)
-        // Wait for menu close animation to finish (300ms match transition)
-        setTimeout(doScroll, 300)
-      } else {
-        doScroll()
-      }
-    }
-  }
-
-  const handleAccess = () => {
-    router.push("/app")
-  }
-
-  const trackEvent = async (eventType: string, metadata?: Record<string, unknown>) => {
-    try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      const _supabase = createClient(supabaseUrl, supabaseKey)
-
-      await _supabase.from('landing_events').insert({
-        event_type: eventType,
-        metadata
-      })
-    } catch (e) {
-      // ignore
+      const elementPosition = element.getBoundingClientRect().top
+      const offsetPosition = elementPosition + window.scrollY - navbarHeight
+      window.scrollTo({ top: offsetPosition, behavior: "smooth" })
+      setIsMenuOpen(false)
     }
   }
 
   useEffect(() => {
-    trackEvent('page_view', { referrer: document.referrer })
-
     const handleScroll = () => {
       setScrolled(window.scrollY > 50)
       setShowScrollTop(window.scrollY > 400)
@@ -99,528 +59,308 @@ export default function HomeLandingPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-slate-950 font-sans selection:bg-blue-500/30 selection:text-white">
-      {/* NAVBAR */}
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-red-600/50">
+
+      {/* MODERN FLOATING NAV */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-[9999] transition-all duration-300 border-b ${scrolled
-          ? "bg-slate-950/80 backdrop-blur-xl border-slate-800 py-2"
-          : "bg-transparent border-transparent py-4"
+        className={`fixed top-6 left-1/2 -translate-x-1/2 z-[9999] transition-all duration-500 w-[95%] max-w-5xl ${scrolled ? "top-4" : "top-8"
           }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
-              <div className="relative group cursor-pointer" onClick={() => scrollToSection("inicio")}>
-                <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 group-hover:opacity-40 transition-opacity rounded-full" />
-                <img
-                  src="/logo.png"
-                  alt="Beleza Dojo Logo"
-                  className="relative w-10 h-10 object-contain rounded-full shadow-2xl"
-                />
-              </div>
-              <span className="text-2xl font-black text-white tracking-tight cursor-pointer" onClick={() => scrollToSection("inicio")}>
-                Beleza <span className="text-blue-500">Dojo</span>
-              </span>
+        <div className={`rounded-2xl border border-white/10 backdrop-blur-2xl px-6 py-3 flex items-center justify-between transition-all ${scrolled ? "bg-black/60 shadow-2xl shadow-red-900/20 py-2" : "bg-white/5"
+          }`}>
+          <div className="flex items-center gap-4 cursor-pointer group" onClick={() => scrollToSection("inicio")}>
+            <div className="relative w-14 h-14 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center overflow-hidden group-hover:border-red-600 group-hover:shadow-[0_0_30px_rgba(220,38,38,0.3)] transition-all duration-500">
+              <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <img
+                src="/lotus_logo_full.png"
+                alt="Lotus Club"
+                className="w-[200%] max-w-none brightness-0 invert relative transition-all duration-700 group-hover:scale-110"
+                style={{ transform: 'translateY(-26%)' }}
+              />
             </div>
-
-            {/* Menu Desktop */}
-            <div className="hidden lg:flex items-center gap-1">
-              {navItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => scrollToSection(item.id)}
-                  className="px-3 py-2 text-xs font-bold text-slate-300 hover:text-white uppercase tracking-wider hover:bg-white/5 rounded-lg transition-all text-center leading-tight max-w-[120px]"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="hidden lg:flex items-center">
-              <Button
-                onClick={() => {
-                  trackEvent('click_access')
-                  handleAccess()
-                }}
-                className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-2 rounded-xl shadow-lg shadow-blue-600/20 transition-all hover:scale-105 hover:shadow-blue-500/40"
-              >
-                ACCESO
-              </Button>
-            </div>
-
-            {/* Mobile Toggle */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
-            >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
           </div>
+
+          <div className="hidden md:flex items-center gap-8">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => scrollToSection(item.id)}
+                className="text-xs font-black uppercase tracking-[0.2em] text-white/60 hover:text-red-500 transition-colors"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          <button className="md:hidden text-white" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
 
-        {/* Mobile Menu */}
+        {/* MOBILE MENU */}
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden bg-slate-950 border-t border-slate-800 overflow-hidden"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-full left-0 right-0 mt-4 bg-black/95 border border-white/10 rounded-2xl p-6 backdrop-blur-3xl overflow-hidden md:hidden"
             >
-              <div className="px-4 py-6 space-y-2">
+              <div className="flex flex-col gap-6">
                 {navItems.map((item) => (
                   <button
                     key={item.id}
-                    onClick={() => {
-                      scrollToSection(item.id)
-                    }}
-                    className="block w-full text-left px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 rounded-xl transition-colors font-bold uppercase tracking-wider"
+                    onClick={() => scrollToSection(item.id)}
+                    className="text-2xl font-black uppercase tracking-tighter text-left hover:text-red-600 transition-colors"
                   >
                     {item.label}
                   </button>
                 ))}
-                <div className="pt-4 px-4">
-                  <Button
-                    onClick={() => {
-                      trackEvent('click_access')
-                      handleAccess()
-                    }}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold h-12 rounded-xl shadow-lg shadow-blue-900/40"
-                  >
-                    ACCESO
-                  </Button>
-                </div>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </nav>
 
-      {/* HERO SECTION */}
-      <section id="inicio" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-        <div className="absolute inset-0 z-0">
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: "url('/beleza_fondo1.png')" }}
-          />
-          {/* Overlay Gradient Premium */}
-          <div className="absolute inset-0 bg-slate-950/80" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950/40 to-slate-950" />
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-10">
-          {/* Badge */}
+      {/* ASYMMETRICAL HERO */}
+      <section id="inicio" className="relative min-h-screen flex items-center pt-24 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center relative z-10 w-full">
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 backdrop-blur-md mb-8"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
           >
-
-            <span className="text-blue-200 text-xs font-bold uppercase tracking-widest">
-              Quilmes - Zona Sur - Artes Marciales
-            </span>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-tight tracking-tight"
-          >
-            TU POTENCIAL <br className="hidden sm:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 animate-gradient-x">
-              NO TIENE LÍMITES
-            </span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-xl md:text-2xl text-slate-300 mb-10 max-w-3xl mx-auto font-medium leading-relaxed"
-          >
-            Entrená con los mejores en <span className="text-blue-400 font-bold">Quilmes</span>.
-            Jiu-Jitsu, Grappling, MMA y Judo en un ambiente diseñado para tu evolución.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
-          >
-            <Button
-              asChild
-              className="bg-blue-600 hover:bg-blue-500 text-white text-lg font-bold px-8 py-7 rounded-2xl shadow-xl shadow-blue-600/30 transition-all hover:scale-105 hover:-translate-y-1"
-              onClick={() => trackEvent('click_wsp_hero')}
-            >
-              <a href="https://www.instagram.com/belezadojo" target="_blank" rel="noopener noreferrer">
-                Quiero mi clase de prueba
-                <ChevronRight className="w-5 h-5 ml-2" />
-              </a>
-            </Button>
-            <Button
-              onClick={() => scrollToSection("horarios")}
-              variant="outline"
-              className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 text-lg font-bold px-8 py-7 rounded-2xl backdrop-blur-sm transition-all"
-            >
-              Ver horarios y clases
-            </Button>
-          </motion.div>
-        </div>
-
-        {/* Scroll Indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 1 }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-        >
-
-          <div className="w-px h-12 bg-gradient-to-b from-blue-500/50 to-transparent" />
-        </motion.div>
-      </section>
-
-      {/* DÓNDE ESTAMOS */}
-      <section id="donde-estamos" className="relative py-32 overflow-hidden bg-slate-950">
-        <div className="absolute inset-0">
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px]" />
-          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px]" />
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">DÓNDE ESTAMOS</h2>
-            <div className="flex items-center justify-center gap-2 text-blue-400">
-              <MapPin className="w-5 h-5" />
-              <p className="text-xl font-medium text-slate-300">Av. Calchaquí 4335, Quilmes Oeste</p>
+            <div className="inline-block px-4 py-1 rounded-full bg-red-600/10 border border-red-600/20 text-red-500 text-[10px] font-black tracking-[0.3em] uppercase mb-8">
+              La Evolución del Combate
             </div>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="rounded-3xl p-1 bg-gradient-to-br from-slate-800 to-slate-900 shadow-2xl"
-          >
-            <div className="relative rounded-[20px] overflow-hidden aspect-video md:aspect-[21/9] border border-slate-700/50">
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3277.7022264486864!2d-58.2792986235246!3d-34.76309316593384!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95a32e9eef9c5603%3A0xe0b9320f38d1beb8!2sAv.%20Calchaqu%C3%AD%204335%2C%20B1879%20Quilmes%2C%20Provincia%20de%20Buenos%20Aires!5e0!3m2!1ses!2sar!4v1763061000312!5m2!1ses!2sar"
-                width="100%"
-                height="100%"
-                style={{ border: 0, filter: "grayscale(1) invert(1) contrast(1.2) brightness(0.8)" }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-              <div className="absolute bottom-6 right-6">
-                <a
-                  href="https://www.google.com/maps/search/?api=1&query=Av+Calchaquí+4335+Quilmes+Buenos+Aires"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-black/50 hover:scale-105 transition-all flex items-center gap-2"
-                  onClick={() => trackEvent('click_maps')}
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Abrir en Google Maps
-                </a>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* HISTORIA */}
-      <section id="historia" className="relative py-32 bg-slate-900 overflow-hidden">
-        {/* Decorative Grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-
-        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-black text-white mb-6 uppercase tracking-tight">Nuestra Historia</h2>
-            <div className="w-24 h-1.5 bg-blue-600 mx-auto rounded-full" />
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="bg-slate-950/50 backdrop-blur-xl border border-white/5 p-8 md:p-12 rounded-3xl relative overflow-hidden group hover:border-blue-500/30 transition-colors duration-500"
-          >
-            <div className="absolute -right-20 -top-20 w-64 h-64 bg-blue-600/10 rounded-full blur-[80px] group-hover:bg-blue-600/20 transition-colors" />
-
-            <div className="space-y-8 text-lg text-slate-300 leading-relaxed relative z-10">
-              <p>
-                Todo comenzó en <span className="text-blue-400 font-bold">Agosto de 2011</span>, en un pequeño gimnasio de Quilmes. Un grupo de apasionados necesitaba una identidad. Así nació Beleza.
-              </p>
-              <p>
-                <span className="text-white font-black text-xl">"BELEZA"</span> — expresión brasileña para decir que "está todo bien". Elegimos este nombre para reflejar el ambiente de camaradería y respeto que se respira en cada entrenamiento, sin perder la intensidad.
-              </p>
-              <p>
-                Nuestro símbolo es el <span className="text-white font-black text-xl">"SHAKA"</span> 🤙. Representa amistad, comprensión y solidaridad. Valores innegociables dentro y fuera del tatami.
-              </p>
-              <div className="pl-6 border-l-4 border-blue-500 py-2 italic text-slate-400">
-                "Hoy, más de una década después, seguimos con la misma pasión, construyendo el mejor centro de entrenamiento de combate de Zona Sur."
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* PROFESORES */}
-      <section id="profesores" className="relative py-32 overflow-hidden bg-slate-950">
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900/50 to-slate-950" />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">PROFESORES</h2>
-            <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-              Guiados por la experiencia, dedicados a tu evolución técnica y personal.
+            <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tight leading-[0.85] uppercase italic mb-8">
+              LIBERA <br />
+              <span className="text-red-600 text-glow-red">TU</span> <br />
+              FUERZA <br />
+              INTERIOR
+            </h1>
+            <p className="text-white/60 text-lg md:text-xl max-w-md font-medium leading-relaxed mb-10">
+              Entrenamiento de élite en Brazilian Jiu-Jitsu, MMA y Grappling en un ambiente diseñado para el alto rendimiento.
             </p>
+            <div className="flex flex-wrap gap-4">
+              <Button
+                onClick={() => window.open("https://wa.me/5491124041132", "_blank")}
+                className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest px-10 py-8 rounded-full h-auto text-lg hover:scale-105 transition-transform"
+              >
+                Unite a la Tribu
+              </Button>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, rotate: 10 }}
+            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="relative hidden lg:block"
+          >
+            <div className="absolute inset-0 bg-red-600/20 blur-[150px] rounded-full animate-pulse" />
+            <img
+              src="/stylized_red_lotus_1768403444922.png"
+              alt="Lotus"
+              className="relative w-full max-w-xl mx-auto drop-shadow-[0_0_50px_rgba(220,38,38,0.3)] animate-float"
+            />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* BRAND ETHOS */}
+      <section id="academy" className="py-32 bg-zinc-950">
+        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-20 items-center">
+          <div className="order-2 md:order-1 relative h-[600px] rounded-[3rem] overflow-hidden border border-white/10 group">
+            <img src="/lotus_club_hero_action_1768403416936.png" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000" alt="Action" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
+            <div className="absolute bottom-10 left-10">
+              <p className="text-4xl font-black uppercase italic tracking-tighter italic">Respeto. <br />Disciplina. <br /><span className="text-red-600">Poder.</span></p>
+            </div>
+          </div>
+          <div className="order-1 md:order-2">
+            <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none mb-10">
+              MÁS QUE <br />UN GIMNASIO. <br />
+              <span className="text-red-600 italic">UN LEGADO.</span>
+            </h2>
+            <div className="space-y-6 text-white/50 text-lg leading-relaxed">
+              <p>
+                Fundado por <span className="text-white font-bold">Cristian Hein</span>, Lotus Club no se trata solo de técnicas de lucha. Es una filosofía de evolución constante.
+              </p>
+              <p>
+                La flor de loto representa el surgimiento desde la lucha hacia la belleza y la fuerza. En cada lucha, en cada entrenamiento, encontramos nuestro camino a la excelencia.
+              </p>
+              <div className="pt-10 flex gap-12">
+                <div>
+                  <p className="text-4xl font-black text-white">10+</p>
+                  <p className="text-[10px] uppercase tracking-widest text-red-600 font-bold">Años de excelencia</p>
+                </div>
+                <div>
+                  <p className="text-4xl font-black text-white">500+</p>
+                  <p className="text-[10px] uppercase tracking-widest text-red-600 font-bold">Alumnos formados</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* BENTO PROGRAMS */}
+      <section id="programs" className="py-32 bg-black">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="mb-20">
+            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">Disciplinas Core</h2>
+            <p className="text-white/40 text-xl font-medium">Diseñadas para el dominio en el mundo real.</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 auto-rows-[300px]">
+            <div className="md:col-span-2 bento-card p-10 flex flex-col justify-end group cursor-pointer lg:row-span-2">
+              <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Shield className="text-red-600 mb-6 group-hover:scale-110 transition-transform" size={48} />
+              <h3 className="text-3xl font-black uppercase italic mb-4">Brazilian Jiu-Jitsu</h3>
+              <p className="text-white/50 max-w-sm">El arte suave. Domina el apalancamiento, el control y la sumisión. Nuestra base fundamental.</p>
+            </div>
+            <div className="bento-card p-8 group cursor-pointer">
+              <Zap className="text-red-600 mb-4 group-hover:rotate-12 transition-transform" size={32} />
+              <h3 className="text-xl font-bold uppercase mb-2">Grappling</h3>
+              <p className="text-white/40 text-sm">Intensidad No-Gi. Movimientos fluidos y transiciones explosivas.</p>
+            </div>
+            <div className="bento-card p-8 group cursor-pointer bg-red-600 shadow-[0_0_30px_rgba(220,38,38,0.2)]">
+              <Target className="text-white mb-4" size={32} />
+              <h3 className="text-xl font-black uppercase mb-2">MMA</h3>
+              <p className="text-white/80 text-sm">La integración definitiva. Golpea, lucha y domina.</p>
+            </div>
+            <div className="bento-card p-8 group cursor-pointer">
+              <Trophy className="text-red-600 mb-4 group-hover:scale-125 transition-transform" size={32} />
+              <h3 className="text-xl font-bold uppercase mb-2">Judo</h3>
+              <p className="text-white/40 text-sm">Domina el arte de los derribos. Precisión y poder tradicional.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* MODERN INSTRUCTORS */}
+      <section id="instructors" className="py-32 bg-zinc-950">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-24">
+            <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none italic mb-6">Staff Técnico</h2>
+            <p className="text-white/40 text-xl max-w-2xl mx-auto">Entrená con expertos dedicados a tu progresión diaria.</p>
           </div>
           <InstructorCarousel />
         </div>
       </section>
 
-      {/* HORARIOS */}
-      <section id="horarios" className="relative py-32 bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-6xl font-black text-white mb-6 uppercase tracking-tight">Horarios</h2>
-            <p className="text-xl text-slate-400">Encontrá tu momento para entrenar</p>
+      {/* SCHEDULE */}
+      <section id="horarios" className="py-32 bg-black">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-end gap-10 mb-20">
+            <div>
+              <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none mb-4">Horarios de <span className="text-red-600">Entrenamiento</span></h2>
+              <p className="text-white/40 text-xl">Encontrá tu momento para evolucionar.</p>
+            </div>
+            <Button className="bg-white text-black font-black uppercase tracking-widest px-8 py-6 rounded-full h-auto hover:bg-red-600 hover:text-white transition-all">Descargar PDF</Button>
           </div>
-          <div className="bg-slate-950 p-1 md:p-2 rounded-[2.5rem] shadow-2xl border border-slate-800">
+          <div className="bg-zinc-900/50 p-4 md:p-10 rounded-[3rem] border border-white/5 shadow-2xl backdrop-blur-xl">
             <ScheduleGrid />
           </div>
         </div>
       </section>
 
-      {/* CONTACTO */}
-      <section id="contacto" className="relative py-32 overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[url('/beleza_fondo3.png')] bg-cover bg-center grayscale opacity-10 blur-[4px]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/90 to-slate-950" />
-        </div>
-
-        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tight">CONTACTO</h2>
-            <p className="text-xl md:text-2xl text-slate-300 mb-12">
-              ¿Tenés dudas? Escribinos para coordinar tu clase de prueba o conocer más sobre nuestros planes.
-            </p>
-
-            <div className="flex flex-col sm:flex-row justify-center gap-6">
-              <a
-                href="https://wa.me/5491124041132"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center justify-center gap-3 bg-[#25D366] hover:bg-[#20bd5a] text-white px-8 py-5 rounded-2xl font-bold text-lg shadow-lg shadow-green-900/20 transition-all hover:-translate-y-1"
-                onClick={() => trackEvent('click_whatsapp')}
-              >
-                <MessageCircle className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                Hablar por WhatsApp
-              </a>
-
-              <a
-                href="https://www.instagram.com/belezadojo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-8 py-5 rounded-2xl font-bold text-lg shadow-lg shadow-purple-900/20 transition-all hover:-translate-y-1"
-                onClick={() => trackEvent('click_instagram')}
-              >
-                <Instagram className="w-6 h-6 group-hover:scale-110 transition-transform" />
-                Seguinos en Instagram
-              </a>
+      {/* LOCATIONS */}
+      <section id="locations" className="py-32 bg-zinc-950">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">Nuestras Sedes</h2>
+            <div className="flex items-center justify-center gap-2 text-red-500 font-bold uppercase tracking-widest text-sm">
+              <MapPin size={20} />
+              <span>Buenos Aires, Argentina</span>
             </div>
-          </motion.div>
+          </div>
+          <div className="rounded-[4rem] overflow-hidden border border-white/10 shadow-[0_0_100px_rgba(220,38,38,0.1)]">
+            <AcademiesMapSection minimal={true} />
+          </div>
         </div>
       </section>
 
-      {/* AFILIACIÓN LOTUS (VERTICAL FULL-WIDTH REDESIGN) */}
-      <section id="afiliacion" className="relative py-32 md:py-48 overflow-hidden bg-slate-950">
-        {/* Background elements */}
-        <div className="absolute inset-0 z-0">
-          <div className="absolute top-[350px] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-[url('/lotus_bg.png')] bg-contain bg-center bg-no-repeat opacity-10 blur-[8px] pointer-events-none" />
-          <div className="absolute top-1/4 -right-20 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-1/4 -left-20 w-[600px] h-[600px] bg-cyan-600/5 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.02] mix-blend-overlay" />
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* FINAL CALL */}
+      <section className="py-40 relative overflow-hidden bg-black">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-50" />
+        <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
           <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={{
-              hidden: { opacity: 0, y: 30 },
-              visible: {
-                opacity: 1,
-                y: 0,
-                transition: {
-                  duration: 0.8,
-                  staggerChildren: 0.2
-                }
-              }
-            }}
-            className="flex flex-col items-center text-center space-y-12 mb-20"
+            whileInView={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.8 }}
           >
-            <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} className="flex flex-col items-center">
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black tracking-[0.3em] uppercase mb-6 backdrop-blur-md">
-                <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
-                Red Global de Excelencia
-              </span>
-              <h2 className="text-6xl md:text-9xl font-black text-white leading-[0.8] tracking-tighter mb-8">
-                LOTUS <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-600">CLUB</span>
-              </h2>
-              <div className="w-32 h-2 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 rounded-full" />
-            </motion.div>
-
-            <motion.p
-              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-              className="text-2xl md:text-3xl text-slate-300 font-medium leading-relaxed max-w-4xl"
-            >
-              <span className="text-white">Beleza Dojo</span> es una sede oficial afiliada a la red global de <br className="hidden md:block" />
-              <strong className="text-blue-400 font-black">LOTUS CLUB BRAZILIAN JIU JITSU</strong>.
-            </motion.p>
-
-            <div className="grid md:grid-cols-2 gap-8 w-full max-w-5xl">
-              <motion.div
-                variants={{ hidden: { opacity: 0, x: -20 }, visible: { opacity: 1, x: 0 } }}
-                className="group relative"
+            <h2 className="text-6xl md:text-[10rem] font-black uppercase tracking-tighter leading-none mb-12">
+              SIN MÁS <br /><span className="text-red-600 italic underline decoration-white/10 underline-offset-8">EXCUSAS.</span>
+            </h2>
+            <div className="flex flex-col items-center gap-8">
+              <p className="text-white/40 text-2xl font-medium max-w-2xl">Empezá tu transformación hoy. Tu primera clase de prueba es por nuestra cuenta.</p>
+              <Button
+                onClick={() => window.open("https://www.instagram.com/lotusclub_ar", "_blank")}
+                className="bg-white text-black hover:bg-red-600 hover:text-white text-2xl font-black px-16 py-10 rounded-full h-auto transition-all shadow-2xl shadow-red-600/20"
               >
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-1000" />
-                <div className="relative bg-slate-900/40 border border-white/10 p-8 rounded-3xl backdrop-blur-xl shadow-2xl overflow-hidden h-full">
-                  <div className="text-slate-200 flex items-start gap-6 relative z-10 text-left">
-                    <div className="p-4 bg-blue-600/20 rounded-2xl text-blue-400 shrink-0 shadow-inner">
-                      <Star className="w-8 h-8 fill-blue-500/20" />
-                    </div>
-                    <div>
-                      <h4 className="text-white font-bold text-lg uppercase tracking-tight mb-2">Prestigio Internacional</h4>
-                      <p className="text-slate-400 leading-relaxed text-sm">
-                        Formamos parte de una de las redes más prestigiosas del mundo, con sedes en Brasil, USA, Europa y Argentina. Tu graduación tiene validez internacional.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                variants={{ hidden: { opacity: 0, x: 20 }, visible: { opacity: 1, x: 0 } }}
-                className="group relative"
-              >
-                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-1000" />
-                <div className="relative bg-slate-900/40 border border-white/10 p-8 rounded-3xl backdrop-blur-xl shadow-2xl overflow-hidden h-full">
-                  <div className="text-slate-200 flex items-start gap-6 relative z-10 text-left">
-                    <div className="p-4 bg-cyan-600/20 rounded-2xl text-cyan-400 shrink-0 shadow-inner">
-                      <ExternalLink className="w-8 h-8" />
-                    </div>
-                    <div className="flex flex-col justify-between h-full">
-                      <div>
-                        <h4 className="text-white font-bold text-lg uppercase tracking-tight mb-2">Sede Oficial</h4>
-                        <p className="text-slate-400 leading-relaxed text-sm mb-4">
-                          Accedé a seminarios internacionales, técnicas exclusivas y el soporte de maestros de élite mundial.
-                        </p>
-                      </div>
-                      <Button
-                        asChild
-                        variant="link"
-                        className="text-blue-400 hover:text-blue-300 p-0 h-auto font-black text-xs uppercase tracking-widest justify-start"
-                      >
-                        <a href="https://www.lotusclubusa.com/" target="_blank" rel="noopener noreferrer">
-                          Visitar Sitio Oficial <ChevronRight className="w-4 h-4 ml-1" />
-                        </a>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
+                Reservar Clase de Prueba
+              </Button>
             </div>
           </motion.div>
         </div>
+        <div className="absolute bottom-[-100px] left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-red-600/10 blur-[120px] rounded-full" />
+      </section>
 
-        {/* Full Width Map Container */}
-        <motion.div
-          initial={{ opacity: 0, y: 100 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          viewport={{ once: true }}
-          className="relative w-full max-w-[1920px] mx-auto px-4"
-        >
-          <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-tr from-blue-500/20 to-cyan-500/20 blur-3xl rounded-[3rem] opacity-50 group-hover:opacity-75 transition duration-1000" />
-            <div className="relative rounded-[2.5rem] md:rounded-[4rem] p-1.5 md:p-3 bg-gradient-to-b from-slate-800 to-slate-900 shadow-[0_0_80px_rgba(30,58,138,0.2)] border border-white/10 overflow-hidden">
-              <div className="rounded-[2rem] md:rounded-[3.5rem] overflow-hidden">
-                <AcademiesMapSection minimal={true} />
+      {/* FOOTER LUXURY */}
+      <footer className="py-20 bg-black border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid md:grid-cols-4 gap-12 mb-20">
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-3 mb-8 cursor-pointer group" onClick={() => scrollToSection("inicio")}>
+                <img src="/lotus_logo_full.png" alt="Lotus Club" className="h-28 w-auto brightness-0 invert opacity-100 transition-all duration-500 hover:scale-105" />
+              </div>
+              <p className="text-white/40 max-w-xs text-lg font-medium leading-relaxed">
+                Elevando vidas a través de la excelencia en artes marciales. El centro de entrenamiento de combate líder en Zona Sur.
+              </p>
+            </div>
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-[0.3em] text-red-600 mb-6">Navegación</h4>
+              <div className="flex flex-col gap-4 text-white/50 font-bold uppercase text-[10px] tracking-widest">
+                <button onClick={() => scrollToSection("inicio")}>Inicio</button>
+                <button onClick={() => scrollToSection("academy")}>Academia</button>
+                <button onClick={() => scrollToSection("horarios")}>Horarios</button>
+                <button onClick={() => scrollToSection("instructors")}>Equipo</button>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-[0.3em] text-red-600 mb-6">Seguinos</h4>
+              <div className="flex flex-col gap-4 text-white/50 font-bold uppercase text-[10px] tracking-widest">
+                <a href="https://www.instagram.com/lotusclub_ar" target="_blank">Instagram</a>
+                <a href="https://wa.me/5491124041132" target="_blank">WhatsApp</a>
+                <p className="mt-4 text-white/30 capitalize tracking-normal italic font-medium">Av. Calchaquí 4335, Buenos Aires</p>
               </div>
             </div>
           </div>
-        </motion.div>
-      </section>
-
-      {/* CTA FINAL */}
-      <section className="relative py-32 overflow-hidden bg-blue-900">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute inset-0 bg-[url('/beleza_fondo3.png')] bg-cover bg-center mix-blend-overlay" />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900 via-blue-800 to-slate-900 opacity-90" />
-
-        <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-6xl font-black text-white mb-8 leading-tight">
-            TU PRIMERA CLASE <br />ES GRATIS
-          </h2>
-          <p className="text-xl text-blue-100/80 mb-10 max-w-2xl mx-auto">
-            No esperes más. Vení a conocer nuestra comunidad y viví la experiencia Beleza desde adentro.
-          </p>
-          <Button
-            asChild
-            className="bg-white text-blue-900 hover:bg-slate-100 text-xl font-black px-10 py-8 rounded-2xl shadow-2xl transition-transform hover:scale-105"
-          >
-            <a href="https://www.instagram.com/belezadojo" target="_blank" rel="noopener noreferrer">
-              QUIERO EMPEZAR HOY
-            </a>
-          </Button>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="bg-slate-950 border-t border-slate-900 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-3">
-              <img src="/logo.png" alt="Beleza Logo" className="w-12 h-12 object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500" />
-              <div className="text-left">
-                <span className="block text-lg font-black text-slate-500 uppercase tracking-widest">Beleza Dojo</span>
-                <span className="text-xs text-slate-600 block">Evolución constante</span>
-              </div>
+          <div className="flex flex-col md:flex-row justify-between items-center pt-10 border-t border-white/5 gap-6">
+            <p className="text-white/20 text-xs font-bold uppercase tracking-widest">© {new Date().getFullYear()} Lotus Club International. Engineered by Antigravity.</p>
+            <div className="flex gap-8 text-[10px] uppercase font-black tracking-[0.2em] text-white/20">
+              <button className="hover:text-red-500 transition-colors">Privacidad</button>
+              <button className="hover:text-red-500 transition-colors">Términos</button>
             </div>
-            <p className="text-slate-600 text-sm font-medium">
-              © {new Date().getFullYear()} Beleza Dojo. Quilmes, Buenos Aires.
-            </p>
           </div>
         </div>
       </footer>
 
-      {/* Scroll to Top Button */}
+      {/* SCROLL TOP */}
       <AnimatePresence>
-        {
-          showScrollTop && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.5, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.5, y: 20 }}
-              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="fixed bottom-8 right-8 z-50 w-14 h-14 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-2xl shadow-blue-500/40 flex items-center justify-center transition-colors group active:scale-95 border border-white/20"
-              aria-label="Volver arriba"
-            >
-              <ArrowUp className="w-6 h-6 group-hover:-translate-y-1 transition-transform duration-300" />
-            </motion.button>
-          )
-        }
+        {showScrollTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="fixed bottom-10 right-10 z-50 w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-2xl shadow-red-600/40 border border-white/20 active:scale-95 transition-transform"
+          >
+            <ArrowUp className="w-6 h-6 text-white" />
+          </motion.button>
+        )}
       </AnimatePresence>
     </div>
   )

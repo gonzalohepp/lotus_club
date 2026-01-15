@@ -33,7 +33,7 @@ export default function ThemeToggle() {
     return (
         <button
             onClick={toggleTheme}
-            className="relative h-10 w-10 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center transition-colors hover:ring-2 hover:ring-blue-500/20"
+            className="relative h-10 w-10 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center transition-colors hover:ring-2 hover:ring-red-500/20"
             aria-label="Cambiar tema"
         >
             <AnimatePresence mode="wait">
@@ -45,7 +45,7 @@ export default function ThemeToggle() {
                         exit={{ y: -20, opacity: 0, rotate: 45 }}
                         transition={{ duration: 0.2 }}
                     >
-                        <Moon className="w-5 h-5 text-blue-400 fill-blue-400 italic" />
+                        <Moon className="w-5 h-5 text-red-500 fill-red-500 italic" />
                     </motion.div>
                 ) : (
                     <motion.div

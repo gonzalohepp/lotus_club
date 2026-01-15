@@ -87,7 +87,7 @@ export function ScheduleGrid() {
         <Button
           onClick={() => setActiveTab("martiales")}
           className={`flex-1 sm:flex-none px-4 md:px-8 py-2 md:py-3 rounded-xl text-xs md:text-base font-semibold transition-all duration-300 ${activeTab === "martiales"
-            ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
+            ? "bg-red-600 text-white shadow-lg shadow-red-600/50"
             : "bg-slate-800 text-slate-300 hover:bg-slate-700"
             }`}
           type="button"
@@ -97,7 +97,7 @@ export function ScheduleGrid() {
         <Button
           onClick={() => setActiveTab("acondicionamiento")}
           className={`flex-1 sm:flex-none px-4 md:px-8 py-2 md:py-3 rounded-xl text-xs md:text-base font-semibold transition-all duration-300 ${activeTab === "acondicionamiento"
-            ? "bg-blue-600 text-white shadow-lg shadow-blue-600/50"
+            ? "bg-red-600 text-white shadow-lg shadow-red-600/50"
             : "bg-slate-800 text-slate-300 hover:bg-slate-700"
             }`}
           type="button"
@@ -141,7 +141,7 @@ export function ScheduleGrid() {
                         {slot.available.map((isAvailable, dayIdx) => (
                           <td key={dayIdx} className="p-3 text-center align-middle">
                             {isAvailable ? (
-                              <div className="bg-blue-600 rounded-lg py-2 md:py-3 px-2 md:px-4 text-white font-semibold md:text-lg">
+                              <div className="bg-red-600 rounded-lg py-2 md:py-3 px-2 md:px-4 text-white font-semibold md:text-lg">
                                 {slot.time}
                               </div>
                             ) : (
@@ -175,7 +175,7 @@ export function ScheduleGrid() {
                         {classes.map((cls, idx) => (
                           <div
                             key={idx}
-                            className="bg-blue-600 rounded-lg py-2 px-3 text-[11px] md:text-xs text-white font-semibold text-center"
+                            className="bg-red-600 rounded-lg py-2 px-3 text-[11px] md:text-xs text-white font-semibold text-center"
                           >
                             {cls}
                           </div>

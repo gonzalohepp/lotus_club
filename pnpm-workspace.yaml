@@ -1,7 +1,5 @@
 packages:
   - apps/*
-  - packages/*
-  - supabase/functions/*
 
 ignoredBuiltDependencies:
   - sharp

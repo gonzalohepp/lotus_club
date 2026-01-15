@@ -1,8 +1,6 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useQuery } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabaseClient'
 import { Loader2 } from 'lucide-react'
 
 const PublicMap = dynamic(() => import('./PublicMap'), {
@@ -15,42 +13,37 @@ const PublicMap = dynamic(() => import('./PublicMap'), {
     ssr: false
 })
 
+const STATIC_ACADEMIES = [
+    {
+        id: 1,
+        name: "Lotus Club",
+        city: "Quilmes",
+        address: "Av. Calchaquí 4335",
+        lat: -34.763093,
+        lng: -58.279298,
+        description: "Sede central de Lotus Club. Especialistas en BJJ y Grappling.",
+        classes: "Jiu-Jitsu, Grappling, MMA, Judo",
+        professors: "Instructor Principal",
+        schedules: "Lunes a Viernes 08:00 - 22:00"
+    }
+]
+
 export default function AcademiesMapSection({ minimal = false }: { minimal?: boolean }) {
-    const { data: academies } = useQuery({
-        queryKey: ['public-academies'],
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from('academies')
-                .select('*')
-                .eq('is_active', true)
-            if (error) {
-                console.error('Error fetching academies:', error)
-                return []
-            }
-            return data || []
-        }
-    })
-
-    // Dummy data fallback for preview if DB is empty
-    const displayAcademies = academies && academies.length > 0 ? academies : []
-
     if (minimal) {
-        return <PublicMap academies={displayAcademies} />
+        return <PublicMap academies={STATIC_ACADEMIES} />
     }
 
     return (
         <section id="academias" className="py-24 relative overflow-hidden">
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/5 rounded-full blur-[120px]" />
-            </div>
+            <div className="absolute inset-0 bg-black pointer-events-none" />
 
             <div className="max-w-7xl mx-auto px-6 relative z-10">
                 <div className="text-center mb-16 max-w-3xl mx-auto">
-                    <span className="text-blue-500 font-bold tracking-widest text-xs uppercase mb-2 block">
+                    <span className="text-red-500 font-bold tracking-widest text-xs uppercase mb-2 block">
                         Nuestra Red
                     </span>
                     <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-6">
-                        Encontrá tu <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Dojo</span> más cercano
+                        Encontrá tu <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-rose-600">Dojo</span> más cercano
                     </h2>
                     <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
                         Contamos con múltiples sedes equipadas con la mejor infraestructura para tu entrenamiento.
@@ -58,7 +51,7 @@ export default function AcademiesMapSection({ minimal = false }: { minimal?: boo
                     </p>
                 </div>
 
-                <PublicMap academies={displayAcademies} />
+                <PublicMap academies={STATIC_ACADEMIES} />
             </div>
         </section>
     )
