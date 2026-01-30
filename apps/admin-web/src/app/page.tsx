@@ -136,7 +136,7 @@ export default function HomeLandingPage() {
           transition={{ delay: 1.5, duration: 1 }}
           className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/40"
         >
-          <span className="text-[10px] font-black uppercase tracking-[0.3em]">Scroll</span>
+
           <div className="w-px h-8 bg-white/20 animate-pulse" />
         </motion.div>
       </section>
