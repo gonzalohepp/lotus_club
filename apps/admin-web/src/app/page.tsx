@@ -73,12 +73,12 @@ export default function HomeLandingPage() {
             />
           </div>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-4">
             {navItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
-                className="text-xs font-black uppercase tracking-[0.2em] text-black/60 hover:text-black transition-colors"
+                className="text-xs font-black uppercase tracking-[0.15em] text-black/60 px-4 py-2 rounded-lg hover:bg-black hover:text-white transition-all duration-300"
               >
                 {item.label}
               </button>
@@ -104,7 +104,7 @@ export default function HomeLandingPage() {
                   <button
                     key={item.id}
                     onClick={() => scrollToSection(item.id)}
-                    className="text-2xl font-black uppercase tracking-tighter text-left text-black hover:text-black/70 transition-colors"
+                    className="text-2xl font-black uppercase tracking-tighter text-left text-black px-4 py-2 rounded-xl hover:bg-black hover:text-white transition-all"
                   >
                     {item.label}
                   </button>
@@ -115,50 +115,30 @@ export default function HomeLandingPage() {
         </AnimatePresence>
       </nav>
 
-      {/* ASYMMETRICAL HERO */}
-      <section id="inicio" className="relative min-h-screen flex items-center pt-24 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center relative z-10 w-full">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="inline-block px-4 py-1 rounded-full bg-white/10 border border-white/20 text-white text-[10px] font-black tracking-[0.3em] uppercase mb-8">
-              La Evolución del Combate
-            </div>
-            <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tight leading-[0.85] uppercase italic mb-8">
-              LIBERA <br />
-              <span className="text-white text-glow-white">TU</span> <br />
-              FUERZA <br />
-              INTERIOR
-            </h1>
-            <p className="text-white/60 text-lg md:text-xl max-w-md font-medium leading-relaxed mb-10">
-              Lotus Club - Donde la excelencia técnica se encuentra con el espíritu indomable.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Button
-                onClick={() => scrollToSection("about-bjj")}
-                className="bg-white hover:bg-black text-black hover:text-white font-black uppercase tracking-widest px-10 py-8 rounded-full h-auto text-lg hover:scale-105 transition-transform"
-              >
-                Conocé más
-              </Button>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8, rotate: 10 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            transition={{ duration: 1, delay: 0.2 }}
-            className="relative hidden lg:block"
-          >
-            <div className="absolute inset-0 bg-white/5 blur-[150px] rounded-full animate-pulse" />
-            <img
-              src="/stylized_red_lotus_1768403444922.png"
-              alt="Lotus"
-              className="relative w-full max-w-xl mx-auto drop-shadow-[0_0_50px_rgba(255,255,255,0.1)] animate-float grayscale brightness-200"
-            />
-          </motion.div>
-        </div>
+      {/* FULL SCREEN LOGO HERO */}
+      <section id="inicio" className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="relative z-10 flex flex-col items-center"
+        >
+          <div className="absolute inset-0 bg-white/5 blur-[200px] rounded-full animate-pulse scale-150" />
+          <img
+            src="/lotus_logo_full.png"
+            alt="Lotus Club"
+            className="relative w-[70vw] md:w-[50vw] lg:w-[40vw] max-w-3xl brightness-0 invert drop-shadow-[0_0_80px_rgba(255,255,255,0.2)] animate-float"
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5, duration: 1 }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/40"
+        >
+          <span className="text-[10px] font-black uppercase tracking-[0.3em]">Scroll</span>
+          <div className="w-px h-8 bg-white/20 animate-pulse" />
+        </motion.div>
       </section>
 
       {/* QUE ES JIU-JITSU */}
@@ -293,42 +273,24 @@ export default function HomeLandingPage() {
         </div>
       </section>
 
-      {/* FOOTER LUXURY */}
-      <footer className="py-20 bg-black border-t border-white/5">
+      {/* FOOTER */}
+      <footer className="py-16 bg-black border-t border-white/5">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-12 mb-20">
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-3 mb-8 cursor-pointer group" onClick={() => scrollToSection("inicio")}>
-                <img src="/lotus_logo_full.png" alt="Lotus Club" className="h-28 w-auto brightness-0 invert opacity-100 transition-all duration-500 hover:scale-105" />
-              </div>
-              <p className="text-white/40 max-w-xs text-lg font-medium leading-relaxed">
-                Elevando vidas a través de la excelencia en artes marciales. El centro de entrenamiento de combate líder en Zona Sur.
-              </p>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-4 cursor-pointer group" onClick={() => scrollToSection("inicio")}>
+              <img src="/lotus_logo_full.png" alt="Lotus Club" className="h-20 w-auto brightness-0 invert opacity-80 transition-all duration-500 group-hover:opacity-100 group-hover:scale-105" />
             </div>
-            <div>
-              <h4 className="text-xs font-black uppercase tracking-[0.3em] text-white underline mb-6">Navegación</h4>
-              <div className="flex flex-col gap-4 text-white/50 font-bold uppercase text-[10px] tracking-widest">
-                <button onClick={() => scrollToSection("inicio")}>Inicio</button>
-                <button onClick={() => scrollToSection("academy")}>Academia</button>
-                <button onClick={() => scrollToSection("horarios")}>Horarios</button>
-                <button onClick={() => scrollToSection("instructors")}>Equipo</button>
-              </div>
+            <div className="flex flex-col md:flex-row items-center gap-6 text-white/40">
+              <a href="https://www.instagram.com/lotusclub_ar" target="_blank" className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors">
+                <Instagram size={16} /> Instagram
+              </a>
+              <a href="https://wa.me/5491124041132" target="_blank" className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors">
+                <MessageCircle size={16} /> WhatsApp
+              </a>
             </div>
-            <div>
-              <h4 className="text-xs font-black uppercase tracking-[0.3em] text-white underline mb-6">Seguinos</h4>
-              <div className="flex flex-col gap-4 text-white/50 font-bold uppercase text-[10px] tracking-widest">
-                <a href="https://www.instagram.com/lotusclub_ar" target="_blank">Instagram</a>
-                <a href="https://wa.me/5491124041132" target="_blank">WhatsApp</a>
-                <p className="mt-4 text-white/30 capitalize tracking-normal italic font-medium">Av. Calchaquí 4335, Buenos Aires</p>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col md:flex-row justify-between items-center pt-10 border-t border-white/5 gap-6">
-            <p className="text-white/20 text-xs font-bold uppercase tracking-widest">© {new Date().getFullYear()} Lotus Club International. Engineered by Antigravity.</p>
-            <div className="flex gap-8 text-[10px] uppercase font-black tracking-[0.2em] text-white/20">
-              <button className="hover:text-white transition-colors">Privacidad</button>
-              <button className="hover:text-white transition-colors">Términos</button>
-            </div>
+            <p className="text-white/20 text-xs font-bold uppercase tracking-widest text-center md:text-right">
+              © {new Date().getFullYear()} Lotus Club International
+            </p>
           </div>
         </div>
       </footer>
