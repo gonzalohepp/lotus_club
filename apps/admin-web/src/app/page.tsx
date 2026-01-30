@@ -174,43 +174,34 @@ export default function HomeLandingPage() {
 
       {/* HISTORIA JIU-JITSU */}
       <section id="history-bjj" className="py-32 bg-black overflow-hidden">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid lg:grid-cols-12 gap-16">
-            <div className="lg:col-span-5">
-              <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none mb-10">
-                HISTORIA DEL <br />
-                <span className="text-white italic">BJJ</span>
-              </h2>
-              <div className="sticky top-32">
-                <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden border border-white/10 grayscale hover:grayscale-0 transition-all duration-700">
-                  <img src="/lotus_club_hero_action_1768403416936.png" className="w-full h-full object-cover" alt="History" />
-                </div>
-              </div>
+        <div className="max-w-4xl mx-auto px-6">
+          <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none mb-16">
+            HISTORIA DEL <br />
+            <span className="text-white italic">BJJ</span>
+          </h2>
+          <div className="space-y-12 text-white/60 text-lg leading-relaxed">
+            <div className="space-y-6">
+              <h3 className="text-2xl font-black uppercase text-white tracking-widest">Orígenes Japoneses</h3>
+              <p>
+                Los métodos de lucha cuerpo a cuerpo clásicos del Japón feudal, conocidos como jiu-jitsu (柔術) o jūjutsu se desarrollaron a lo largo de la época del Japón feudal (siglos VIII al XIX). Los samuráis desarrollaron técnicas de lanzamientos, luxaciones y derribos para enfrentar oponentes con armadura, donde los golpes resultaban poco efectivos.
+              </p>
+              <p>
+                En 1882, Jigorō Kanō fundó el judo (柔道) y la academia Kōdōkan, basándose en la escuela Kito-Ryu y Tenshin Shin´yo Ryu. El judo desplazó por su superioridad a otros tipos de jiu-jitsu tradicional basados solamente en formas y katas antiguos.
+              </p>
             </div>
-            <div className="lg:col-span-7 space-y-12 text-white/60 text-lg leading-relaxed pt-10">
-              <div className="space-y-6">
-                <h3 className="text-2xl font-black uppercase text-white tracking-widest">Orígenes Japoneses</h3>
-                <p>
-                  Los métodos de lucha cuerpo a cuerpo clásicos del Japón feudal, conocidos como jiu-jitsu (柔術) o jūjutsu se desarrollaron a lo largo de la época del Japón feudal (siglos VIII al XIX). Los samuráis desarrollaron técnicas de lanzamientos, luxaciones y derribos para enfrentar oponentes con armadura, donde los golpes resultaban poco efectivos.
-                </p>
-                <p>
-                  En 1882, Jigorō Kanō fundó el judo (柔道) y la academia Kōdōkan, basándose en la escuela Kito-Ryu y Tenshin Shin´yo Ryu. El judo desplazó por su superioridad a otros tipos de jiu-jitsu tradicional basados solamente en formas y katas antiguos.
-                </p>
-              </div>
 
-              <div className="space-y-6">
-                <h3 className="text-2xl font-black uppercase text-white tracking-widest">La semilla en Brasil</h3>
-                <p>
-                  Mitsuyo Maeda, conocido como el "Conde Koma", fue uno de los grandes judokas del Kodokan que recorrieron el mundo aceptando retos. En 1914 llegó a Belem do Pará, Brasil, donde Gastão Gracie le ayudó en sus exhibiciones. Maeda aceptó entrenar a los hijos de Gastão como agradecimiento.
-                </p>
-              </div>
+            <div className="space-y-6">
+              <h3 className="text-2xl font-black uppercase text-white tracking-widest">La semilla en Brasil</h3>
+              <p>
+                Mitsuyo Maeda, conocido como el "Conde Koma", fue uno de los grandes judokas del Kodokan que recorrieron el mundo aceptando retos. En 1914 llegó a Belem do Pará, Brasil, donde Gastão Gracie le ayudó en sus exhibiciones. Maeda aceptó entrenar a los hijos de Gastão como agradecimiento.
+              </p>
+            </div>
 
-              <div className="space-y-6">
-                <h3 className="text-2xl font-black uppercase text-white tracking-widest">El Legado Gracie</h3>
-                <p>
-                  En 1925 se abrió la primera academia de "Gracie Jiu-jitsu" en Río de Janeiro. Carlos Gracie y sus hermanos perfeccionaron las técnicas y desafiaban a cualquiera a un combate sin reglas para demostrar la eficacia del sistema. Hélio Gracie, dadas sus condiciones físicas, adaptó y perfeccionó aún más las técnicas para maximizar el uso de palancas y minimizar el esfuerzo físico.
-                </p>
-              </div>
+            <div className="space-y-6">
+              <h3 className="text-2xl font-black uppercase text-white tracking-widest">El Legado Gracie</h3>
+              <p>
+                En 1925 se abrió la primera academia de "Gracie Jiu-jitsu" en Río de Janeiro. Carlos Gracie y sus hermanos perfeccionaron las técnicas y desafiaban a cualquiera a un combate sin reglas para demostrar la eficacia del sistema. Hélio Gracie, dadas sus condiciones físicas, adaptó y perfeccionó aún más las técnicas para maximizar el uso de palancas y minimizar el esfuerzo físico.
+              </p>
             </div>
           </div>
         </div>
