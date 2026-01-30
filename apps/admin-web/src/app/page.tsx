@@ -221,7 +221,7 @@ export default function HomeLandingPage() {
               HISTORIA DE <br />
               <span className="text-white italic underline decoration-white/20 underline-offset-8">LÓTUS</span>
             </h2>
-            <p className="text-white/40 text-2xl font-medium max-w-2xl mx-auto">Tradición, Respeto y Calidad de Vida desde 1989.</p>
+
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-12 items-center mb-32">
