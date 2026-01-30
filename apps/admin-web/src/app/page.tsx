@@ -20,16 +20,13 @@ import {
   Trophy
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { InstructorCarousel } from "./components/landing/InstructorCarousel"
-import { ScheduleGrid } from "./components/landing/ScheduleGrid"
 import AcademiesMapSection from "@/components/landing/AcademiesMapSection"
 
 const navItems = [
   { label: "Inicio", id: "inicio" },
-  { label: "Academia", id: "academy" },
-  { label: "Programas", id: "programs" },
-  { label: "Profesores", id: "instructors" },
-  { label: "Horarios", id: "horarios" },
+  { label: "¿Qué es BJJ?", id: "about-bjj" },
+  { label: "Historia del BJJ", id: "history-bjj" },
+  { label: "Historia de Lótus", id: "history-lotus" },
   { label: "Sedes", id: "locations" },
 ]
 
@@ -69,15 +66,11 @@ export default function HomeLandingPage() {
         <div className={`rounded-2xl border border-white/10 backdrop-blur-2xl px-6 py-3 flex items-center justify-between transition-all ${scrolled ? "bg-white shadow-2xl py-2" : "bg-white/90"
           }`}>
           <div className="flex items-center gap-4 cursor-pointer group" onClick={() => scrollToSection("inicio")}>
-            <div className="relative w-14 h-14 rounded-2xl border border-black/10 bg-black/5 flex items-center justify-center overflow-hidden group-hover:border-black group-hover:shadow-[0_0_30px_rgba(0,0,0,0.3)] transition-all duration-500">
-              <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <img
-                src="/lotus_logo_full.png"
-                alt="Lotus Club"
-                className="w-[200%] max-w-none brightness-0 relative transition-all duration-700 group-hover:scale-110"
-                style={{ transform: 'translateY(-26%)' }}
-              />
-            </div>
+            <img
+              src="/lotus_logo_full.png"
+              alt="Lotus Club"
+              className="h-10 md:h-12 w-auto brightness-0 transition-all duration-500 group-hover:scale-105"
+            />
           </div>
 
           <div className="hidden md:flex items-center gap-8">
@@ -140,14 +133,14 @@ export default function HomeLandingPage() {
               INTERIOR
             </h1>
             <p className="text-white/60 text-lg md:text-xl max-w-md font-medium leading-relaxed mb-10">
-              Entrenamiento de élite en Brazilian Jiu-Jitsu, MMA y Grappling en un ambiente diseñado para el alto rendimiento.
+              Lotus Club - Donde la excelencia técnica se encuentra con el espíritu indomable.
             </p>
             <div className="flex flex-wrap gap-4">
               <Button
-                onClick={() => window.open("https://wa.me/5491124041132", "_blank")}
+                onClick={() => scrollToSection("about-bjj")}
                 className="bg-white hover:bg-black text-black hover:text-white font-black uppercase tracking-widest px-10 py-8 rounded-full h-auto text-lg hover:scale-105 transition-transform"
               >
-                Unite a la Tribu
+                Conocé más
               </Button>
             </div>
           </motion.div>
@@ -168,100 +161,118 @@ export default function HomeLandingPage() {
         </div>
       </section>
 
-      {/* BRAND ETHOS */}
-      <section id="academy" className="py-32 bg-black">
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-20 items-center">
-          <div className="order-2 md:order-1 relative h-[600px] rounded-[3rem] overflow-hidden border border-white/10 group">
-            <img src="/lotus_club_hero_action_1768403416936.png" className="w-full h-full object-cover grayscale transition-all duration-1000" alt="Action" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
-            <div className="absolute bottom-10 left-10">
-              <p className="text-4xl font-black uppercase italic tracking-tighter italic">Respeto. <br />Disciplina. <br /><span className="text-white underline decoration-white/30">Poder.</span></p>
-            </div>
-          </div>
-          <div className="order-1 md:order-2">
-            <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none mb-10">
-              MÁS QUE <br />UN GIMNASIO. <br />
-              <span className="text-white italic">UN LEGADO.</span>
+      {/* QUE ES JIU-JITSU */}
+      <section id="about-bjj" className="py-32 bg-zinc-950">
+        <div className="max-w-4xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none mb-12">
+              ¿QUÉ ES EL <br />
+              <span className="text-white italic">JIU-JITSU?</span>
             </h2>
-            <div className="space-y-6 text-white/50 text-lg leading-relaxed">
+            <div className="space-y-8 text-white/70 text-lg md:text-xl leading-relaxed font-medium">
               <p>
-                Fundado por <span className="text-white font-bold">Cristian Hein</span>, Lotus Club no se trata solo de técnicas de lucha. Es una filosofía de evolución constante.
+                El jiu-jitsu brasileño (popularmente conocido también por sus siglas en inglés, BJJ) es un arte marcial, deporte de combate y sistema de defensa personal desarrollado en Brasil. Se centra principalmente en la lucha cuerpo a cuerpo en el suelo, usando para ello luxaciones, estrangulaciones, inmovilizaciones y derribos.
+              </p>
+              <div className="p-8 bg-white/5 border border-white/10 rounded-3xl italic">
+                "El principal objetivo del jiu-jitsu brasileño es someter al rival mediante una luxación o estrangulación sin necesidad de usar golpes, de ahí que se le denomine a veces «arte suave»."
+              </div>
+              <p>
+                Estas técnicas tienen su origen en el judo japonés, particularmente en su apartado de lucha en suelo conocido como ne waza, llevado a Brasil por los maestros Mitsuyo Maeda y Geo Omori. Estas técnicas fueron posteriormente adaptadas en su aspecto deportivo por la familia Gracie, transmitiéndolas a través de sucesivas generaciones.
               </p>
               <p>
-                La flor de loto representa el surgimiento desde la lucha hacia la belleza y la fuerza. En cada lucha, en cada entrenamiento, encontramos nuestro camino a la excelencia.
+                Este arte marcial está basado en la idea de que un individuo pequeño puede defenderse con éxito frente a un rival más grande y fuerte gracias al uso eficaz de la técnica, llevándolo al suelo, desgastándolo y finalmente sometiéndolo con una luxación o estrangulación.
               </p>
-              <div className="pt-10 flex gap-12">
-                <div>
-                  <p className="text-4xl font-black text-white">10+</p>
-                  <p className="text-[10px] uppercase tracking-widest text-white/60 font-bold">Años de excelencia</p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* HISTORIA JIU-JITSU */}
+      <section id="history-bjj" className="py-32 bg-black overflow-hidden">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid lg:grid-cols-12 gap-16">
+            <div className="lg:col-span-5">
+              <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none mb-10">
+                HISTORIA DEL <br />
+                <span className="text-white italic">BJJ</span>
+              </h2>
+              <div className="sticky top-32">
+                <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden border border-white/10 grayscale hover:grayscale-0 transition-all duration-700">
+                  <img src="/lotus_club_hero_action_1768403416936.png" className="w-full h-full object-cover" alt="History" />
                 </div>
-                <div>
-                  <p className="text-4xl font-black text-white">500+</p>
-                  <p className="text-[10px] uppercase tracking-widest text-white/60 font-bold">Alumnos formados</p>
-                </div>
+              </div>
+            </div>
+            <div className="lg:col-span-7 space-y-12 text-white/60 text-lg leading-relaxed pt-10">
+              <div className="space-y-6">
+                <h3 className="text-2xl font-black uppercase text-white tracking-widest">Orígenes Japoneses</h3>
+                <p>
+                  Los métodos de lucha cuerpo a cuerpo clásicos del Japón feudal, conocidos como jiu-jitsu (柔術) o jūjutsu se desarrollaron a lo largo de la época del Japón feudal (siglos VIII al XIX). Los samuráis desarrollaron técnicas de lanzamientos, luxaciones y derribos para enfrentar oponentes con armadura, donde los golpes resultaban poco efectivos.
+                </p>
+                <p>
+                  En 1882, Jigorō Kanō fundó el judo (柔道) y la academia Kōdōkan, basándose en la escuela Kito-Ryu y Tenshin Shin´yo Ryu. El judo desplazó por su superioridad a otros tipos de jiu-jitsu tradicional basados solamente en formas y katas antiguos.
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                <h3 className="text-2xl font-black uppercase text-white tracking-widest">La semilla en Brasil</h3>
+                <p>
+                  Mitsuyo Maeda, conocido como el "Conde Koma", fue uno de los grandes judokas del Kodokan que recorrieron el mundo aceptando retos. En 1914 llegó a Belem do Pará, Brasil, donde Gastão Gracie le ayudó en sus exhibiciones. Maeda aceptó entrenar a los hijos de Gastão como agradecimiento.
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                <h3 className="text-2xl font-black uppercase text-white tracking-widest">El Legado Gracie</h3>
+                <p>
+                  En 1925 se abrió la primera academia de "Gracie Jiu-jitsu" en Río de Janeiro. Carlos Gracie y sus hermanos perfeccionaron las técnicas y desafiaban a cualquiera a un combate sin reglas para demostrar la eficacia del sistema. Hélio Gracie, dadas sus condiciones físicas, adaptó y perfeccionó aún más las técnicas para maximizar el uso de palancas y minimizar el esfuerzo físico.
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* BENTO PROGRAMS */}
-      <section id="programs" className="py-32 bg-black">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="mb-20">
-            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">Disciplinas Core</h2>
-            <p className="text-white/40 text-xl font-medium">Diseñadas para el dominio en el mundo real.</p>
-          </div>
+      {/* HISTORIA LOTUS */}
+      <section id="history-lotus" className="py-32 bg-zinc-950">
+        <div className="max-w-5xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1 }}
+            viewport={{ once: true }}
+            className="text-center mb-20"
+          >
+            <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none mb-6">
+              HISTORIA DE <br />
+              <span className="text-white italic underline decoration-white/20 underline-offset-8">LÓTUS</span>
+            </h2>
+            <p className="text-white/40 text-2xl font-medium max-w-2xl mx-auto">Tradición, Respeto y Calidad de Vida desde 1989.</p>
+          </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-6 auto-rows-[300px]">
-            <div className="md:col-span-2 bento-card p-10 flex flex-col justify-end group cursor-pointer lg:row-span-2">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Shield className="text-white mb-6 group-hover:scale-110 transition-transform" size={48} />
-              <h3 className="text-3xl font-black uppercase italic mb-4">Brazilian Jiu-Jitsu</h3>
-              <p className="text-white/50 max-w-sm">El arte suave. Domina el apalancamiento, el control y la sumisión. Nuestra base fundamental.</p>
+          <div className="grid md:grid-cols-2 gap-12 items-center mb-32">
+            <div className="space-y-6 text-white/70 text-lg leading-relaxed">
+              <p>
+                Fundada el 19 de febrero de 1989 por los hermanos Moisés, Ali y Elias, en una época en la que el Jiu-Jitsu no era conocido como lo es hoy, Lótus siempre mantuvo la tradición familiar de sus miembros, priorizando la calidad de vida, el respeto y la solidaridad.
+              </p>
+              <p>
+                El equipo de competencia de Lótus es reconocido como el mejor de São Paulo, ostentando el mayor número de títulos. Actualmente, Lótus Club ha trascendido fronteras, desarrollándose en países como Estados Unidos, Japón y Nueva Zelanda.
+              </p>
             </div>
-            <div className="bento-card p-8 group cursor-pointer">
-              <Zap className="text-white mb-4 group-hover:rotate-12 transition-transform" size={32} />
-              <h3 className="text-xl font-bold uppercase mb-2">Grappling</h3>
-              <p className="text-white/40 text-sm">Intensidad No-Gi. Movimientos fluidos y transiciones explosivas.</p>
+            <div className="p-10 bg-white border border-black/10 rounded-[3rem] shadow-2xl">
+              <h3 className="text-3xl font-black text-black uppercase mb-6 leading-tight">Moisés Muradi</h3>
+              <p className="text-black/70 mb-6 font-medium">
+                Fundador de Lotus Club Jiu-Jitsu. Iniciado por Orlando Saraiva y graduado a cinturón negro por Otávio de Almeida.
+              </p>
+              <div className="pt-6 border-t border-black/10">
+                <p className="text-black/60 text-sm font-bold uppercase tracking-widest">
+                  Fundador de la primera Federación de Jiu-Jitsu de São Paulo y la CBJJE.
+                </p>
+              </div>
             </div>
-            <div className="bento-card p-8 group cursor-pointer bg-white">
-              <Target className="text-black mb-4" size={32} />
-              <h3 className="text-xl font-black uppercase mb-2 text-black">MMA</h3>
-              <p className="text-black/60 text-sm font-medium">La integración definitiva. Golpea, lucha y domina.</p>
-            </div>
-            <div className="bento-card p-8 group cursor-pointer">
-              <Trophy className="text-white mb-4 group-hover:scale-125 transition-transform" size={32} />
-              <h3 className="text-xl font-bold uppercase mb-2">Judo</h3>
-              <p className="text-white/40 text-sm">Domina el arte de los derribos. Precisión y poder tradicional.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* MODERN INSTRUCTORS */}
-      <section id="instructors" className="py-32 bg-black">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-24">
-            <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none italic mb-6">Staff Técnico</h2>
-            <p className="text-white/40 text-xl max-w-2xl mx-auto">Entrená con expertos dedicados a tu progresión diaria.</p>
-          </div>
-          <InstructorCarousel />
-        </div>
-      </section>
-
-      {/* SCHEDULE */}
-      <section id="horarios" className="py-32 bg-black">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-end gap-10 mb-20">
-            <div>
-              <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none mb-4">Horarios de <span className="text-white underline decoration-white/20">Entrenamiento</span></h2>
-              <p className="text-white/40 text-xl">Encontrá tu momento para evolucionar.</p>
-            </div>
-            <Button className="bg-white text-black font-black uppercase tracking-widest px-8 py-6 rounded-full h-auto hover:bg-black hover:text-white transition-all shadow-xl">Descargar PDF</Button>
-          </div>
-          <div className="bg-zinc-900/50 p-4 md:p-10 rounded-[3rem] border border-white/5 shadow-2xl backdrop-blur-xl">
-            <ScheduleGrid />
           </div>
         </div>
       </section>
@@ -280,32 +291,6 @@ export default function HomeLandingPage() {
             <AcademiesMapSection minimal={true} />
           </div>
         </div>
-      </section>
-
-      {/* FINAL CALL */}
-      <section className="py-40 relative overflow-hidden bg-black">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
-        <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
-          <motion.div
-            whileInView={{ opacity: 1, scale: 1 }}
-            initial={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.8 }}
-          >
-            <h2 className="text-6xl md:text-[10rem] font-black uppercase tracking-tighter leading-none mb-12">
-              SIN MÁS <br /><span className="text-white italic underline decoration-white/10 underline-offset-8">EXCUSAS.</span>
-            </h2>
-            <div className="flex flex-col items-center gap-8">
-              <p className="text-white/40 text-2xl font-medium max-w-2xl">Empezá tu transformación hoy. Tu primera clase de prueba es por nuestra cuenta.</p>
-              <Button
-                onClick={() => window.open("https://www.instagram.com/lotusclub_ar", "_blank")}
-                className="bg-white text-black hover:bg-black hover:text-white text-2xl font-black px-16 py-10 rounded-full h-auto transition-all shadow-2xl"
-              >
-                Reservar Clase de Prueba
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-        <div className="absolute bottom-[-100px] left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-white/5 blur-[120px] rounded-full" />
       </section>
 
       {/* FOOTER LUXURY */}
