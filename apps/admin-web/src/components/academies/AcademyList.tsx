@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabaseClient'
 import { MapPin, Edit2, Trash2, ChevronLeft, ChevronRight, Info } from 'lucide-react'
@@ -8,7 +8,7 @@ import type { Academy } from './AcademyModal'
 
 const ITEMS_PER_PAGE = 6
 
-export default function AcademyList({ search, onEdit }: { search: string, onEdit: (academy: Academy) => void }) {
+export default function AcademyList({ search, onEdit, onCountChange }: { search: string, onEdit: (academy: Academy) => void, onCountChange?: (count: number) => void }) {
     const queryClient = useQueryClient()
     const [currentPage, setCurrentPage] = useState(1)
 
@@ -33,6 +33,11 @@ export default function AcademyList({ search, onEdit }: { search: string, onEdit
             queryClient.invalidateQueries({ queryKey: ['academies'] })
         }
     })
+
+    useEffect(() => {
+        onCountChange?.(academies?.length ?? 0)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [academies])
 
     // Filtered academies
     const filteredAcademies = useMemo(() => {

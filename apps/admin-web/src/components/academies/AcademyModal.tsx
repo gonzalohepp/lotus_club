@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { X, Upload, Loader2, MapPin } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
+import { getAcademyLimit } from '@/lib/features'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import MapSelector from './MapSelector'
 import Image from 'next/image'
@@ -146,6 +147,20 @@ export default function AcademyModal({
                 const { error } = await supabase.from('academies').update(payload).eq('id', academy.id)
                 if (error) throw error
             } else {
+                // Re-chequeamos el límite acá (no solo en el botón del listado) para
+                // cerrar la ventana de carrera entre que carga el conteo y que el
+                // usuario hace click en "Nueva Academia".
+                const limit = getAcademyLimit()
+                if (limit !== null) {
+                    const { count, error: countError } = await supabase
+                        .from('academies')
+                        .select('id', { count: 'exact', head: true })
+                    if (countError) throw countError
+                    if ((count ?? 0) >= limit) {
+                        throw new Error(`Tu plan permite hasta ${limit} sede${limit === 1 ? '' : 's'}. Actualizá a Pro para agregar más.`)
+                    }
+                }
+
                 const { error } = await supabase.from('academies').insert(payload)
                 if (error) throw error
             }

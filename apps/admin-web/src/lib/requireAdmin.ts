@@ -2,6 +2,7 @@ import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { User } from '@supabase/supabase-js'
+import { hasFeature, type FeatureKey } from './features'
 
 type UserAuthResult =
   | { error: NextResponse; user?: undefined; supabase?: undefined }
@@ -61,4 +62,15 @@ export async function requireAdmin(): Promise<AdminAuthResult> {
   }
 
   return { user: auth.user }
+}
+
+/**
+ * Corta rutas de features que no están habilitadas en esta instancia (plan
+ * Basic). Devuelve 404 en vez de 403 para no revelar que la feature existe.
+ */
+export function requireFeature(key: FeatureKey): { error?: NextResponse } {
+  if (!hasFeature(key)) {
+    return { error: NextResponse.json({ error: 'Not found' }, { status: 404 }) }
+  }
+  return {}
 }

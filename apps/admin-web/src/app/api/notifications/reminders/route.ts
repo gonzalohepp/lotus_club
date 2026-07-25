@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import webpush, { WebPushError, type PushSubscription } from 'web-push'
 import { createClient } from '@supabase/supabase-js'
-import { requireAdmin } from '@/lib/requireAdmin'
+import { requireAdmin, requireFeature } from '@/lib/requireAdmin'
 import { requireCronSecret } from '@/lib/requireCronSecret'
 
 export async function POST(req: Request) {
@@ -14,6 +14,9 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
         }
     }
+
+    const featureGuard = requireFeature('notifications')
+    if (featureGuard.error) return featureGuard.error
 
     try {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!

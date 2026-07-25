@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { hasFeature, ROUTE_FEATURES } from '@/lib/features'
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl
@@ -80,7 +81,10 @@ export async function middleware(request: NextRequest) {
         '/torneo',
         '/metricas',
         '/access-log',
-        '/qr'
+        '/qr',
+        '/reportes',
+        '/asistencia-vivo',
+        '/notificaciones'
     ]
 
     const isPathAdmin = adminPaths.some(p => pathname.startsWith(p))
@@ -110,6 +114,12 @@ export async function middleware(request: NextRequest) {
             if (profile?.role !== 'admin' && profile?.role !== 'instructor') {
                 console.warn(`[middleware] Blocked ${profile?.role || 'member'} ${user.email} from ${pathname}`)
                 return NextResponse.redirect(new URL('/validate', origin))
+            }
+
+            // 3. Bloqueo por plan: la ruta existe pero la feature está apagada en esta instancia
+            const featureEntry = Object.entries(ROUTE_FEATURES).find(([prefix]) => pathname.startsWith(prefix))
+            if (featureEntry && !hasFeature(featureEntry[1])) {
+                return NextResponse.redirect(new URL('/admin', origin))
             }
         }
     }

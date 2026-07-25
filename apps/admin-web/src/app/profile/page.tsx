@@ -31,6 +31,7 @@ import PhotoCropper from '../components/profile/PhotoCropper'
 import MemberGrades from '../components/profile/MemberGrades'
 import { fmtARS, fmtDate, fmtSchedule } from '@/lib/format'
 import { getPaymentStatusMessage } from '@/lib/pricing'
+import { hasFeature } from '@/lib/features'
 
 
 type MemberRow = {
@@ -504,13 +505,15 @@ export default function ProfilePage() {
                       onClick={() => setSheetAsistencia(true)}
                       accent="emerald"
                     />
-                    <SectionButton
-                      icon={<Shield className="w-5 h-5" />}
-                      label="Mis Graduaciones"
-                      sublabel="Cinturones y logros"
-                      onClick={() => setSheetGraduaciones(true)}
-                      accent="purple"
-                    />
+                    {hasFeature('graduations') && (
+                      <SectionButton
+                        icon={<Shield className="w-5 h-5" />}
+                        label="Mis Graduaciones"
+                        sublabel="Cinturones y logros"
+                        onClick={() => setSheetGraduaciones(true)}
+                        accent="purple"
+                      />
+                    )}
                   </div>
 
                   {/* Contact info mobile */}
@@ -671,9 +674,11 @@ export default function ProfilePage() {
                       </div>
 
                       {/* Grades */}
-                      <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
-                        <MemberGrades userId={member.user_id} readOnly={true} />
-                      </div>
+                      {hasFeature('graduations') && (
+                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                          <MemberGrades userId={member.user_id} readOnly={true} />
+                        </div>
+                      )}
                     </div>
 
                     {/* Right column */}

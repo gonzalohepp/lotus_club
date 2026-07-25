@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { fmtARS } from '@/lib/format'
+import { hasFeature } from '@/lib/features'
 import AdminLayout from '../layouts/AdminLayout'
 import StatsCard from '../components/dashboard/StatsCard'
 import RecentActivity from '../components/dashboard/RecentActivity'
@@ -63,11 +64,13 @@ export default function AdminDashboard() {
         { data: a, error: ae },
       ] = await Promise.all([
         supabase.from('dashboard_stats').select('*').maybeSingle(),
-        supabase
-          .from('payments')
-          .select('amount, method, paid_at, profiles!payments_user_id_fkey(first_name,last_name,avatar_url)')
-          .order('paid_at', { ascending: false })
-          .limit(5),
+        hasFeature('payments')
+          ? supabase
+            .from('payments')
+            .select('amount, method, paid_at, profiles!payments_user_id_fkey(first_name,last_name,avatar_url)')
+            .order('paid_at', { ascending: false })
+            .limit(5)
+          : Promise.resolve({ data: [] as PayRow[], error: null }),
         supabase
           .from('access_logs')
           .select('scanned_at, result, reason, profiles!access_logs_user_id_fkey(first_name,last_name,avatar_url)')
@@ -180,12 +183,14 @@ export default function AdminDashboard() {
                   Nuevo Miembro
                 </button>
               </Link>
-              <Link href="/payments" className="flex-1 md:flex-none">
-                <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-semibold hover:bg-slate-50 dark:hover:bg-white/10 transition-all active:scale-95">
-                  <DollarSign className="w-4 h-4" />
-                  Pago
-                </button>
-              </Link>
+              {hasFeature('payments') && (
+                <Link href="/payments" className="flex-1 md:flex-none">
+                  <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-semibold hover:bg-slate-50 dark:hover:bg-white/10 transition-all active:scale-95">
+                    <DollarSign className="w-4 h-4" />
+                    Pago
+                  </button>
+                </Link>
+              )}
             </div>
           </header>
 
@@ -201,7 +206,7 @@ export default function AdminDashboard() {
           )}
 
           {/* KPIs */}
-          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
+          <section className={hasFeature('payments') ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-10' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10'}>
             <StatsCard
               title="Total Miembros"
               value={stats?.members_total ?? 0}
@@ -223,13 +228,15 @@ export default function AdminDashboard() {
               color="red"
               loading={loading}
             />
-            <StatsCard
-              title="Ingresos del Mes"
-              value={fmtARS(monthRevenue)}
-              icon={<DollarSign className="w-5 h-5" />}
-              color="purple"
-              loading={loading}
-            />
+            {hasFeature('payments') && (
+              <StatsCard
+                title="Ingresos del Mes"
+                value={fmtARS(monthRevenue)}
+                icon={<DollarSign className="w-5 h-5" />}
+                color="purple"
+                loading={loading}
+              />
+            )}
             <StatsCard
               title="Accesos Hoy"
               value={(stats?.accesses_success_today ?? 0) + (stats?.accesses_denied_today ?? 0)}
@@ -242,26 +249,28 @@ export default function AdminDashboard() {
 
 
           {/* Activity Section */}
-          <div className="grid lg:grid-cols-3 gap-8 mb-10">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="lg:col-span-2 space-y-6"
-            >
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-brand" />
-                  Pagos recientes
-                </h2>
-                <Link href="/payments" className="text-sm font-semibold text-brand-dark dark:text-brand hover:underline flex items-center gap-1">
-                  Ver todos <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-              <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                <RecentActivity rows={payments} loading={loading} />
-              </div>
-            </motion.div>
+          <div className={hasFeature('payments') ? 'grid lg:grid-cols-3 gap-8 mb-10' : 'grid gap-8 mb-10'}>
+            {hasFeature('payments') && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="lg:col-span-2 space-y-6"
+              >
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-brand" />
+                    Pagos recientes
+                  </h2>
+                  <Link href="/payments" className="text-sm font-semibold text-brand-dark dark:text-brand hover:underline flex items-center gap-1">
+                    Ver todos <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+                <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                  <RecentActivity rows={payments} loading={loading} />
+                </div>
+              </motion.div>
+            )}
 
             <motion.div
               initial={{ opacity: 0, x: 20 }}

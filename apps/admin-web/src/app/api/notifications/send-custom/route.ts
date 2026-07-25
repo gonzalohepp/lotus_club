@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server'
 import webpush, { WebPushError, type PushSubscription } from 'web-push'
 import { createClient } from '@supabase/supabase-js'
-import { requireAdmin } from '@/lib/requireAdmin'
+import { requireAdmin, requireFeature } from '@/lib/requireAdmin'
 
 export async function POST(req: Request) {
     const auth = await requireAdmin()
     if (auth.error) return auth.error
+
+    const featureGuard = requireFeature('notifications')
+    if (featureGuard.error) return featureGuard.error
 
     try {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!

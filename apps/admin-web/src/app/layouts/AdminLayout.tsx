@@ -20,12 +20,15 @@ import {
   ArrowRight,
   Wifi,
   WifiOff,
-  Activity
+  Activity,
+  Sparkles
 } from 'lucide-react'
 import { Toaster, toast } from 'sonner'
 import ThemeToggle from '../components/ThemeToggle'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
+import { hasFeature, PLAN, type FeatureKey } from '@/lib/features'
+import UpgradeModal from '../components/plan/UpgradeModal'
 
 type Notification = {
   id: string
@@ -55,19 +58,26 @@ type Profile = {
   avatar_url: string | null
 }
 
-const NAV_ITEMS = [
+const NAV_ITEMS: {
+  href: string
+  label: string
+  icon: typeof LayoutDashboard
+  roles: string[]
+  feature?: FeatureKey
+}[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin'] },
-  { href: '/qr', label: 'QR de Acceso', icon: QrCode, roles: ['admin', 'instructor'] },
+  { href: '/qr', label: 'QR de Acceso', icon: QrCode, roles: ['admin', 'instructor'], feature: 'qr' },
   { href: '/validate', label: 'Validar Acceso', icon: QrCode, roles: ['admin', 'instructor', 'becado', 'member'] },
   { href: '/profile', label: 'Mi Perfil', icon: UserIcon, roles: ['admin', 'instructor', 'becado', 'member'] },
-  { href: '/members', label: 'Miembros', icon: Users, roles: ['admin'] },
-  { href: '/admin/academies', label: 'Academias', icon: Building2, roles: ['admin'] },
-  { href: '/classes', label: 'Clases', icon: GraduationCap, roles: ['admin'] },
-  { href: '/payments', label: 'Pagos', icon: DollarSign, roles: ['admin'] },
-  { href: '/metricas', label: 'Metricas', icon: ChartLine, roles: ['admin'] },
-  { href: '/reportes', label: 'Reportes', icon: ClipboardList, roles: ['admin'] },
-  { href: '/asistencia-vivo', label: 'Asistencia en Vivo', icon: Activity, roles: ['admin', 'instructor'] },
-  { href: '/access-log', label: 'Historial de Accesos', icon: ClipboardList, roles: ['admin'] },
+  { href: '/members', label: 'Miembros', icon: Users, roles: ['admin'], feature: 'members' },
+  { href: '/admin/academies', label: 'Academias', icon: Building2, roles: ['admin'], feature: 'academies' },
+  { href: '/classes', label: 'Clases', icon: GraduationCap, roles: ['admin'], feature: 'classes' },
+  { href: '/payments', label: 'Pagos', icon: DollarSign, roles: ['admin'], feature: 'payments' },
+  { href: '/metricas', label: 'Metricas', icon: ChartLine, roles: ['admin'], feature: 'metrics' },
+  { href: '/reportes', label: 'Reportes', icon: ClipboardList, roles: ['admin'], feature: 'reports' },
+  { href: '/asistencia-vivo', label: 'Asistencia en Vivo', icon: Activity, roles: ['admin', 'instructor'], feature: 'asistenciaVivo' },
+  { href: '/access-log', label: 'Historial de Accesos', icon: ClipboardList, roles: ['admin'], feature: 'accessLog' },
+  { href: '/notificaciones', label: 'Notificaciones', icon: Bell, roles: ['admin'], feature: 'notifications' },
 ]
 
 export default function AdminLayout({ children, active }: { children: React.ReactNode, active?: string }) {
@@ -76,6 +86,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [showNotifs, setShowNotifs] = useState(false)
+  const [showUpgrade, setShowUpgrade] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -157,7 +168,12 @@ export default function AdminLayout({ children, active }: { children: React.Reac
       fetchInitialNotifs()
     }
     load()
-  }, [router, subscription, VAPID_PUBLIC_KEY, subscribeUser])
+    // No incluimos `subscription` en las deps a propósito: este efecto es de
+    // carga inicial (perfil + sync silencioso de push). Si dependiera de
+    // `subscription`, cada vez que el usuario se desactiva a mano el efecto
+    // se re-disparaba y el sync silencioso lo volvía a suscribir al toque,
+    // haciendo que el ícono de wifi "revirtiera" solo después de desactivar.
+  }, [router, VAPID_PUBLIC_KEY, subscribeUser])
 
   // ========= Real-time Security Alerts =========
   useEffect(() => {
@@ -250,7 +266,10 @@ export default function AdminLayout({ children, active }: { children: React.Reac
 
   /* State and Hooks for Navigation & Protection */
   const role = profile?.role || 'member'
-  const nav = useMemo(() => NAV_ITEMS.filter(item => item.roles.includes(role)), [role])
+  const nav = useMemo(
+    () => NAV_ITEMS.filter(item => item.roles.includes(role) && (!item.feature || hasFeature(item.feature))),
+    [role]
+  )
   const isAdmin = role === 'admin' || role === 'instructor'
 
   // Optimized Route protection
@@ -262,7 +281,15 @@ export default function AdminLayout({ children, active }: { children: React.Reac
     if (currentPath === '/login' || currentPath === '/auth/callback') return
 
     const userRole = profile.role || 'member'
-    const allowed = NAV_ITEMS.filter(item => item.roles.includes(userRole)).some(item => item.href === currentPath)
+    // Ordenado por especificidad (href más largo primero) para que, por ej.,
+    // /admin/academies matchee su propia entrada (y su feature gate) en vez
+    // de caer en el prefijo más corto de /admin (el dashboard, sin gate).
+    const matchingItem = [...NAV_ITEMS]
+      .sort((a, b) => b.href.length - a.href.length)
+      .find(item => currentPath === item.href || currentPath.startsWith(item.href + '/'))
+    const allowed = !!matchingItem
+      && matchingItem.roles.includes(userRole)
+      && (!matchingItem.feature || hasFeature(matchingItem.feature))
 
     if (!allowed && currentPath !== '/validate') {
       const defaultPath = userRole === 'admin' ? '/admin' : '/profile'
@@ -362,6 +389,20 @@ export default function AdminLayout({ children, active }: { children: React.Reac
             })}
           </nav>
         </div>
+
+        {/* Upgrade CTA (solo plan Basic) */}
+        {PLAN === 'basic' && role === 'admin' && (
+          <div className="px-4 pb-4">
+            <button
+              onClick={() => setShowUpgrade(true)}
+              className="group relative w-full h-14 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-blue-500/30 overflow-hidden transition-transform active:scale-95 hover:scale-[1.02]"
+            >
+              <span className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/50 to-transparent shine-sweep" />
+              <Sparkles className="w-4 h-4 relative z-10" />
+              <span className="relative z-10">Actualizar a Pro</span>
+            </button>
+          </div>
+        )}
 
         {/* Footer profile section */}
         <div className="p-4 border-t border-border">
@@ -533,6 +574,8 @@ export default function AdminLayout({ children, active }: { children: React.Reac
         </div>
         <Toaster position="top-right" richColors closeButton />
       </main>
+
+      <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} />
     </div>
   )
 }

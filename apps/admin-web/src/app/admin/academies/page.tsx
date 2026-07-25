@@ -6,11 +6,16 @@ import { Plus, Search, MapPin, Zap } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import AcademyList from '@/components/academies/AcademyList'
 import AcademyModal, { type Academy } from '@/components/academies/AcademyModal'
+import { getAcademyLimit } from '@/lib/features'
 
 export default function AcademiesPage() {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [search, setSearch] = useState('')
     const [selectedAcademy, setSelectedAcademy] = useState<Academy | null>(null)
+    const [academyCount, setAcademyCount] = useState<number | null>(null)
+
+    const academyLimit = getAcademyLimit()
+    const atAcademyLimit = academyLimit !== null && academyCount !== null && academyCount >= academyLimit
 
     return (
         <AdminLayout active="/admin/academies">
@@ -34,6 +39,11 @@ export default function AcademiesPage() {
                                 <Zap className="w-4 h-4 text-amber-500 fill-current" />
                                 Configurá las ubicaciones oficiales del dojo
                             </p>
+                            {academyLimit !== null && (
+                                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mt-2">
+                                    {academyCount ?? '…'} / {academyLimit} sede{academyLimit === 1 ? '' : 's'} de tu plan
+                                </p>
+                            )}
                         </div>
 
                         <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
@@ -49,8 +59,10 @@ export default function AcademiesPage() {
                             </div>
 
                             <button
-                                onClick={() => { setSelectedAcademy(null); setIsModalOpen(true) }}
-                                className="w-full sm:w-auto h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 shadow-xl shadow-blue-500/20 transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
+                                onClick={() => { if (atAcademyLimit) return; setSelectedAcademy(null); setIsModalOpen(true) }}
+                                disabled={atAcademyLimit}
+                                title={atAcademyLimit ? `Tu plan permite hasta ${academyLimit} sede${academyLimit === 1 ? '' : 's'}. Actualizá a Pro para agregar más.` : undefined}
+                                className="w-full sm:w-auto h-12 px-8 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 shadow-xl shadow-blue-500/20 transition-all hover:scale-105 active:scale-95 whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
                             >
                                 <Plus className="w-4 h-4" strokeWidth={3} />
                                 Nueva Academia
@@ -67,6 +79,7 @@ export default function AcademiesPage() {
                         <AcademyList
                             search={search}
                             onEdit={(academy) => { setSelectedAcademy(academy); setIsModalOpen(true) }}
+                            onCountChange={setAcademyCount}
                         />
                     </motion.div>
 
