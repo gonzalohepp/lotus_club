@@ -6,23 +6,21 @@ export function usePushNotifications() {
     const [isSupported] = useState(typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window)
     const [subscription, setSubscription] = useState<PushSubscription | null>(null)
 
-    const registerServiceWorker = async () => {
-        try {
-            const registration = await navigator.serviceWorker.register('/sw.js')
-            const sub = await registration.pushManager.getSubscription()
-            setSubscription(sub)
-        } catch (err) {
-            console.error('SW registration failed:', err)
-        }
-    }
-
     useEffect(() => {
         if (!isSupported) return
 
         let mounted = true
-        navigator.serviceWorker.ready.then(() => {
-            if (mounted) registerServiceWorker()
-        })
+        // Registramos directo, sin esperar a `serviceWorker.ready`: ese promise
+        // solo resuelve cuando YA hay un worker activo, así que en un browser
+        // sin registro previo (primera visita) nunca resolvía y el registro
+        // quedaba trabado para siempre — el botón de activar no hacía nada.
+        navigator.serviceWorker.register('/sw.js')
+            .then(async (registration) => {
+                const sub = await registration.pushManager.getSubscription()
+                if (mounted) setSubscription(sub)
+            })
+            .catch((err) => console.error('SW registration failed:', err))
+
         return () => { mounted = false }
     }, [isSupported])
 

@@ -12,7 +12,6 @@ import {
     CheckCircle,
     Smartphone,
     History as HistoryIcon, // Renamed to avoid conflict with state variable
-    Info,
     Search,
     Trash2,
     Clock,
@@ -63,7 +62,6 @@ export default function NotificationsPage() {
     })
 
     const [history, setHistory] = useState<NotificationHistoryItem[]>([])
-    const [subscribedCount, setSubscribedCount] = useState(0)
     const [subscribedUsers, setSubscribedUsers] = useState<SubscribedUser[]>([])
     const [settings, setSettings] = useState({
         day10Enabled: true,
@@ -110,7 +108,6 @@ export default function NotificationsPage() {
 
                 const uniqueUsers = Array.from(userMap.values())
                 setSubscribedUsers(uniqueUsers)
-                setSubscribedCount(uniqueUsers.length)
             }
 
             // 3. Fetch Settings
@@ -273,7 +270,7 @@ export default function NotificationsPage() {
 
     return (
         <AdminLayout active="/notificaciones">
-            <div className="relative min-h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
+            <div className="relative min-h-screen overflow-hidden">
                 {/* Background Blobs */}
                 <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[600px] h-[600px] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
                 <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none" />
@@ -336,186 +333,116 @@ export default function NotificationsPage() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
-                                className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+                                className="max-w-3xl"
                             >
-                                {/* Form Section */}
-                                <div className="lg:col-span-12 xl:col-span-8 flex flex-col gap-8">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        {/* Configuration Card */}
-                                        <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-xl p-8 overflow-hidden relative">
-                                            <div className="flex items-center gap-4 mb-8">
-                                                <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                                                    <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                                                </div>
-                                                <div>
-                                                    <h3 className="text-xl font-black text-slate-900 dark:text-white">Destinatarios</h3>
-                                                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">¿A quién enviamos?</p>
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-6">
-                                                <div>
-                                                    <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-3">Segmento</label>
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        {([
-                                                            { id: 'all', label: 'Todos (Socios)', icon: Users },
-                                                            { id: 'active', label: 'Socios Activos', icon: CheckCircle },
-                                                            { id: 'expiring', label: 'Vencen Pronto', icon: Clock },
-                                                            { id: 'custom', label: 'Manual/Individual', icon: Search }
-                                                        ] as const).map((opt) => (
-                                                            <button
-                                                                key={opt.id}
-                                                                onClick={() => setForm({ ...form, target: opt.id })}
-                                                                className={`flex items-center gap-3 p-4 rounded-2xl border transition-all text-left ${form.target === opt.id
-                                                                    ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20'
-                                                                    : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-blue-400'}`}
-                                                            >
-                                                                <opt.icon className="w-5 h-5" />
-                                                                <span className="text-xs font-black uppercase tracking-tighter leading-none">{opt.label}</span>
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-
-                                                <AnimatePresence>
-                                                    {form.target === 'custom' && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, height: 0 }}
-                                                            animate={{ opacity: 1, height: 'auto' }}
-                                                            exit={{ opacity: 0, height: 0 }}
-                                                        >
-                                                            <UserSearch onSelect={setSelectedUser} selectedUser={selectedUser} />
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
-                                            </div>
-                                        </div>
-
-                                        {/* Content Card */}
-                                        <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-xl p-8">
-                                            <div className="flex items-center gap-4 mb-8">
-                                                <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
-                                                    <Send className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                                                </div>
-                                                <div>
-                                                    <h3 className="text-xl font-black text-slate-900 dark:text-white">Mensaje</h3>
-                                                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Contenido de la notificación</p>
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-5">
-                                                <div>
-                                                    <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Título</label>
-                                                    <input
-                                                        type="text"
-                                                        value={form.title}
-                                                        onChange={(e) => setForm({ ...form, title: e.target.value })}
-                                                        placeholder="Ej: Nueva clase disponible"
-                                                        className="w-full h-12 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Mensaje</label>
-                                                    <textarea
-                                                        value={form.message}
-                                                        onChange={(e) => setForm({ ...form, message: e.target.value })}
-                                                        placeholder="Escribe el mensaje..."
-                                                        rows={3}
-                                                        className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">URL Acción</label>
-                                                    <input
-                                                        type="text"
-                                                        value={form.url}
-                                                        onChange={(e) => setForm({ ...form, url: e.target.value })}
-                                                        placeholder="/profile"
-                                                        className="w-full h-12 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Action Banner */}
-                                    <div className="p-8 bg-blue-600 rounded-[2rem] text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl shadow-blue-500/20">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
-                                                <Bell className="w-7 h-7" />
-                                            </div>
-                                            <div className="text-center md:text-left">
-                                                <h4 className="text-lg font-black tracking-tight leading-none mb-1 text-white">¿Todo listo para enviar?</h4>
-                                                <p className="text-blue-100 text-sm font-medium">Revisa la previsualización antes del envío masivo.</p>
-                                            </div>
-                                        </div>
-                                        <button
-                                            onClick={handleSend}
-                                            disabled={loading}
-                                            className="w-full md:w-auto h-14 px-10 bg-white text-blue-600 hover:bg-slate-100 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-3"
-                                        >
-                                            {loading ? (
-                                                <div className="w-5 h-5 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
-                                            ) : (
-                                                <>
-                                                    <Send className="w-4 h-4" />
-                                                    Lanzar Notificación
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Preview Section */}
-                                <div className="lg:col-span-12 xl:col-span-4 sticky top-24">
-                                    <div className="relative mx-auto w-[280px] h-[580px] bg-slate-900 rounded-[3rem] border-[8px] border-slate-800 shadow-2xl overflow-hidden p-2">
-                                        {/* Camera Notch */}
-                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-slate-800 rounded-b-2xl z-20" />
-
-                                        {/* Screen */}
-                                        <div className="w-full h-full bg-slate-100 dark:bg-slate-950 rounded-[2.2rem] overflow-hidden relative">
-                                            {/* Wallpaper */}
-                                            <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-600 opacity-20" />
-
-                                            <div className="relative p-4 h-full flex flex-col pt-12">
-                                                <div className="mb-4 text-center">
-                                                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Lunes, 19 de enero</p>
-                                                    <p className="text-4xl font-black text-slate-900 dark:text-white mt-1">16:09</p>
-                                                </div>
-
-                                                {/* Notification Banner */}
-                                                <motion.div
-                                                    animate={{ opacity: [0, 1], y: [-20, 0] }}
-                                                    className="w-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl p-4 shadow-xl border border-white/20"
+                                <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-xl p-8 space-y-8">
+                                    {/* Destinatario */}
+                                    <div>
+                                        <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-3">¿A quién le enviamos?</label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {([
+                                                { id: 'all', label: 'Todos', icon: Users },
+                                                { id: 'active', label: 'Activos', icon: CheckCircle },
+                                                { id: 'expiring', label: 'Vencen pronto', icon: Clock },
+                                                { id: 'custom', label: 'Una persona', icon: Search }
+                                            ] as const).map((opt) => (
+                                                <button
+                                                    key={opt.id}
+                                                    onClick={() => setForm({ ...form, target: opt.id })}
+                                                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all ${form.target === opt.id
+                                                        ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20'
+                                                        : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-blue-400'}`}
                                                 >
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <div className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center">
-                                                            <img src="/logo.png" className="w-4 h-4 invert brightness-0" alt="" />
-                                                        </div>
-                                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex-1">Beleza Dojo</span>
-                                                        <span className="text-[10px] text-slate-400 font-bold">Ahora</span>
-                                                    </div>
-                                                    <h5 className="text-xs font-black text-slate-900 dark:text-white mb-1 leading-tight">
-                                                        {form.title || 'Título de la Notificación'}
-                                                    </h5>
-                                                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-normal line-clamp-3">
-                                                        {form.message || 'Escribe un mensaje para ver cómo se verá en el teléfono de los usuarios.'}
-                                                    </p>
-                                                </motion.div>
+                                                    <opt.icon className="w-4 h-4" />
+                                                    <span className="text-xs font-black uppercase tracking-tight">{opt.label}</span>
+                                                </button>
+                                            ))}
+                                        </div>
 
-                                                <div className="mt-auto mb-6 flex justify-center">
-                                                    <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center">
-                                                        <Smartphone className="w-5 h-5 text-white/40" />
-                                                    </div>
-                                                </div>
-                                            </div>
+                                        <AnimatePresence>
+                                            {form.target === 'custom' && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    className="mt-4"
+                                                >
+                                                    <UserSearch onSelect={setSelectedUser} selectedUser={selectedUser} />
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+
+                                    {/* Mensaje */}
+                                    <div className="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-700">
+                                        <div>
+                                            <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 mt-6">Título</label>
+                                            <input
+                                                type="text"
+                                                value={form.title}
+                                                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                                                placeholder="Ej: Nueva clase disponible"
+                                                className="w-full h-12 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Mensaje</label>
+                                            <textarea
+                                                value={form.message}
+                                                onChange={(e) => setForm({ ...form, message: e.target.value })}
+                                                placeholder="Escribe el mensaje..."
+                                                rows={3}
+                                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                            />
+                                        </div>
+
+                                        <details className="group">
+                                            <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors list-none flex items-center gap-1.5">
+                                                <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform" />
+                                                Opciones avanzadas (URL de destino)
+                                            </summary>
+                                            <input
+                                                type="text"
+                                                value={form.url}
+                                                onChange={(e) => setForm({ ...form, url: e.target.value })}
+                                                placeholder="/profile"
+                                                className="w-full h-11 mt-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            />
+                                        </details>
+                                    </div>
+
+                                    {/* Preview compacto */}
+                                    <div className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
+                                        <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
+                                            <Bell className="w-4 h-4 text-white" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Así se va a ver</p>
+                                            <h5 className="text-sm font-black text-slate-900 dark:text-white leading-tight truncate">
+                                                {form.title || 'Título de la notificación'}
+                                            </h5>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal line-clamp-2">
+                                                {form.message || 'Escribí un mensaje para ver la vista previa acá.'}
+                                            </p>
                                         </div>
                                     </div>
-                                    <p className="text-center mt-6 text-xs font-black text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
-                                        <Info className="w-4 h-4" /> Previsualización Real-Time
-                                    </p>
+
+                                    {/* Enviar */}
+                                    <button
+                                        onClick={handleSend}
+                                        disabled={loading}
+                                        className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-blue-500/20 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                                    >
+                                        {loading ? (
+                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        ) : (
+                                            <>
+                                                <Send className="w-4 h-4" />
+                                                Enviar notificación
+                                            </>
+                                        )}
+                                    </button>
                                 </div>
                             </motion.div>
                         ) : activeTab === 'history' ? (
@@ -576,7 +503,7 @@ export default function NotificationsPage() {
                                     </div>
                                 </div>
                             </motion.div>
-                        ) : (
+                        ) : activeTab === 'config' ? (
                             <motion.div
                                 key="config-tab"
                                 initial={{ opacity: 0, scale: 0.95 }}
@@ -663,19 +590,23 @@ export default function NotificationsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="mt-8 flex justify-end">
+                                    <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                        <button
+                                            onClick={handleTestReminders}
+                                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-black text-xs uppercase tracking-widest hover:border-blue-400 hover:text-blue-600 transition-all"
+                                        >
+                                            <Bell className="w-4 h-4" /> Probar ahora
+                                        </button>
                                         <button
                                             onClick={saveSettings}
-                                            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2"
+                                            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
                                         >
                                             <CheckCircle className="w-4 h-4" /> Guardar Cambios
                                         </button>
                                     </div>
                                 </div>
                             </motion.div>
-                        )}
-
-                        {activeTab === 'subscribed' && (
+                        ) : (
                             <motion.div
                                 key="subscribed-tab"
                                 initial={{ opacity: 0, y: 20 }}
@@ -799,41 +730,6 @@ export default function NotificationsPage() {
                             </motion.div>
                         )}
                     </AnimatePresence>
-
-                    {/* Footer Info Area */}
-                    <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex items-start gap-4 h-full">
-                            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                                <Smartphone className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div>
-                                <h5 className="font-black text-slate-900 dark:text-white text-sm">Dispositivos Vinculados</h5>
-                                <p className="text-xs text-slate-500 mt-1">Hay **{subscribedCount}** usuarios que han autorizado notificaciones push en este momento.</p>
-                                <div className="mt-3 flex items-center gap-2">
-                                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">
-                                        Solo estos usuarios recibirán los mensajes.
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Control Area */}
-                        <button
-                            onClick={handleTestReminders}
-                            className="bg-slate-900 dark:bg-slate-700 rounded-3xl p-6 text-white hover:bg-slate-800 transition-all text-left flex items-start gap-4 group h-full"
-                        >
-                            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-                                <Bell className="w-5 h-5 group-hover:animate-bounce" />
-                            </div>
-                            <div className="flex-1">
-                                <h5 className="font-black text-white text-sm">Prueba de Recordatorios</h5>
-                                <p className="text-white/60 text-xs mt-1">Ejecutar el proceso de verificación de vencimientos y deudas ahora mismo.</p>
-                                <div className="mt-3 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-blue-400">
-                                    Ejecutar ahora <Send className="w-3 h-3 ml-1" />
-                                </div>
-                            </div>
-                        </button>
-                    </div>
                 </div>
             </div>
         </AdminLayout>
