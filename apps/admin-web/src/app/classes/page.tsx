@@ -6,6 +6,7 @@ import AdminLayout from '../layouts/AdminLayout'
 import { Plus, Search, BookOpen, Layers } from 'lucide-react'
 import ClassForm, { ClassRow } from '../components/classes/ClassForm'
 import ClassCard from '../components/classes/ClassCard'
+import StyledSelect from '../components/common/StyledSelect'
 import { supabase } from '@/lib/supabaseClient'
 
 export default function ClassesPage() {
@@ -146,46 +147,39 @@ export default function ClassesPage() {
           </div>
 
           <div className="flex flex-wrap gap-4">
-            <div className="relative min-w-[200px]">
-              <Layers className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 pointer-events-none" />
-              <select
-                value={categoryFilter}
-                onChange={(e) => { setCategoryFilter(e.target.value as 'all' | 'artes-marciales' | 'acondicionamiento-fisico'); setCurrentPage(1); }}
-                className="h-14 w-full appearance-none rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-11 pr-10 text-sm font-bold text-slate-700 dark:text-slate-200 outline-none ring-blue-500/10 transition-all focus:border-blue-500/50 focus:ring-4"
-              >
-                <option value="all">Todas las Categorías</option>
-                <option value="artes-marciales">Artes Marciales</option>
-                <option value="acondicionamiento-fisico">Fisico</option>
-              </select>
-              <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
-                <svg className="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-              </div>
-            </div>
+            <StyledSelect
+              wrapperClassName="min-w-[200px]"
+              triggerClassName="h-14 rounded-2xl"
+              icon={Layers}
+              value={categoryFilter}
+              onChange={(v) => { setCategoryFilter(v as 'all' | 'artes-marciales' | 'acondicionamiento-fisico'); setCurrentPage(1) }}
+              options={[
+                { value: 'all', label: 'Todas las Categorías' },
+                { value: 'artes-marciales', label: 'Artes Marciales' },
+                { value: 'acondicionamiento-fisico', label: 'Fisico' },
+              ]}
+            />
 
-            <div className="relative min-w-[180px]">
-              <div className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border border-slate-300 pointer-events-none" />
-              <select
-                value={colorFilter}
-                onChange={(e) => { setColorFilter(e.target.value); setCurrentPage(1); }}
-                className="h-14 w-full appearance-none rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-11 pr-10 text-sm font-bold text-slate-700 dark:text-slate-200 outline-none ring-blue-500/10 transition-all focus:border-blue-500/50 focus:ring-4"
-              >
-                <option value="all">Todos los colores</option>
-                <option value="blue">Azul</option>
-                <option value="red">Rojo</option>
-                <option value="green">Verde</option>
-                <option value="purple">Violeta</option>
-                <option value="orange">Naranja</option>
-                <option value="pink">Rosa</option>
-                <option value="amber">Ámbar</option>
-                <option value="teal">Teal</option>
-                <option value="cyan">Cian</option>
-                <option value="indigo">Indigo</option>
-                <option value="rose">Rose</option>
-              </select>
-              <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
-                <svg className="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-              </div>
-            </div>
+            <StyledSelect
+              wrapperClassName="min-w-[180px]"
+              triggerClassName="h-14 rounded-2xl"
+              value={colorFilter}
+              onChange={(v) => { setColorFilter(v); setCurrentPage(1) }}
+              options={[
+                { value: 'all', label: 'Todos los colores' },
+                { value: 'blue', label: 'Azul' },
+                { value: 'red', label: 'Rojo' },
+                { value: 'green', label: 'Verde' },
+                { value: 'purple', label: 'Violeta' },
+                { value: 'orange', label: 'Naranja' },
+                { value: 'pink', label: 'Rosa' },
+                { value: 'amber', label: 'Ámbar' },
+                { value: 'teal', label: 'Teal' },
+                { value: 'cyan', label: 'Cian' },
+                { value: 'indigo', label: 'Indigo' },
+                { value: 'rose', label: 'Rose' },
+              ]}
+            />
           </div>
         </motion.div>
 

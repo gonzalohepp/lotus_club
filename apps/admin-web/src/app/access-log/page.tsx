@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
 import AdminLayout from '../layouts/AdminLayout'
+import StyledSelect from '../components/common/StyledSelect'
 import { fmtDateTime } from '@/lib/format'
 
 const ITEMS_PER_PAGE = 10
@@ -470,22 +471,13 @@ function SelectUi({ value, onChange, options }: {
   options: { value: string; label: string }[]
 }) {
   return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full h-12 appearance-none bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 pr-10 text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-200 outline-none focus:border-blue-500/50 transition-all cursor-pointer"
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
-      </select>
-      <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
-        <ChevronRight className="w-4 h-4 text-slate-400 rotate-90" />
-      </div>
-    </div>
+    <StyledSelect
+      value={value}
+      onChange={onChange}
+      options={options}
+      triggerClassName="h-12 rounded-2xl bg-slate-50 dark:bg-slate-900 text-xs font-black uppercase tracking-widest"
+    />
   )
-
 }
 
 function SkeletonRow() {

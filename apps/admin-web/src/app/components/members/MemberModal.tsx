@@ -33,7 +33,7 @@ export default function MemberModal({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-4xl overflow-hidden rounded-[32px] bg-white shadow-2xl h-[90vh] flex flex-col"
+            className="relative w-full max-w-4xl overflow-hidden rounded-[32px] bg-white dark:bg-slate-900 shadow-2xl h-[90vh] flex flex-col"
           >
             {/* Header Header */}
             <div className="relative h-32 bg-slate-900 flex items-center px-10 overflow-hidden shrink-0">
@@ -75,7 +75,7 @@ export default function MemberModal({
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar px-10 py-8 bg-slate-50">
+            <div className="flex-1 overflow-y-auto custom-scrollbar px-10 py-8 bg-slate-50 dark:bg-slate-900">
               {activeTab === 'info' ? (
                 <MemberForm
                   member={member}

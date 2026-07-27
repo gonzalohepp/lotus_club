@@ -21,7 +21,8 @@ import {
   Wifi,
   WifiOff,
   Activity,
-  Sparkles
+  Sparkles,
+  Crown
 } from 'lucide-react'
 import { Toaster, toast } from 'sonner'
 import ThemeToggle from '../components/ThemeToggle'
@@ -29,6 +30,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { hasFeature, PLAN, type FeatureKey } from '@/lib/features'
 import UpgradeModal from '../components/plan/UpgradeModal'
+import ProBenefitsModal from '../components/plan/ProBenefitsModal'
 
 type Notification = {
   id: string
@@ -87,6 +89,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [showNotifs, setShowNotifs] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [showProBenefits, setShowProBenefits] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -404,6 +407,20 @@ export default function AdminLayout({ children, active }: { children: React.Reac
           </div>
         )}
 
+        {/* Badge de plan Pro (solo instancias Pro) */}
+        {PLAN === 'pro' && role === 'admin' && (
+          <div className="px-4 pb-4">
+            <button
+              onClick={() => setShowProBenefits(true)}
+              className="group relative w-full h-14 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-400 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-amber-500/30 overflow-hidden transition-transform active:scale-95 hover:scale-[1.02]"
+            >
+              <span className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/50 to-transparent shine-sweep" />
+              <Crown className="w-4 h-4 relative z-10" />
+              <span className="relative z-10">Sos Plan Pro</span>
+            </button>
+          </div>
+        )}
+
         {/* Footer profile section */}
         <div className="p-4 border-t border-border">
           <div className="px-3 py-3 bg-slate-50 dark:bg-white/5 rounded-2xl flex items-center gap-3 mb-3 border border-border shadow-sm">
@@ -477,15 +494,16 @@ export default function AdminLayout({ children, active }: { children: React.Reac
                   </button>
                 )}
 
+                {showNotifs && (
+                  <div className="fixed inset-0 z-40" onClick={() => setShowNotifs(false)} />
+                )}
                 <AnimatePresence>
                   {showNotifs && (
-                    <>
-                      <div className="fixed inset-0 z-40" onClick={() => setShowNotifs(false)} />
                       <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 10, x: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10, x: 20 }}
-                        className="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-[2rem] shadow-2xl z-50 overflow-hidden"
+                        className="absolute right-0 top-full mt-3 w-80 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-[2rem] shadow-2xl z-50 overflow-hidden"
                       >
                         <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                           <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">Notificaciones</h3>
@@ -556,7 +574,6 @@ export default function AdminLayout({ children, active }: { children: React.Reac
                           </div>
                         )}
                       </motion.div>
-                    </>
                   )}
                 </AnimatePresence>
               </div>
@@ -576,6 +593,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
       </main>
 
       <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} />
+      <ProBenefitsModal open={showProBenefits} onClose={() => setShowProBenefits(false)} />
     </div>
   )
 }

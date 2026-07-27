@@ -54,7 +54,7 @@ export default function PaymentsPage() {
   const [memberOpts, setMemberOpts] = useState<{ value: string; label: string }[]>([]);
   const [classOpts, setClassOpts] = useState<{ value: string; label: string }[]>([]);
   const [months, setMonths] = useState<{ value: string; label: string }[]>([]);
-  const [filters, setFilters] = useState({ member: '', classId: '', month: '' });
+  const [filters, setFilters] = useState({ member: 'all', classId: 'all', month: 'all' });
 
   const handleFilterChange = (newFilters: typeof filters) => {
     setFilters(newFilters);
@@ -147,9 +147,9 @@ export default function PaymentsPage() {
   const filtered = useMemo(() => {
     const mk = (d: string | null) => monthKey(d);
     return rows.filter((r) => {
-      const okMember = !filters.member || r.user_id === filters.member;
-      const okMonth = !filters.month || mk(r.paid_at) === filters.month;
-      const okClass = !filters.classId || true;
+      const okMember = filters.member === 'all' || r.user_id === filters.member;
+      const okMonth = filters.month === 'all' || mk(r.paid_at) === filters.month;
+      const okClass = filters.classId === 'all' || true;
       return okMember && okMonth && okClass;
     });
   }, [rows, filters]);

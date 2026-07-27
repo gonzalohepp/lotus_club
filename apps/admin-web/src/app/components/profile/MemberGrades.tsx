@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabaseClient'
 import { Plus, Trash, Award, Calendar, User, Save, X } from 'lucide-react'
 import { fmtDateShort } from '@/lib/format'
+import StyledSelect from '../common/StyledSelect'
 
 type Grade = {
     id: string
@@ -186,17 +187,16 @@ export default function MemberGrades({ userId, readOnly = false }: { userId: str
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Grado / Cinturón</label>
-                                    <select
+                                    <StyledSelect
                                         value={newGrade}
-                                        onChange={e => setNewGrade(e.target.value)}
-                                        className="w-full h-12 px-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 outline-none focus:ring-2 focus:ring-blue-500 text-sm font-bold transition-all appearance-none cursor-pointer"
-                                    >
-                                        <option value="">Seleccionar Grado...</option>
-                                        {BELT_OPTIONS.map(opt => (
-                                            <option key={opt} value={opt}>{opt}</option>
-                                        ))}
-                                        <option value="OTRO">Otro...</option>
-                                    </select>
+                                        onChange={setNewGrade}
+                                        placeholder="Seleccionar Grado..."
+                                        triggerClassName="h-12 rounded-2xl bg-slate-50 dark:bg-slate-950"
+                                        options={[
+                                            ...BELT_OPTIONS.map(opt => ({ value: opt, label: opt })),
+                                            { value: 'OTRO', label: 'Otro...' },
+                                        ]}
+                                    />
                                     {newGrade === 'OTRO' && (
                                         <input
                                             type="text"

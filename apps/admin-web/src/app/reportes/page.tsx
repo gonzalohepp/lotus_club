@@ -20,7 +20,17 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
+import StyledSelect from '../components/common/StyledSelect'
 import { exportToExcel } from '@/lib/excelExport'
+
+// Esta página usa una paleta oscura fija (no sigue el toggle de tema global),
+// así que los StyledSelect acá se estilizan explícitamente para matchear ese
+// fondo siempre-oscuro en vez de usar los tokens toggle-aware por default.
+const darkSelectProps = {
+    triggerClassName: 'bg-slate-950 border-slate-800 text-white font-bold appearance-none hover:bg-slate-950 focus-visible:ring-blue-500/50',
+    contentClassName: 'bg-slate-900 border-slate-800',
+    itemClassName: 'text-white focus:bg-slate-800',
+}
 
 /* ================= Tipos ================= */
 interface AttendanceRecord {
@@ -122,9 +132,9 @@ function AsistenciaReport() {
     const [classes, setClasses] = useState<{ id: number, name: string, category: string }[]>([])
 
     // Filters
-    const [filterClass, setFilterClass] = useState<string>('')
+    const [filterClass, setFilterClass] = useState<string>('all')
     const [filterSearch, setFilterSearch] = useState('')
-    const [filterMember, setFilterMember] = useState('')
+    const [filterMember, setFilterMember] = useState('all')
     const [period, setPeriod] = useState<PeriodFilter>('month')
     const [customFrom, setCustomFrom] = useState('')
     const [customTo, setCustomTo] = useState('')
@@ -195,9 +205,9 @@ function AsistenciaReport() {
 
     const filteredRecords = useMemo(() => {
         return records.filter(r => {
-            const matchesClass = !filterClass || r.class_id === Number(filterClass)
+            const matchesClass = filterClass === 'all' || r.class_id === Number(filterClass)
             const matchesPeriod = r.date >= dateRange.from && r.date <= dateRange.to
-            const matchesMember = !filterMember || r.user_id === filterMember
+            const matchesMember = filterMember === 'all' || r.user_id === filterMember
             const searchLower = filterSearch.toLowerCase()
             return matchesClass && matchesPeriod && matchesMember && (!filterSearch ||
                 r.member_name.toLowerCase().includes(searchLower) ||
@@ -288,28 +298,26 @@ function AsistenciaReport() {
             {/* Filters row */}
             <div className="rounded-xl bg-slate-900 border border-slate-800 p-3 md:p-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
-                    <div className="relative">
-                        <Layers className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 z-10" />
-                        <select
-                            value={filterClass}
-                            onChange={(e) => { setFilterClass(e.target.value); setVisibleCount(50) }}
-                            className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none font-bold text-sm"
-                        >
-                            <option value="">Todas las clases</option>
-                            {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                    </div>
-                    <div className="relative">
-                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 z-10" />
-                        <select
-                            value={filterMember}
-                            onChange={(e) => { setFilterMember(e.target.value); setVisibleCount(50) }}
-                            className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none font-bold text-sm"
-                        >
-                            <option value="">Todos los alumnos</option>
-                            {memberOptions.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-                        </select>
-                    </div>
+                    <StyledSelect
+                        icon={Layers}
+                        {...darkSelectProps}
+                        value={filterClass}
+                        onChange={(v) => { setFilterClass(v); setVisibleCount(50) }}
+                        options={[
+                            { value: 'all', label: 'Todas las clases' },
+                            ...classes.map(c => ({ value: String(c.id), label: c.name })),
+                        ]}
+                    />
+                    <StyledSelect
+                        icon={Filter}
+                        {...darkSelectProps}
+                        value={filterMember}
+                        onChange={(v) => { setFilterMember(v); setVisibleCount(50) }}
+                        options={[
+                            { value: 'all', label: 'Todos los alumnos' },
+                            ...memberOptions.map(m => ({ value: m.id, label: m.name })),
+                        ]}
+                    />
                     <div className="relative sm:col-span-2 md:col-span-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 z-10" />
                         <input
