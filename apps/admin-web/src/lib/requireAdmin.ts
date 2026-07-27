@@ -2,7 +2,7 @@ import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { User } from '@supabase/supabase-js'
-import { hasFeature, type FeatureKey } from './features'
+import { hasFeature, mercadoPagoEnabled, type FeatureKey } from './features'
 
 type UserAuthResult =
   | { error: NextResponse; user?: undefined; supabase?: undefined }
@@ -70,6 +70,18 @@ export async function requireAdmin(): Promise<AdminAuthResult> {
  */
 export function requireFeature(key: FeatureKey): { error?: NextResponse } {
   if (!hasFeature(key)) {
+    return { error: NextResponse.json({ error: 'Not found' }, { status: 404 }) }
+  }
+  return {}
+}
+
+/**
+ * Corta las rutas de Mercado Pago cuando el cobro online está apagado en esta
+ * instancia (NEXT_PUBLIC_MERCADOPAGO != 'on'). Devuelve 404, igual que
+ * requireFeature, para no revelar que la ruta existe.
+ */
+export function requireMercadoPago(): { error?: NextResponse } {
+  if (!mercadoPagoEnabled()) {
     return { error: NextResponse.json({ error: 'Not found' }, { status: 404 }) }
   }
   return {}

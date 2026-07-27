@@ -3,9 +3,9 @@
 import { useEffect, useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Shield, Plus, Check, DollarSign, Loader2 } from 'lucide-react'
-import Image from 'next/image'
 import { supabase } from '@/lib/supabaseClient'
 import { getPaymentMultiplier } from '@/lib/pricing'
+import { mercadoPagoEnabled } from '@/lib/features'
 
 type ClassOption = {
     id: number
@@ -106,6 +106,10 @@ export default function SubscriptionModal({
     }, [principalClass, additionalClasses, classes, multiplier])
 
     const handlePayment = async () => {
+        if (!mercadoPagoEnabled()) {
+            alert('El pago online con Mercado Pago no está disponible en este momento.')
+            return
+        }
         try {
             setProcessing(true)
 
@@ -292,10 +296,23 @@ export default function SubscriptionModal({
                                     </div>
                                 </div>
 
-                                {/* Botón MP oculto por ahora */}
-                                <div className="w-full md:w-auto px-8 h-16 rounded-2xl bg-slate-700 flex items-center justify-center text-slate-400 font-bold text-sm uppercase tracking-widest opacity-50 cursor-not-allowed">
-                                    Pago online próximamente
-                                </div>
+                                {mercadoPagoEnabled() ? (
+                                    <button
+                                        onClick={handlePayment}
+                                        disabled={processing || !principalClass}
+                                        className="w-full md:w-auto px-8 h-16 rounded-2xl bg-[#009EE3] hover:bg-[#0088c7] flex items-center justify-center gap-3 text-white font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg shadow-blue-500/30"
+                                    >
+                                        {processing ? (
+                                            <><Loader2 className="w-5 h-5 animate-spin" /> Redirigiendo…</>
+                                        ) : (
+                                            'Pagar con Mercado Pago'
+                                        )}
+                                    </button>
+                                ) : (
+                                    <div className="w-full md:w-auto px-8 h-16 rounded-2xl bg-slate-700 flex items-center justify-center text-slate-400 font-bold text-sm uppercase tracking-widest opacity-50 cursor-not-allowed">
+                                        Pago online próximamente
+                                    </div>
+                                )}
                             </div>
                         </div>
 

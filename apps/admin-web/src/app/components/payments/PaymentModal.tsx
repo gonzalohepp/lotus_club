@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Shield, Plus, Check, DollarSign, Loader2, User, ChevronDown, CreditCard } from 'lucide-react';
+import { X, Shield, Plus, Check, DollarSign, Loader2, User, CreditCard } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { lastDayOfMonth, addMonths } from 'date-fns';
 import { getPaymentMultiplier } from '@/lib/pricing';
+import { mercadoPagoEnabled } from '@/lib/features';
+import StyledSelect from '../common/StyledSelect';
 
 type MemberOpt = {
   user_id: string;
@@ -227,7 +229,7 @@ export default function PaymentModal({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-4xl overflow-hidden rounded-[32px] bg-white shadow-2xl flex flex-col max-h-[95vh]"
+            className="relative w-full max-w-4xl overflow-hidden rounded-[32px] bg-white dark:bg-slate-900 shadow-2xl flex flex-col max-h-[95vh]"
           >
             {/* Header */}
             <div className="relative h-24 bg-slate-900 flex items-center px-8 shrink-0">
@@ -250,38 +252,32 @@ export default function PaymentModal({
             </div>
 
             {/* Top Bar: User Selection */}
-            <div className="px-8 pt-8 pb-4 bg-white z-10">
+            <div className="px-8 pt-8 pb-4 bg-white dark:bg-slate-900 z-10">
               <div className="relative">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-1">
                   Seleccionar Alumno
                 </label>
-                <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
-                  <select
-                    className="w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl px-4 pl-12 pr-10 text-slate-900 font-bold text-lg focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/50 transition-all appearance-none cursor-pointer"
-                    value={userId}
-                    onChange={e => setUserId(e.target.value)}
-                  >
-                    <option value="">Seleccionar miembro...</option>
-                    {members.map(m => (
-                      <option key={m.user_id} value={m.user_id}>{m.name}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
-                </div>
+                <StyledSelect
+                  icon={User}
+                  placeholder="Seleccionar miembro..."
+                  triggerClassName="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 text-lg font-bold focus-visible:ring-emerald-500/10 focus-visible:border-emerald-500/50"
+                  value={userId}
+                  onChange={setUserId}
+                  options={members.map(m => ({ value: m.user_id, label: m.name }))}
+                />
               </div>
             </div>
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar">
               {!userId ? (
-                <div className="h-64 flex flex-col items-center justify-center text-slate-300 border-2 border-dashed border-slate-100 rounded-3xl mt-4">
+                <div className="h-64 flex flex-col items-center justify-center text-slate-300 dark:text-slate-600 border-2 border-dashed border-slate-100 dark:border-slate-700 rounded-3xl mt-4">
                   <User className="w-12 h-12 mb-4 opacity-50" />
                   <p className="font-medium">Selecciona un alumno para ver sus clases</p>
                 </div>
               ) : fetchingClasses ? (
                 <div className="space-y-4 py-4">
-                  {[1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-100 rounded-2xl animate-pulse" />)}
+                  {[1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-100 dark:bg-slate-800 rounded-2xl animate-pulse" />)}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
@@ -297,10 +293,10 @@ export default function PaymentModal({
                           key={`p-${c.id}`}
                           className={`relative flex items-center gap-4 p-4 rounded-2xl border transition-all cursor-pointer group ${principalClass === c.id
                             ? 'bg-blue-600 border-blue-600 shadow-xl shadow-blue-500/20'
-                            : 'bg-white border-slate-100 hover:border-blue-200'
+                            : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-500/50'
                             }`}
                         >
-                          <div className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center transition-all ${principalClass === c.id ? 'bg-white border-white' : 'bg-white border-slate-300 group-hover:border-blue-300'
+                          <div className={`w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center transition-all ${principalClass === c.id ? 'bg-white border-white' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600 group-hover:border-blue-300'
                             }`}>
                             {principalClass === c.id && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
                           </div>
@@ -312,8 +308,8 @@ export default function PaymentModal({
                             onChange={() => handlePrincipalChange(c.id)}
                           />
                           <div className="flex-1">
-                            <p className={`text-sm font-bold leading-none ${principalClass === c.id ? 'text-white' : 'text-slate-900'}`}>{c.name}</p>
-                            <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${principalClass === c.id ? 'text-blue-100' : 'text-slate-500'}`}>
+                            <p className={`text-sm font-bold leading-none ${principalClass === c.id ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{c.name}</p>
+                            <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${principalClass === c.id ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
                               {fmt(c.price_principal)}
                             </p>
                           </div>
@@ -336,13 +332,13 @@ export default function PaymentModal({
                           <label
                             key={`a-${c.id}`}
                             className={`relative flex items-center gap-4 p-4 rounded-2xl border transition-all cursor-pointer ${isSelected
-                              ? 'bg-emerald-50 border-emerald-500 shadow-lg shadow-emerald-500/10'
+                              ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-500 shadow-lg shadow-emerald-500/10'
                               : isPrincipal
-                                ? 'opacity-40 cursor-not-allowed bg-slate-50 border-transparent'
-                                : 'bg-white border-slate-100 hover:border-emerald-200'
+                                ? 'opacity-40 cursor-not-allowed bg-slate-50 dark:bg-slate-800/50 border-transparent'
+                                : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-emerald-200 dark:hover:border-emerald-500/50'
                               }`}
                           >
-                            <div className={`w-5 h-5 rounded-md border-2 shrink-0 flex items-center justify-center transition-all ${isSelected ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-300'
+                            <div className={`w-5 h-5 rounded-md border-2 shrink-0 flex items-center justify-center transition-all ${isSelected ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600'
                               }`}>
                               {isSelected && <Check className="w-3 h-3 stroke-[4]" />}
                             </div>
@@ -354,8 +350,8 @@ export default function PaymentModal({
                               onChange={() => toggleAdditional(c.id)}
                             />
                             <div className="flex-1">
-                              <p className="text-sm font-bold text-slate-900 leading-none">{c.name}</p>
-                              <p className="text-[10px] font-black uppercase tracking-widest mt-1 text-emerald-600">
+                              <p className="text-sm font-bold text-slate-900 dark:text-white leading-none">{c.name}</p>
+                              <p className="text-[10px] font-black uppercase tracking-widest mt-1 text-emerald-600 dark:text-emerald-400">
                                 + {fmt(c.price_additional || c.price_principal)}
                               </p>
                             </div>
@@ -392,20 +388,22 @@ export default function PaymentModal({
 
                 {/* Row 2: Payment Method & Action */}
                 <div className="w-full flex flex-col md:flex-row gap-4 h-14">
-                  <div className="relative flex-1 group">
-                    <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-white transition-colors z-10" />
-                    <select
-                      value={method}
-                      onChange={(e) => setMethod(e.target.value as 'efectivo' | 'transferencia' | 'mercadopago')}
-                      className="w-full h-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-10 text-white font-bold appearance-none cursor-pointer hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                    >
-                      <option value="efectivo" className="text-slate-900">Efectivo 💵</option>
-                      <option value="transferencia" className="text-slate-900">Transferencia 🏦</option>
-                      {/* Mercado Pago oculto por ahora */}
-                      {/* <option value="mercadopago" className="text-slate-900">Mercado Pago 📱</option> */}
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                  </div>
+                  <StyledSelect
+                    wrapperClassName="flex-1 h-full"
+                    icon={CreditCard}
+                    value={method}
+                    onChange={(v) => setMethod(v as 'efectivo' | 'transferencia' | 'mercadopago')}
+                    triggerClassName="h-full bg-white/5 dark:bg-white/5 border-white/10 dark:border-white/10 text-white dark:text-white font-bold hover:bg-white/10 dark:hover:bg-white/10 focus-visible:ring-emerald-500/50"
+                    contentClassName="bg-slate-900 dark:bg-slate-900 border-white/10 dark:border-white/10"
+                    itemClassName="text-white dark:text-white focus:bg-white/10 dark:focus:bg-white/10"
+                    options={[
+                      { value: 'efectivo', label: 'Efectivo 💵' },
+                      { value: 'transferencia', label: 'Transferencia 🏦' },
+                      // Mercado Pago solo aparece si el cobro online está prendido
+                      // en la instancia (NEXT_PUBLIC_MERCADOPAGO=on).
+                      ...(mercadoPagoEnabled() ? [{ value: 'mercadopago', label: 'Mercado Pago 📱' }] : []),
+                    ]}
+                  />
 
                   <button
                     disabled={!userId || !principalClass || loading}

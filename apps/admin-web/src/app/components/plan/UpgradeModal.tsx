@@ -14,7 +14,8 @@ const FEATURE_LABELS: Record<FeatureKey, string> = {
     accessLog: 'Historial de accesos',
     academies: 'Sedes (academias)',
     graduations: 'Graduaciones y cinturones',
-    payments: 'Cobros con Mercado Pago',
+    payments: 'Cobros y pagos',
+    mercadopago: 'Cobros con Mercado Pago',
     metrics: 'Métricas',
     reports: 'Reportes',
     asistenciaVivo: 'Asistencia en vivo',
@@ -23,7 +24,7 @@ const FEATURE_LABELS: Record<FeatureKey, string> = {
 
 const FEATURE_ORDER: FeatureKey[] = [
     'qr', 'members', 'classes', 'accessLog', 'academies', 'graduations',
-    'payments', 'metrics', 'reports', 'asistenciaVivo', 'notifications',
+    'payments', 'mercadopago', 'metrics', 'reports', 'asistenciaVivo', 'notifications',
 ]
 
 // Academias es `true` en ambos planes (el límite real es numérico, ver

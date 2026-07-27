@@ -31,7 +31,7 @@ import PhotoCropper from '../components/profile/PhotoCropper'
 import MemberGrades from '../components/profile/MemberGrades'
 import { fmtARS, fmtDate, fmtSchedule } from '@/lib/format'
 import { getPaymentStatusMessage } from '@/lib/pricing'
-import { hasFeature } from '@/lib/features'
+import { hasFeature, mercadoPagoEnabled } from '@/lib/features'
 
 
 type MemberRow = {
@@ -482,12 +482,11 @@ export default function ProfilePage() {
                     )}
                   </div>
 
-                  {/* Botón MP oculto por ahora */}
-                  {/* {!isSpecialRole && !isLifetime && (
+                  {mercadoPagoEnabled() && !isSpecialRole && !isLifetime && (
                     <button onClick={() => setShowPayModal(true)} className="w-full h-14 rounded-2xl bg-[#009EE3] mb-4 relative overflow-hidden">
-                      <Image src="/mp_button.png" alt="Pagar con Mercado Pago" fill className="object-contain" />
+                      <img src="/mp_button.png" alt="Pagar con Mercado Pago" className="absolute inset-0 w-full h-full object-contain" />
                     </button>
-                  )} */}
+                  )}
 
                   {/* Section buttons mobile */}
                   <div className="space-y-3">
@@ -627,14 +626,13 @@ export default function ProfilePage() {
                           <p className="text-xs font-bold text-slate-400 mt-2">
                             {getPaymentStatusMessage(member?.next_payment_due, member?.role)}
                           </p>
-                          {/* Botón MP oculto por ahora */}
-                          {/* {!isSpecialRole && !isLifetime && (
+                          {mercadoPagoEnabled() && !isSpecialRole && !isLifetime && (
                             <div className="mt-4">
                               <button onClick={() => setShowPayModal(true)} className="w-full h-14 relative transition-all hover:scale-105 active:scale-95 rounded-2xl overflow-hidden shadow-lg bg-[#009EE3]">
-                                <Image src="/mp_button.png" alt="Pagar Suscripción" fill className="object-contain" />
+                                <img src="/mp_button.png" alt="Pagar Suscripción" className="absolute inset-0 w-full h-full object-contain" />
                               </button>
                             </div>
-                          )} */}
+                          )}
                         </motion.div>
                       </div>
 

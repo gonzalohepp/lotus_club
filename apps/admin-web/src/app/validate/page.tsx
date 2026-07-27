@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { MemberRow as BaseMemberRow } from '@/types/member'
 import { getPaymentMultiplier } from '@/lib/pricing'
+import { mercadoPagoEnabled } from '@/lib/features'
 import { todayAR, nowAR_ISO } from '@/lib/dateUtils'
 
 export const dynamic = 'force-dynamic'
@@ -207,6 +208,12 @@ function ValidateContent() {
   // ========= Redirigir a Mercado Pago =========
   const redirectToMP = useCallback(
     async (m: MemberRow, selectedIds: number[]) => {
+      if (!mercadoPagoEnabled()) {
+        toast.error('El pago online no está disponible', {
+          description: 'Acercate a recepción para regularizar tu cuota.',
+        })
+        return
+      }
       setIsFinalizing(true)
       try {
         // Usar clases completas con precios para calcular el monto

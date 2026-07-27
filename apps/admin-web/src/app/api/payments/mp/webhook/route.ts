@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import MercadoPagoConfig, { Payment } from 'mercadopago'
 import { createClient } from '@supabase/supabase-js'
-import { requireFeature } from '@/lib/requireAdmin'
+import { requireMercadoPago } from '@/lib/requireAdmin'
 import crypto from 'crypto'
 
 // Verifica el header x-signature que manda Mercado Pago según su esquema
@@ -42,7 +42,7 @@ function verifyMpSignature(req: Request, dataId: string): boolean {
 
 export async function POST(req: Request) {
     try {
-        const featureGuard = requireFeature('payments')
+        const featureGuard = requireMercadoPago()
         if (featureGuard.error) return featureGuard.error
 
         const url = new URL(req.url)

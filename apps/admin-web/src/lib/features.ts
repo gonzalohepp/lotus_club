@@ -18,6 +18,7 @@ export type FeatureKey =
     | 'academies'
     | 'graduations'
     | 'payments'
+    | 'mercadopago'
     | 'metrics'
     | 'reports'
     | 'asistenciaVivo'
@@ -36,6 +37,7 @@ export const FEATURES_BY_PLAN: Record<Plan, Record<FeatureKey, boolean>> = {
         academies: true,
         graduations: false,
         payments: false,
+        mercadopago: false,
         metrics: false,
         reports: false,
         asistenciaVivo: false,
@@ -49,6 +51,7 @@ export const FEATURES_BY_PLAN: Record<Plan, Record<FeatureKey, boolean>> = {
         academies: true,
         graduations: true,
         payments: true,
+        mercadopago: true,
         metrics: true,
         reports: true,
         asistenciaVivo: true,
@@ -79,4 +82,26 @@ const ACADEMY_LIMIT_BY_PLAN: Record<Plan, number | null> = {
 
 export function getAcademyLimit(): number | null {
     return ACADEMY_LIMIT_BY_PLAN[PLAN]
+}
+
+/**
+ * Cobro online con Mercado Pago = DOS capas que deben cumplirse a la vez:
+ *
+ *  1) Capa de PLAN — `mercadopago` en FEATURES_BY_PLAN (Basic ❌, Pro ✅).
+ *     Define si el plan de esta instancia incluye la posibilidad de cobrar
+ *     online. Se muestra como diferenciador en la tabla comparativa (UpgradeModal).
+ *
+ *  2) Toggle OPERATIVO — NEXT_PUBLIC_MERCADOPAGO. Aunque el plan incluya MP, el
+ *     botón de cobro sólo se muestra si además este toggle está en 'on'. Sirve
+ *     para tener MP disponible en Pro pero apagado hasta empezar a usarlo.
+ *
+ * `mercadoPagoEnabled()` es la única fuente de verdad: prende/apaga TODO lo de
+ * MP a la vez (opción de cobro en PaymentModal, checkout del alumno en
+ * validate/suscripción y las rutas /api/payments/mp/*). Para activar el cobro
+ * online en una instancia Pro: NEXT_PUBLIC_MERCADOPAGO=on (+ MP_ACCESS_TOKEN).
+ */
+const MERCADOPAGO_TOGGLE = process.env.NEXT_PUBLIC_MERCADOPAGO === 'on'
+
+export function mercadoPagoEnabled(): boolean {
+    return hasFeature('mercadopago') && MERCADOPAGO_TOGGLE
 }

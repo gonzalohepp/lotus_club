@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import MercadoPagoConfig, { Preference } from "mercadopago";
 import { createClient } from "@supabase/supabase-js";
-import { requireUser, requireFeature } from "@/lib/requireAdmin";
+import { requireUser, requireMercadoPago } from "@/lib/requireAdmin";
 import { getPaymentMultiplier } from "@/lib/pricing";
 
 type ClassRow = {
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     if (auth.error) return auth.error;
     const user = auth.user;
 
-    const featureGuard = requireFeature('payments');
+    const featureGuard = requireMercadoPago();
     if (featureGuard.error) return featureGuard.error;
 
     try {

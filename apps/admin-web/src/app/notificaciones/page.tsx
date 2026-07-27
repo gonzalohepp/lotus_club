@@ -333,7 +333,7 @@ export default function NotificationsPage() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
-                                className="max-w-3xl"
+                                className="max-w-5xl mx-auto grid lg:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start"
                             >
                                 <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-xl p-8 space-y-8">
                                     {/* Destinatario */}
@@ -412,22 +412,6 @@ export default function NotificationsPage() {
                                         </details>
                                     </div>
 
-                                    {/* Preview compacto */}
-                                    <div className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
-                                        <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
-                                            <Bell className="w-4 h-4 text-white" />
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Así se va a ver</p>
-                                            <h5 className="text-sm font-black text-slate-900 dark:text-white leading-tight truncate">
-                                                {form.title || 'Título de la notificación'}
-                                            </h5>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal line-clamp-2">
-                                                {form.message || 'Escribí un mensaje para ver la vista previa acá.'}
-                                            </p>
-                                        </div>
-                                    </div>
-
                                     {/* Enviar */}
                                     <button
                                         onClick={handleSend}
@@ -444,6 +428,45 @@ export default function NotificationsPage() {
                                         )}
                                     </button>
                                 </div>
+
+                                {/* Columna derecha: preview en vivo + alcance (sticky en desktop) */}
+                                <div className="lg:sticky lg:top-6 space-y-4">
+                                    <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-xl p-6">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 text-center">Vista previa</p>
+                                        <div className="rounded-3xl bg-slate-100 dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-700">
+                                            <div className="flex items-start gap-3 rounded-2xl bg-white dark:bg-slate-800 p-4 shadow-lg">
+                                                <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
+                                                    <Bell className="w-5 h-5 text-white" />
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <p className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">Beleza Dojo</p>
+                                                        <span className="text-[9px] font-bold text-slate-400 shrink-0">ahora</span>
+                                                    </div>
+                                                    <h5 className="text-sm font-black text-slate-900 dark:text-white leading-tight mt-0.5 break-words">
+                                                        {form.title || 'Título de la notificación'}
+                                                    </h5>
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal mt-0.5 line-clamp-4 break-words">
+                                                        {form.message || 'Escribí un mensaje para ver la vista previa acá.'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={() => setActiveTab('subscribed')}
+                                        className="w-full flex items-center gap-4 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm p-5 hover:border-blue-400 dark:hover:border-blue-500 transition-all text-left"
+                                    >
+                                        <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                                            <Smartphone className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-2xl font-black text-slate-900 dark:text-white leading-none">{subscribedUsers.length}</p>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Usuarios suscritos</p>
+                                        </div>
+                                    </button>
+                                </div>
                             </motion.div>
                         ) : activeTab === 'history' ? (
                             <motion.div
@@ -451,7 +474,7 @@ export default function NotificationsPage() {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="max-w-4xl"
+                                className="max-w-4xl mx-auto"
                             >
                                 {/* ... existing history content ... */}
                                 <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden">
@@ -509,7 +532,7 @@ export default function NotificationsPage() {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="max-w-4xl"
+                                className="max-w-4xl mx-auto"
                             >
                                 <div className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden p-8">
                                     <div className="flex items-center gap-4 mb-8">
@@ -612,7 +635,7 @@ export default function NotificationsPage() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
-                                className="bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden"
+                                className="max-w-6xl mx-auto bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden"
                             >
                                 <div className="p-8 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
                                     <div>
