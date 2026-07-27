@@ -503,19 +503,6 @@ export default function AdminLayout({ children, active }: { children: React.Reac
                   )}
                 </button>
 
-                {isSupported && (
-                  <button
-                    onClick={handleTogglePush}
-                    className={`p-2.5 rounded-xl transition-colors relative group ${subscription
-                      ? 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'
-                      : 'text-muted-foreground hover:bg-white dark:hover:bg-slate-800'
-                      }`}
-                    title={subscription ? 'Notificaciones activas' : 'Activar notificaciones push'}
-                  >
-                    {subscription ? <Wifi className="w-5 h-5" /> : <WifiOff className="w-5 h-5" />}
-                  </button>
-                )}
-
                 {showNotifs && (
                   <div className="fixed inset-0 z-40" onClick={() => setShowNotifs(false)} />
                 )}
@@ -599,6 +586,18 @@ export default function AdminLayout({ children, active }: { children: React.Reac
                   )}
                 </AnimatePresence>
               </div>
+            )}
+            {isSupported && (
+              <button
+                onClick={handleTogglePush}
+                className={`p-2.5 rounded-xl transition-colors relative group ${subscription
+                  ? 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'
+                  : 'text-muted-foreground hover:bg-white dark:hover:bg-slate-800'
+                  }`}
+                title={subscription ? 'Notificaciones activas' : 'Activar notificaciones push'}
+              >
+                {subscription ? <Wifi className="w-5 h-5" /> : <WifiOff className="w-5 h-5" />}
+              </button>
             )}
             {isAdmin && <div className="w-px h-5 bg-border mx-0.5" />}
             <ThemeToggle />
