@@ -151,11 +151,33 @@ export default function AdminLayout({ children, active }: { children: React.Reac
       if (data) {
         setProfile(data as Profile)
         // Ensure push sync happens for the current user session
-        if ('Notification' in window && Notification.permission === 'granted') {
-          // Subscription synced
-          subscribeUser(VAPID_PUBLIC_KEY).catch(err =>
-            console.error('[Push] Silent sync failed:', err)
-          )
+        if ('Notification' in window && isSupported) {
+          if (Notification.permission === 'granted') {
+            // Subscription synced
+            subscribeUser(VAPID_PUBLIC_KEY).catch(err =>
+              console.error('[Push] Silent sync failed:', err)
+            )
+          } else if (Notification.permission === 'default') {
+            // Pedimos el permiso una sola vez por usuario: si lo ignora o lo
+            // rechaza, no lo volvemos a molestar automáticamente (queda el
+            // toggle manual en el header para activarlo cuando quiera).
+            const promptedKey = `push_prompted_${user.id}`
+            if (!localStorage.getItem(promptedKey)) {
+              localStorage.setItem(promptedKey, '1')
+              toast('¿Querés recibir notificaciones push?', {
+                description: 'Te avisamos de novedades importantes al instante.',
+                duration: 15000,
+                action: {
+                  label: 'Activar',
+                  onClick: () => {
+                    subscribeUser(VAPID_PUBLIC_KEY).then(sub => {
+                      if (sub) toast.success('¡Notificaciones activadas!')
+                    }).catch(err => console.error('[Push] Prompted subscribe failed:', err))
+                  }
+                }
+              })
+            }
+          }
         }
       } else {
         setProfile({
@@ -481,7 +503,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
                   )}
                 </button>
 
-                {profile?.role === 'admin' && isSupported && (
+                {isSupported && (
                   <button
                     onClick={handleTogglePush}
                     className={`p-2.5 rounded-xl transition-colors relative group ${subscription
