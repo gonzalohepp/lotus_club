@@ -207,7 +207,7 @@ export async function POST(req: Request) {
 
         const PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY
         const PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY
-        const SUBS_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@beleza-dojo.com'
+        const SUBS_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:soporte@lotusclub.com'
 
         if (!PUBLIC_KEY || !PRIVATE_KEY) throw new Error('VAPID Keys missing')
 

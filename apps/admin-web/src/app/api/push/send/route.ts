@@ -41,14 +41,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: 'No subscriptions found for this user' })
         }
 
-        // Configure VAPID - Try both with and without NEXT_PUBLIC prefix
-        // Fallback hardcoded to match the frontend key used in AdminLayout
-        const PUBLIC_KEY_FALLBACK = 'BMXQvrbtBZdniuZrLMYD87T0E-742Lo72ktJWrjzB5mcbKYrrCh5X6cAo7z0d09QqOygrZsNFVEz_IBgTWqUp6o'
-
-        // Check all possible names for keys
-        const rawPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || PUBLIC_KEY_FALLBACK
+        // Sin fallback: la clave que había acá era de otro proyecto, y usarla
+        // producía suscripciones que nunca iban a recibir nada.
+        const rawPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY
         const rawPrivateKey = process.env.VAPID_PRIVATE_KEY || process.env.NEXT_PUBLIC_VAPID_PRIVATE_KEY
-        const rawSubject = process.env.VAPID_SUBJECT || process.env.NEXT_PUBLIC_VAPID_SUBJECT || 'mailto:admin@beleza-dojo.com'
+        const rawSubject = process.env.VAPID_SUBJECT || process.env.NEXT_PUBLIC_VAPID_SUBJECT || 'mailto:soporte@lotusclub.com'
 
         const publicKey = rawPublicKey?.trim()
         const privateKey = rawPrivateKey?.trim()
@@ -63,7 +60,6 @@ export async function POST(req: Request) {
             publicLength: publicKey?.length || 0,
             hasPrivate: !!privateKey,
             privateLength: privateKey?.length || 0,
-            isUsingFallback: rawPublicKey === PUBLIC_KEY_FALLBACK && !process.env.VAPID_PUBLIC_KEY && !process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
             subject
         })
 

@@ -49,7 +49,9 @@ type SubscribedUser = {
 export default function NotificationsPage() {
     // Historial y configuración de avisos son por sede: los días de recordatorio
     // dependen de la lógica de cobro, que cada dojo define por separado.
-    const { activeDojo } = useTenant()
+    const { activeDojo, branding, org } = useTenant()
+    // La vista previa muestra el remitente real que verá el alumno.
+    const marca = branding.display_name || org?.name || 'Tu dojo'
     const dojoId = activeDojo?.id
 
     const [loading, setLoading] = useState(false)
@@ -462,7 +464,7 @@ export default function NotificationsPage() {
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex items-center justify-between gap-2">
-                                                        <p className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">Beleza Dojo</p>
+                                                        <p className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">{marca}</p>
                                                         <span className="text-[9px] font-bold text-slate-400 shrink-0">ahora</span>
                                                     </div>
                                                     <h5 className="text-sm font-black text-slate-900 dark:text-white leading-tight mt-0.5 break-words">

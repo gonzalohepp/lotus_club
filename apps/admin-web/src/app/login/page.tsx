@@ -110,8 +110,11 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-4">
+            {/* Sin marca fija: el login es la puerta de entrada de todas las
+                organizaciones de la plataforma, y todavía no hay sesión de la
+                cual deducir cuál. El nombre concreto aparece una vez adentro. */}
             <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-[1.1]">
-              Beleza <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Dojo</span>
+              Portal <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">del Dojo</span>
             </h1>
             <p className="text-lg md:text-xl text-slate-400 max-w-lg mx-auto md:mx-0 font-medium leading-relaxed">
               Gestiona tu entrenamiento, revisa tus clases y accede al dojo con tu credencial digital.

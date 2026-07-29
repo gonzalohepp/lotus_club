@@ -255,7 +255,8 @@ function ValidateContent() {
             items: [
               {
                 id: 'cuota_mensual',
-                title: `Cuota Mensual - Beleza Dojo${multiplier > 1 ? ' (Recargo 20%)' : ''}`,
+                // El recargo sale del motor de cobro de la sede, no de un 20% fijo.
+                title: `Cuota Mensual - ${activeDojo?.name ?? 'Dojo'}${multiplier > 1 ? ` (Recargo ${Math.round((multiplier - 1) * 100)}%)` : ''}`,
                 price: finalPrice,
               },
             ],
@@ -477,7 +478,7 @@ function ValidateContent() {
           </motion.div>
 
           <div className="mt-auto pt-12 text-center opacity-40">
-            <p className="text-xs text-slate-500 font-medium tracking-widest uppercase">Beleza dojo</p>
+            <p className="text-xs text-slate-500 font-medium tracking-widest uppercase">{activeDojo?.name ?? 'Dojo'}</p>
           </div>
         </div>
       </div>

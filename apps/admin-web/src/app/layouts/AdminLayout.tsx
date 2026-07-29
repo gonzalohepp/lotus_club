@@ -140,14 +140,20 @@ export default function AdminLayout({ children, active }: { children: React.Reac
   const plan = org?.plan ?? 'basic'
 
   const { isSupported, subscription, subscribeUser, unsubscribeUser } = usePushNotifications()
-  const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BMXQvrbtBZdniuZrLMYD87T0E-742Lo72ktJWrjzB5mcbKYrrCh5X6cAo7z0d09QqOygrZsNFVEz_IBgTWqUp6o'
+  // Sin fallback hardcodeado a propósito: acá había una clave VAPID de otro
+  // proyecto. Con ella, el navegador se suscribía usando ese par de claves y la
+  // suscripción quedaba guardada en la base sin servir para nada, porque la
+  // privada de esta instancia no coincide. Si no hay clave configurada, las
+  // notificaciones simplemente no se ofrecen.
+  const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  const pushDisponible = isSupported && !!VAPID_PUBLIC_KEY
 
   const handleTogglePush = async () => {
     if (subscription) {
       const success = await unsubscribeUser()
       if (success) toast.info('Notificaciones desactivadas')
     } else {
-      const sub = await subscribeUser(VAPID_PUBLIC_KEY)
+      const sub = await subscribeUser(VAPID_PUBLIC_KEY!)
       if (sub) {
         toast.success('¡Notificaciones activadas!')
       } else {
@@ -197,10 +203,10 @@ export default function AdminLayout({ children, active }: { children: React.Reac
       if (data) {
         setProfile(data as Profile)
         // Ensure push sync happens for the current user session
-        if ('Notification' in window && isSupported) {
+        if ('Notification' in window && pushDisponible) {
           if (Notification.permission === 'granted') {
             // Subscription synced
-            subscribeUser(VAPID_PUBLIC_KEY).catch(err =>
+            subscribeUser(VAPID_PUBLIC_KEY!).catch(err =>
               console.error('[Push] Silent sync failed:', err)
             )
           } else if (Notification.permission === 'default') {
@@ -216,7 +222,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
                 action: {
                   label: 'Activar',
                   onClick: () => {
-                    subscribeUser(VAPID_PUBLIC_KEY).then(sub => {
+                    subscribeUser(VAPID_PUBLIC_KEY!).then(sub => {
                       if (sub) toast.success('¡Notificaciones activadas!')
                     }).catch(err => console.error('[Push] Prompted subscribe failed:', err))
                   }
@@ -244,7 +250,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
     // `subscription`, cada vez que el usuario se desactiva a mano el efecto
     // se re-disparaba y el sync silencioso lo volvía a suscribir al toque,
     // haciendo que el ícono de wifi "revirtiera" solo después de desactivar.
-  }, [router, VAPID_PUBLIC_KEY, subscribeUser])
+  }, [router, VAPID_PUBLIC_KEY, pushDisponible, subscribeUser])
 
   // ========= Real-time Security Alerts =========
   useEffect(() => {
@@ -678,7 +684,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
                 </AnimatePresence>
               </div>
             )}
-            {isSupported && (
+            {pushDisponible && (
               <button
                 onClick={handleTogglePush}
                 className={`p-2.5 rounded-xl transition-colors relative group ${subscription

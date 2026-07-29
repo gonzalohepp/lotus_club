@@ -1,8 +1,14 @@
 'use client'
 import { motion } from 'framer-motion'
 import { Calendar, AlertTriangle, MessageCircle } from 'lucide-react'
+import { useTenant } from '@/lib/tenant/context'
 type Expiring = { user_id: string; first_name: string | null; last_name: string | null; end_date: string; phone?: string | null }
 export default function ExpiringMembers({ rows, loading }: { rows: Expiring[]; loading?: boolean }) {
+  // Nombre con el que se firma hacia el alumno: el display_name configurado en
+  // /superadmin, o el de la organización.
+  const { branding, org } = useTenant()
+  const marca = branding.display_name || org?.name || 'tu dojo'
+
   if (loading) {
     return (
       <div className="space-y-3">
@@ -23,7 +29,9 @@ export default function ExpiringMembers({ rows, loading }: { rows: Expiring[]; l
 
   const handleWhatsApp = (m: Expiring) => {
     const name = m.first_name || 'Alumno'
-    const msg = `Hola ${name}! Te escribimos de Beleza Dojo para recordarte que tu membresía vence el ${new Date(m.end_date).toLocaleDateString()}. ¡Te esperamos! 🥋`
+    // La firma sale de la marca activa: mandarle a un alumno de Lotus un
+    // mensaje que dice "Beleza Dojo" es peor que no mandarlo.
+    const msg = `Hola ${name}! Te escribimos de ${marca} para recordarte que tu membresía vence el ${new Date(m.end_date).toLocaleDateString()}. ¡Te esperamos! 🥋`
     const phone = m.phone?.replace(/\D/g, '') || ''
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank')
   }

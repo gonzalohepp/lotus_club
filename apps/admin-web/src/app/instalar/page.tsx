@@ -29,7 +29,11 @@ export default function InstallPage() {
         setOs(detected)
     }, [])
 
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent('https://belezadojo.com.ar/instalar')}`
+    // El QR apunta a esta misma instalación, no a un dominio fijo de otra marca.
+    const baseUrl =
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        (typeof window !== 'undefined' ? window.location.origin : '')
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${baseUrl}/instalar`)}`
 
     return (
         <div className="min-h-screen bg-slate-950 text-white selection:bg-blue-500/30">
@@ -44,7 +48,7 @@ export default function InstallPage() {
                     <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/20 mx-auto mb-6">
                         <img src="/logo.png" alt="Logo" className="w-12 h-12" />
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight mb-3 italic">BELEZA <span className="text-blue-500">APP</span></h1>
+                    <h1 className="text-4xl font-black tracking-tight mb-3 italic">NUESTRA <span className="text-blue-500">APP</span></h1>
                     <p className="text-slate-400 font-medium">Instalá nuestra aplicación oficial para una mejor experiencia en el Dojo.</p>
                 </motion.div>
 

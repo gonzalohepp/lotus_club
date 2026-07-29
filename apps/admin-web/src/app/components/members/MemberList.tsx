@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { MemberRow } from '@/types/member'
+import { useTenant } from '@/lib/tenant/context'
 
 const fmtDate = (d?: string | null) =>
   d
@@ -38,12 +39,17 @@ function ActionSheet({
     return () => window.removeEventListener('keydown', handler)
   }, [open, onClose])
 
+  // Nombre con el que se firma hacia el alumno: el display_name configurado en
+  // /superadmin, o el de la organización.
+  const { branding, org } = useTenant()
+  const marca = branding.display_name || org?.name || 'tu dojo'
+
   if (!member) return null
   const fullName = [member.first_name, member.last_name].filter(Boolean).join(' ').trim()
   const isActive = member.status === 'activo'
 
   const handleWhatsApp = () => {
-    const msg = `Hola ${fullName || 'Alumno'}! Te escribimos de Beleza Dojo. 🥋`
+    const msg = `Hola ${fullName || 'Alumno'}! Te escribimos de ${marca}. 🥋`
     const phone = member.phone?.replace(/\D/g, '') || ''
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank')
     onClose()
@@ -244,6 +250,10 @@ function DesktopCard({
   onDelete: (id: string) => void
   onQuickRenew: (m: MemberRow) => void
 }) {
+  // Firma hacia el alumno: el nombre configurado en /superadmin.
+  const { branding, org } = useTenant()
+  const marca = branding.display_name || org?.name || 'tu dojo'
+
   const fullName = [m.first_name, m.last_name].filter(Boolean).join(' ').trim()
   const isActive = m.status === 'activo'
 
@@ -364,7 +374,7 @@ function DesktopCard({
             <button
               onClick={() => {
                 const name = fullName || 'Alumno'
-                const msg = `Hola ${name}! Te escribimos de Beleza Dojo. 🥋`
+                const msg = `Hola ${name}! Te escribimos de ${marca}. 🥋`
                 const phone = m.phone?.replace(/\D/g, '') || ''
                 window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank')
               }}

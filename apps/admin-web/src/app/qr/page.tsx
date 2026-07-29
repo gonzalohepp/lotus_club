@@ -299,12 +299,14 @@ export default function QRAcceso() {
       // Footer
       ctx.fillStyle = '#3b82f6'
       ctx.font = 'bold 28px sans-serif'
-      ctx.fillText('Beleza Dojo', canvas.width / 2, 630)
+      // El cartel impreso lleva el nombre de la sede: es lo que le sirve a
+      // quien lo pega en la puerta y a quien lo escanea.
+      ctx.fillText(activeDojo?.name ?? 'Dojo', canvas.width / 2, 630)
 
       const pngUrl = canvas.toDataURL('image/png')
       const a = document.createElement('a')
       a.href = pngUrl
-      a.download = 'QR-Acceso-BelezaDojo.png'
+      a.download = `QR-Acceso-${(activeDojo?.slug ?? 'dojo')}.png`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -319,7 +321,7 @@ export default function QRAcceso() {
     w.document.write(`
       <html>
         <head>
-          <title>QR de Acceso - Beleza Dojo</title>
+          <title>QR de Acceso - ${activeDojo?.name ?? 'Dojo'}</title>
           <style>
             body { 
               display:flex; justify-content:center; align-items:center; 
@@ -351,7 +353,7 @@ export default function QRAcceso() {
             <h1>ACCESO A BELEZA DOJO</h1>
             <p>Escanea el código para validar tu ingreso</p>
             <img src="${qrApiUrl}" alt="QR de Acceso" />
-            <div class="brand">Beleza Dojo</div>
+            <div class="brand">${activeDojo?.name ?? 'Dojo'}</div>
             <div class="meta">
               ${nextRefreshAt ? `Válido hasta: ${nextRefreshAt.toLocaleString('es-AR')}` : ''}
             </div>

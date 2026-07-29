@@ -424,7 +424,9 @@ function AsistenciaReport() {
 
 function AusenciaReport() {
     // Reporte de ausentismo de la sede activa.
-    const { activeDojo } = useTenant()
+    const { activeDojo, branding, org } = useTenant()
+    // Firma del mensaje que se le manda al alumno ausente.
+    const marca = branding.display_name || org?.name || 'tu dojo'
     const dojoId = activeDojo?.id
 
     const [members, setMembers] = useState<Member[]>([])
@@ -583,7 +585,7 @@ function AusenciaReport() {
                                                 variant="ghost"
                                                 className="bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white border border-blue-500/20 rounded-xl px-3 sm:px-4 py-3 sm:py-4 font-bold text-xs uppercase tracking-widest transition-all gap-1.5"
                                                 onClick={() => {
-                                                    const msg = encodeURIComponent(`Hola ${m.first_name}, te extrañamos en Beleza Dojo! 🥋 Notamos que hace unos días no vienes a entrenar. ¿Todo bien?`)
+                                                    const msg = encodeURIComponent(`Hola ${m.first_name}, te extrañamos en ${marca}! 🥋 Notamos que hace unos días no venís a entrenar. ¿Todo bien?`)
                                                     const phone = m.phone?.replace(/\D/g, '') || ''
                                                     window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
                                                 }}
