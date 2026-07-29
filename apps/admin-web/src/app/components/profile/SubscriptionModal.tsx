@@ -4,8 +4,9 @@ import { useEffect, useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Shield, Plus, Check, DollarSign, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
-import { getPaymentMultiplier } from '@/lib/pricing'
-import { mercadoPagoEnabled } from '@/lib/features'
+import { evaluateBilling } from '@/lib/billing'
+import { useTenant } from '@/lib/tenant/context'
+import { NO_DOJO } from '@/lib/tenant/constants'
 
 type ClassOption = {
     id: number
@@ -27,6 +28,9 @@ export default function SubscriptionModal({
         additional?: number[]
     }
 }) {
+    // Las clases y la inscripción del alumno son de la sede activa.
+    const { mercadoPago, activeDojo } = useTenant()
+    const dojoId = activeDojo?.id
     const [classes, setClasses] = useState<ClassOption[]>([])
     const [principalClass, setPrincipalClass] = useState<number | null>(null)
     const [additionalClasses, setAdditionalClasses] = useState<number[]>([])
@@ -42,6 +46,7 @@ export default function SubscriptionModal({
             supabase
                 .from('classes')
                 .select('*')
+                .eq('dojo_id', dojoId ?? NO_DOJO)
                 .order('name')
                 .then(({ data }) => {
                     if (data) {
@@ -60,6 +65,7 @@ export default function SubscriptionModal({
                     supabase
                         .from('members_with_status')
                         .select('is_new_member, next_payment_due, role')
+                        .eq('dojo_id', dojoId ?? NO_DOJO)
                         .eq('user_id', user.id)
                         .maybeSingle()
                         .then(({ data }) => {
@@ -89,7 +95,12 @@ export default function SubscriptionModal({
     }
 
     const multiplier = useMemo(() => {
-        return getPaymentMultiplier(nextPaymentDue, isNewMember, memberRole)
+        return evaluateBilling(activeDojo?.billing, {
+            endDate: nextPaymentDue,
+            isNewMember,
+            role: memberRole,
+            timezone: activeDojo?.timezone,
+        }).multiplier
     }, [nextPaymentDue, isNewMember, memberRole])
 
     const total = useMemo(() => {
@@ -106,7 +117,7 @@ export default function SubscriptionModal({
     }, [principalClass, additionalClasses, classes, multiplier])
 
     const handlePayment = async () => {
-        if (!mercadoPagoEnabled()) {
+        if (!mercadoPago) {
             alert('El pago online con Mercado Pago no está disponible en este momento.')
             return
         }
@@ -296,7 +307,7 @@ export default function SubscriptionModal({
                                     </div>
                                 </div>
 
-                                {mercadoPagoEnabled() ? (
+                                {mercadoPago ? (
                                     <button
                                         onClick={handlePayment}
                                         disabled={processing || !principalClass}

@@ -1,40 +1,34 @@
 /**
- * Sistema de planes (Basic / Pro) para desplegar instancias reducidas del
- * panel a nuevos clientes. Cada cliente tiene su propia instancia (Vercel +
- * Supabase propios); este módulo NO es multi-tenant, solo prende/apaga
- * secciones de la UI/API según NEXT_PUBLIC_PLAN.
+ * features.ts — Planes Basic/Pro resueltos en RUNTIME desde la base.
  *
- * Sin dependencias de Node ni del Edge runtime: se importa desde un Client
- * Component (AdminLayout), desde API routes (Node) y desde middleware.ts (Edge).
+ * ANTES (single-tenant): el plan era `NEXT_PUBLIC_PLAN`, una variable de build.
+ * Cambiar a un cliente de Basic a Pro requería redeploy, y cada cliente tenía su
+ * propia instancia de Vercel + Supabase.
+ *
+ * AHORA (multi-tenant): el plan vive en `organizations.plan` y los overrides en
+ * `organizations.features`. Se cambia desde /superadmin y aplica al instante,
+ * sin redeploy y sin tocar código.
+ *
+ * Las funciones de este módulo son PURAS: reciben plan + overrides y devuelven
+ * el mapa de features. Quien tiene que conseguir esos datos es el llamador
+ * (`useTenant()` en cliente, `getTenantContext()` en servidor). Así el módulo
+ * sigue sirviendo en los tres runtimes: browser, Node y Edge (middleware).
  */
 
-export type Plan = 'basic' | 'pro'
+import type { FeatureKey, Plan } from './tenant/types'
 
-export type FeatureKey =
-    | 'qr'
-    | 'members'
-    | 'classes'
-    | 'accessLog'
-    | 'academies'
-    | 'graduations'
-    | 'payments'
-    | 'mercadopago'
-    | 'metrics'
-    | 'reports'
-    | 'asistenciaVivo'
-    | 'notifications'
+export type { FeatureKey, Plan }
 
-/** Usado también por UpgradeModal para armar la tabla comparativa Basic/Pro. */
+/** Defaults por plan. Los overrides por organización pisan estos valores. */
 export const FEATURES_BY_PLAN: Record<Plan, Record<FeatureKey, boolean>> = {
     basic: {
         qr: true,
         members: true,
         classes: true,
         accessLog: true,
-        // Academias queda accesible en Basic (limitada a 1 sede vía
-        // getAcademyLimit(): la landing pública necesita al menos una fila en
-        // `academies` para el mapa, y el admin tiene que poder editarla).
-        academies: true,
+        // Gestión de sedes: en Basic queda accesible pero limitada a 1 dojo
+        // (ver getDojoLimit), porque la landing pública necesita al menos una.
+        dojos: true,
         graduations: false,
         payments: false,
         mercadopago: false,
@@ -48,7 +42,7 @@ export const FEATURES_BY_PLAN: Record<Plan, Record<FeatureKey, boolean>> = {
         members: true,
         classes: true,
         accessLog: true,
-        academies: true,
+        dojos: true,
         graduations: true,
         payments: true,
         mercadopago: true,
@@ -59,13 +53,23 @@ export const FEATURES_BY_PLAN: Record<Plan, Record<FeatureKey, boolean>> = {
     },
 }
 
-export const PLAN: Plan = process.env.NEXT_PUBLIC_PLAN === 'basic' ? 'basic' : 'pro'
+export type FeatureOverrides = Partial<Record<FeatureKey, boolean>>
 
-export function hasFeature(key: FeatureKey): boolean {
-    return FEATURES_BY_PLAN[PLAN][key]
+/**
+ * Mapa final de features de una organización: defaults del plan + overrides.
+ *
+ * Los overrides sirven para vender extras sueltos ("Basic + métricas") sin
+ * inventar planes nuevos.
+ */
+export function resolveFeatures(plan: Plan, overrides: FeatureOverrides = {}): Record<FeatureKey, boolean> {
+    return { ...FEATURES_BY_PLAN[plan], ...overrides }
 }
 
-/** Prefijos de ruta gateados por feature, usado por middleware.ts a nivel edge. */
+export function hasFeature(plan: Plan, overrides: FeatureOverrides, key: FeatureKey): boolean {
+    return resolveFeatures(plan, overrides)[key] === true
+}
+
+/** Prefijos de ruta gateados por feature. Lo usa el middleware a nivel edge. */
 export const ROUTE_FEATURES: Record<string, FeatureKey> = {
     '/payments': 'payments',
     '/metricas': 'metrics',
@@ -74,34 +78,56 @@ export const ROUTE_FEATURES: Record<string, FeatureKey> = {
     '/notificaciones': 'notifications',
 }
 
-/** Cantidad máxima de sedes (academias) permitidas por plan. `null` = sin límite. */
-const ACADEMY_LIMIT_BY_PLAN: Record<Plan, number | null> = {
+export function featureForPath(pathname: string): FeatureKey | null {
+    const entry = Object.entries(ROUTE_FEATURES).find(([prefix]) => pathname.startsWith(prefix))
+    return entry ? entry[1] : null
+}
+
+/** Cantidad máxima de dojos (sedes) por plan. `null` = sin límite. */
+const DOJO_LIMIT_BY_PLAN: Record<Plan, number | null> = {
     basic: 1,
     pro: null,
 }
 
-export function getAcademyLimit(): number | null {
-    return ACADEMY_LIMIT_BY_PLAN[PLAN]
+export function getDojoLimit(plan: Plan): number | null {
+    return DOJO_LIMIT_BY_PLAN[plan]
 }
 
 /**
  * Cobro online con Mercado Pago = DOS capas que deben cumplirse a la vez:
  *
  *  1) Capa de PLAN — `mercadopago` en FEATURES_BY_PLAN (Basic ❌, Pro ✅).
- *     Define si el plan de esta instancia incluye la posibilidad de cobrar
- *     online. Se muestra como diferenciador en la tabla comparativa (UpgradeModal).
+ *     Define si el plan de la organización incluye cobrar online.
  *
- *  2) Toggle OPERATIVO — NEXT_PUBLIC_MERCADOPAGO. Aunque el plan incluya MP, el
- *     botón de cobro sólo se muestra si además este toggle está en 'on'. Sirve
- *     para tener MP disponible en Pro pero apagado hasta empezar a usarlo.
+ *  2) Toggle OPERATIVO — `dojos.billing.mercadopago_enabled`. Aunque el plan lo
+ *     incluya, el botón sólo aparece si el dojo lo prendió. Permite tener MP
+ *     disponible en Pro pero apagado hasta que la sede empiece a usarlo, y que
+ *     una sede lo use y otra no.
  *
- * `mercadoPagoEnabled()` es la única fuente de verdad: prende/apaga TODO lo de
- * MP a la vez (opción de cobro en PaymentModal, checkout del alumno en
- * validate/suscripción y las rutas /api/payments/mp/*). Para activar el cobro
- * online en una instancia Pro: NEXT_PUBLIC_MERCADOPAGO=on (+ MP_ACCESS_TOKEN).
+ * Ojo: el token de MP (`MP_ACCESS_TOKEN`) sigue siendo por instancia. Si dos
+ * organizaciones necesitan cuentas de Mercado Pago distintas hay que moverlo a
+ * `organizations.secrets` — está anotado en SETUP-MULTITENANT.md.
  */
-const MERCADOPAGO_TOGGLE = process.env.NEXT_PUBLIC_MERCADOPAGO === 'on'
+export function mercadoPagoEnabled(
+    plan: Plan,
+    overrides: FeatureOverrides,
+    dojoMercadoPagoOn: boolean | undefined
+): boolean {
+    return hasFeature(plan, overrides, 'mercadopago') && dojoMercadoPagoOn === true
+}
 
-export function mercadoPagoEnabled(): boolean {
-    return hasFeature('mercadopago') && MERCADOPAGO_TOGGLE
+/** Etiquetas para la tabla comparativa Basic/Pro del UpgradeModal. */
+export const FEATURE_LABELS: Record<FeatureKey, string> = {
+    qr: 'Control de acceso QR',
+    members: 'Gestión de alumnos',
+    classes: 'Clases y horarios',
+    accessLog: 'Historial de ingresos',
+    dojos: 'Sedes',
+    graduations: 'Graduaciones y cinturones',
+    payments: 'Pagos y cuotas',
+    mercadopago: 'Cobro online (Mercado Pago)',
+    metrics: 'Métricas y mapas de calor',
+    reports: 'Reportes exportables',
+    asistenciaVivo: 'Asistencia en vivo',
+    notifications: 'Notificaciones push',
 }

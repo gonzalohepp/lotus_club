@@ -5,8 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Shield, Plus, Check, DollarSign, Loader2, User, CreditCard } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { lastDayOfMonth, addMonths } from 'date-fns';
-import { getPaymentMultiplier } from '@/lib/pricing';
-import { mercadoPagoEnabled } from '@/lib/features';
+import { evaluateBilling } from '@/lib/billing';
+import { useTenant } from '@/lib/tenant/context';
+import { NO_DOJO } from '@/lib/tenant/constants'
 import StyledSelect from '../common/StyledSelect';
 
 type MemberOpt = {
@@ -33,6 +34,10 @@ export default function PaymentModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  // Cobrar es una operación de UNA sede: el pago, la inscripción a clases y la
+  // membresía que se renuevan son los de este dojo.
+  const { mercadoPago, activeDojo, billing } = useTenant();
+  const dojoId = activeDojo?.id;
   const [members, setMembers] = useState<MemberOpt[]>([]);
   const [classes, setClasses] = useState<ClassOption[]>([])
   const [userId, setUserId] = useState('');
@@ -53,13 +58,14 @@ export default function PaymentModal({
 
     (async () => {
       // Load classes
-      const { data: classData } = await supabase.from('classes').select('*').order('name')
+      const { data: classData } = await supabase.from('classes').select('*').eq('dojo_id', dojoId ?? NO_DOJO).order('name')
       if (classData) setClasses(classData)
 
       // Load members
       const { data, error } = await supabase
         .from('members_with_status')
         .select('user_id, first_name, last_name, is_new_member, next_payment_due, role')
+        .eq('dojo_id', dojoId ?? NO_DOJO)
         .order('last_name', { ascending: true, nullsFirst: true });
 
       if (error) console.error('[PaymentModal] load members error:', error)
@@ -75,7 +81,7 @@ export default function PaymentModal({
         setMembers(opts);
       }
     })();
-  }, [open]);
+  }, [open, dojoId]);
 
   // When User Selected -> Load Current Enrollments
   useEffect(() => {
@@ -91,6 +97,7 @@ export default function PaymentModal({
       const { data } = await supabase
         .from('class_enrollments')
         .select('class_id, is_principal')
+        .eq('dojo_id', dojoId ?? NO_DOJO)
         .eq('user_id', userId)
 
       if (data) {
@@ -101,7 +108,7 @@ export default function PaymentModal({
       }
       setFetchingClasses(false);
     })()
-  }, [userId])
+  }, [userId, dojoId])
 
 
   // Logic Helpers
@@ -120,13 +127,16 @@ export default function PaymentModal({
   // Pricing Logic
   const selectedMember = useMemo(() => members.find(m => m.user_id === userId), [members, userId]);
 
+  // El recargo sale de las reglas de ESTA sede, no de las de Beleza: cada dojo
+  // define sus propios tramos desde /superadmin.
   const multiplier = useMemo(() => {
-    return getPaymentMultiplier(
-      selectedMember?.next_payment_due ?? null,
-      selectedMember?.is_new_member ?? false,
-      selectedMember?.role
-    )
-  }, [selectedMember])
+    return evaluateBilling(billing, {
+      endDate: selectedMember?.next_payment_due ?? null,
+      isNewMember: selectedMember?.is_new_member ?? false,
+      role: selectedMember?.role,
+      timezone: activeDojo?.timezone,
+    }).multiplier
+  }, [selectedMember, billing, activeDojo?.timezone])
 
   const total = useMemo(() => {
     let sum = 0
@@ -157,20 +167,22 @@ export default function PaymentModal({
     const day = today.getDate();
 
     // 2. Update Enrollments
-    await supabase.from('class_enrollments').delete().eq('user_id', userId)
-    const newEnrollments: { user_id: string, class_id: number, is_principal: boolean }[] = []
-    if (principalClass) newEnrollments.push({ user_id: userId, class_id: principalClass, is_principal: true })
-    additionalClasses.forEach(id => newEnrollments.push({ user_id: userId, class_id: id, is_principal: false }))
+    await supabase.from('class_enrollments').delete().eq('dojo_id', dojoId ?? NO_DOJO).eq('user_id', userId)
+    const newEnrollments: { dojo_id: string, user_id: string, class_id: number, is_principal: boolean }[] = []
+    if (principalClass) newEnrollments.push({ dojo_id: dojoId!, user_id: userId, class_id: principalClass, is_principal: true })
+    additionalClasses.forEach(id => newEnrollments.push({ dojo_id: dojoId!, user_id: userId, class_id: id, is_principal: false }))
     if (newEnrollments.length > 0) {
       await supabase.from('class_enrollments').insert(newEnrollments)
     }
 
     // 3. Insert Payment
-    const note = multiplier > 1 ? `Incluye recargo del 20% (día ${day}).` : null;
+    const surchargePct = Math.round((multiplier - 1) * 100);
+    const note = multiplier > 1 ? `Incluye recargo del ${surchargePct}% (día ${day}).` : null;
 
     const { data: insertPay, error: payErr } = await supabase
       .from('payments')
       .insert({
+        dojo_id: dojoId,
         user_id: userId,
         amount: total,
         method: method,
@@ -193,19 +205,21 @@ export default function PaymentModal({
     const { data: existingMem } = await supabase
       .from('memberships')
       .select('start_date')
+      .eq('dojo_id', dojoId ?? NO_DOJO)
       .eq('member_id', userId)
       .maybeSingle();
 
     const finalStartDate = existingMem?.start_date || fromStr;
 
     await supabase.from('memberships').upsert({
+      dojo_id: dojoId,
       member_id: userId,
       type: 'monthly',
       start_date: finalStartDate,
       last_payment_date: fromStr, // New field for renewal logic
       end_date: toStr,
       notes: `Pago #${insertPay?.id}`,
-    }, { onConflict: 'member_id' });
+    }, { onConflict: 'dojo_id,member_id' });
 
     setLoading(false);
     onClose();
@@ -401,7 +415,7 @@ export default function PaymentModal({
                       { value: 'transferencia', label: 'Transferencia 🏦' },
                       // Mercado Pago solo aparece si el cobro online está prendido
                       // en la instancia (NEXT_PUBLIC_MERCADOPAGO=on).
-                      ...(mercadoPagoEnabled() ? [{ value: 'mercadopago', label: 'Mercado Pago 📱' }] : []),
+                      ...(mercadoPago ? [{ value: 'mercadopago', label: 'Mercado Pago 📱' }] : []),
                     ]}
                   />
 

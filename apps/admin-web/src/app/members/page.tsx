@@ -17,6 +17,8 @@ import { todayAR } from '@/lib/dateUtils'
 import { addMonths, lastDayOfMonth } from 'date-fns'
 
 import { MemberRow as Row, ClassRow, MemberPayload } from '@/types/member'
+import { useTenant } from '@/lib/tenant/context'
+import { NO_DOJO } from '@/lib/tenant/constants'
 
 function SuccessToast({ message, onClose }: { message: string, onClose: () => void }) {
   useEffect(() => {
@@ -44,6 +46,9 @@ function SuccessToast({ message, onClose }: { message: string, onClose: () => vo
 
 function MembersContent() {
   const searchParams = useSearchParams()
+  // Sede activa: todo lo de esta pantalla se lee y escribe scopeado a ella.
+  const { activeDojo } = useTenant()
+  const dojoId = activeDojo?.id
   const [members, setMembers] = useState<Row[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -68,9 +73,14 @@ function MembersContent() {
   // --- CARGA ---
   const load = async () => {
     setLoading(true)
+    // RLS ya impide leer otras sedes, pero un admin de dos sedes las vería
+    // mezcladas sin este filtro: la vista devuelve una fila por (dojo, persona).
+    if (!dojoId) { setLoading(false); return }
+
     const { data, error } = await supabase
       .from('members_with_status')
       .select('*')
+      .eq('dojo_id', dojoId)
       .order('last_name', { ascending: true, nullsFirst: true })
 
     if (error) console.error('[members] load error:', error)
@@ -99,15 +109,20 @@ function MembersContent() {
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [dojoId])
 
   useEffect(() => {
     const loadClasses = async () => {
-      const { data } = await supabase.from('classes').select('id,name').order('name')
+      if (!dojoId) return
+      const { data } = await supabase
+        .from('classes')
+        .select('id,name')
+        .eq('dojo_id', dojoId)
+        .order('name')
       setClasses((data ?? []) as ClassRow[])
     }
     loadClasses()
-  }, [])
+  }, [dojoId])
 
   useEffect(() => {
     const newId = searchParams.get('new_id')
@@ -189,6 +204,7 @@ function MembersContent() {
       const { data: existingMem } = await supabase
         .from('memberships')
         .select('start_date')
+        .eq('dojo_id', dojoId ?? NO_DOJO)
         .eq('member_id', m.user_id)
         .maybeSingle()
 
@@ -201,7 +217,7 @@ function MembersContent() {
         last_payment_date: todayStr,
         end_date: newExpirationStr,
         notes: 'Renovación rápida manual desde administración',
-      }, { onConflict: 'member_id' })
+      }, { onConflict: 'dojo_id,member_id' })
 
       if (memErr) throw memErr
 
@@ -281,6 +297,7 @@ function MembersContent() {
         const { data: existingMem } = await supabase
           .from('memberships')
           .select('start_date')
+          .eq('dojo_id', dojoId ?? NO_DOJO)
           .eq('member_id', userId)
           .maybeSingle()
 
@@ -288,6 +305,7 @@ function MembersContent() {
           .from('memberships')
           .upsert(
             {
+              dojo_id: dojoId,
               member_id: userId,
               type: 'monthly',
               start_date: existingMem?.start_date || payload.last_payment_date || new Date().toISOString().slice(0, 10),
@@ -298,11 +316,12 @@ function MembersContent() {
           )
         if (memErr) throw memErr
 
-        await supabase.from('class_enrollments').delete().eq('user_id', userId)
+        await supabase.from('class_enrollments').delete().eq('dojo_id', dojoId).eq('user_id', userId)
         if (payload.classes?.length) {
           const { error: enrollErr } = await supabase
             .from('class_enrollments')
             .insert(payload.classes.map((c) => ({
+              dojo_id: dojoId,
               user_id: userId,
               class_id: c.class_id,
               is_principal: c.is_principal
@@ -364,7 +383,9 @@ function MembersContent() {
                 Gestión de <span className="text-blue-600 dark:text-blue-400">Miembros</span>
               </h1>
               <p className="mt-1 text-slate-500 dark:text-slate-400 font-medium text-sm md:text-base">
-                Visualiza, filtra y gestiona todos los alumnos del Dojo al instante.
+                {activeDojo
+                  ? <>Alumnos de <span className="font-black text-slate-700 dark:text-slate-200">{activeDojo.name}</span>. Los que des de alta quedan asociados a esta sede.</>
+                  : 'Visualiza, filtra y gestiona todos los alumnos del Dojo al instante.'}
               </p>
             </div>
 

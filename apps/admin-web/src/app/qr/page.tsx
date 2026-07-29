@@ -17,6 +17,8 @@ import {
 } from 'lucide-react'
 import AdminLayout from '../layouts/AdminLayout'
 import { supabase } from '@/lib/supabaseClient'
+import { useTenant } from '@/lib/tenant/context'
+import { NO_DOJO } from '@/lib/tenant/constants'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { nowAR_ISO } from '@/lib/dateUtils'
@@ -48,12 +50,75 @@ function formatTimeLeft(target: Date | null, now: number) {
 
 /* ================= COMPONENT ================= */
 export default function QRAcceso() {
+  // El QR de acceso es de una sede concreta: un token generado en Lanús no
+  // debe abrirle la puerta a nadie en Quilmes. El rol también sale de la sede
+  // activa, no de `profiles.role`, para que sólo su admin cambie la config.
+  const { activeDojo, role } = useTenant()
+  const dojoId = activeDojo?.id
+
   const [token, setToken] = useState<string>('')
   const [nextRefreshAt, setNextRefreshAt] = useState<Date | null>(null)
   const [now, setNow] = useState(Date.now())
   const [autoRefresh, setAutoRefresh] = useState(true)
-  const [userRole, setUserRole] = useState<string | null>(null)
-  const isAdmin = userRole === 'admin'
+
+  const isAdmin = role === 'admin'
+
+  // Confirmación antes de cambiar el modo del QR: es una decisión operativa que
+  // deja inservible el código anterior, así que no debe pasar de un click suelto.
+  const [showModeConfirm, setShowModeConfirm] = useState(false)
+  const [switchingMode, setSwitchingMode] = useState(false)
+
+  /**
+   * Aplica el cambio de modo. Se llama sólo desde la confirmación.
+   *
+   * Al pasar a ROTATIVO se genera un token nuevo, con lo cual el QR impreso que
+   * estuviera pegado en la puerta deja de validar. Al pasar a FIJO se reutiliza
+   * el token fijo vigente si lo hay, para no obligar a reimprimir cada vez que
+   * alguien toca el interruptor sin querer.
+   */
+  const applyModeChange = useCallback(async () => {
+    const nextAuto = !autoRefresh
+    setSwitchingMode(true)
+
+    try {
+      const { error: modeErr } = await supabase
+        .from('dojos')
+        .update({ qr_fixed: !nextAuto })
+        .eq('id', dojoId ?? NO_DOJO)
+
+      if (modeErr) {
+        console.error('[qr] no se pudo guardar el modo en la sede:', modeErr)
+        return
+      }
+
+      setAutoRefresh(nextAuto)
+
+      if (!nextAuto) {
+        const { data } = await supabase
+          .from('qr_tokens')
+          .select('token, expires_at')
+          .eq('dojo_id', dojoId ?? NO_DOJO)
+          .eq('is_fixed', true)
+          .gt('expires_at', new Date().toISOString())
+          .order('expires_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (data) {
+          setToken(data.token)
+          setNextRefreshAt(new Date(data.expires_at))
+        } else {
+          await regenerate(false)
+        }
+      } else {
+        await regenerate(true)
+      }
+    } finally {
+      setSwitchingMode(false)
+      setShowModeConfirm(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRefresh, dojoId])
 
   // ================= ACTIONS =================
   const regenerate = useCallback(async (isAutoOverride?: boolean) => {
@@ -66,6 +131,7 @@ export default function QRAcceso() {
     const expiry = new Date(Date.now() + durationMs)
 
     const { error } = await supabase.from('qr_tokens').insert({
+      dojo_id: dojoId,
       token: t,
       expires_at: expiry.toISOString(),
       is_fixed: !currentAuto
@@ -78,12 +144,14 @@ export default function QRAcceso() {
 
     setToken(t)
     setNextRefreshAt(expiry)
-  }, [autoRefresh])
+  }, [autoRefresh, dojoId])
 
-  // Load autoRefresh state from localStorage on mount and init token
+  // El modo (fijo / rotativo) es un atributo de la SEDE, no del navegador:
+  // la tablet de la puerta y la laptop del admin tienen que coincidir.
   useEffect(() => {
-    const savedAuto = localStorage.getItem('qr_auto_refresh')
-    const isAuto = savedAuto !== null ? JSON.parse(savedAuto) : true
+    if (!dojoId) return
+
+    const isAuto = !(activeDojo?.qr_fixed ?? false)
     setAutoRefresh(isAuto)
 
     if (!isAuto) {
@@ -91,6 +159,7 @@ export default function QRAcceso() {
       supabase
         .from('qr_tokens')
         .select('token, expires_at')
+        .eq('dojo_id', dojoId ?? NO_DOJO)
         .eq('is_fixed', true)
         .gt('expires_at', new Date().toISOString())
         .order('expires_at', { ascending: false })
@@ -110,23 +179,8 @@ export default function QRAcceso() {
       regenerate(true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [dojoId, activeDojo?.qr_fixed])
 
-  // Obtener rol del usuario actual
-  useEffect(() => {
-    ; (async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user?.email) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('role')
-          .ilike('email', user.email)
-          .limit(1)
-          .maybeSingle()
-        setUserRole(data?.role ?? 'member')
-      }
-    })()
-  }, [])
 
   // UI State for Guest Access
   const [showGuestConfirm, setShowGuestConfirm] = useState(false)
@@ -344,31 +398,7 @@ export default function QRAcceso() {
 
             {isAdmin && (
               <motion.button
-                onClick={async () => {
-                  const nextValue = !autoRefresh
-                  setAutoRefresh(nextValue)
-                  localStorage.setItem('qr_auto_refresh', JSON.stringify(nextValue))
-
-                  if (!nextValue) {
-                    const { data } = await supabase
-                      .from('qr_tokens')
-                      .select('token, expires_at')
-                      .eq('is_fixed', true)
-                      .gt('expires_at', new Date().toISOString())
-                      .order('expires_at', { ascending: false })
-                      .limit(1)
-                      .maybeSingle()
-
-                    if (data) {
-                      setToken(data.token)
-                      setNextRefreshAt(new Date(data.expires_at))
-                    } else {
-                      regenerate(false)
-                    }
-                  } else {
-                    regenerate(true)
-                  }
-                }}
+                onClick={() => setShowModeConfirm(true)}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 whileHover={{ scale: 1.02 }}
@@ -586,6 +616,91 @@ export default function QRAcceso() {
         </div>
       </div>
 
+
+      {/* Confirmación de cambio de modo del QR */}
+      <Dialog open={showModeConfirm} onOpenChange={setShowModeConfirm}>
+        <DialogContent className="sm:max-w-lg bg-slate-900 border-white/10 text-white rounded-3xl p-0 overflow-hidden">
+          <div className="p-8">
+            <DialogHeader>
+              <div className={`w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center ${autoRefresh ? 'bg-amber-500/15 text-amber-400' : 'bg-emerald-500/15 text-emerald-400'
+                }`}>
+                {autoRefresh ? <Lock className="w-7 h-7" /> : <Unlock className="w-7 h-7" />}
+              </div>
+
+              <DialogTitle className="text-2xl font-black text-white text-center">
+                {autoRefresh ? 'Fijar el código QR' : 'Volver al QR rotativo'}
+              </DialogTitle>
+
+              <DialogDescription className="text-slate-400 text-center text-sm mt-2">
+                Este cambio aplica a <span className="font-bold text-white">{activeDojo?.name ?? 'esta sede'}</span> y
+                a todos los dispositivos que la abran.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="mt-6 space-y-3">
+              {autoRefresh ? (
+                <>
+                  <p className="flex gap-3 text-sm text-slate-300">
+                    <span className="text-emerald-400 shrink-0">✓</span>
+                    Vas a poder <b>imprimir el código</b> y pegarlo en la puerta. No hace falta pantalla ni tablet.
+                  </p>
+                  <p className="flex gap-3 text-sm text-slate-300">
+                    <span className="text-emerald-400 shrink-0">✓</span>
+                    El mismo código sigue sirviendo <b>durante un año</b>.
+                  </p>
+                  <p className="flex gap-3 text-sm text-amber-300/90">
+                    <span className="shrink-0">⚠</span>
+                    Como no cambia, quien le saque una foto <b>puede compartirla</b> y ese código va a seguir
+                    validando. Igual el ingreso exige estar logueado, activo y pertenecer a esta sede.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="flex gap-3 text-sm text-slate-300">
+                    <span className="text-emerald-400 shrink-0">✓</span>
+                    El código pasa a <b>renovarse cada 30 segundos</b>, así que una foto deja de servir enseguida.
+                  </p>
+                  <p className="flex gap-3 text-sm text-rose-300">
+                    <span className="shrink-0">⚠</span>
+                    <span>
+                      <b>El QR impreso que tengas pegado deja de funcionar.</b> Hay que retirarlo.
+                    </span>
+                  </p>
+                  <p className="flex gap-3 text-sm text-amber-300/90">
+                    <span className="shrink-0">⚠</span>
+                    Necesitás una <b>pantalla o tablet en la puerta</b> mostrando esta página. Sin eso nadie puede
+                    escanear.
+                  </p>
+                </>
+              )}
+            </div>
+
+            <DialogFooter className="flex-col gap-3 sm:flex-col mt-8">
+              <Button
+                onClick={applyModeChange}
+                disabled={switchingMode}
+                className={`w-full h-12 rounded-xl font-bold tracking-wide text-white ${autoRefresh ? 'bg-amber-600 hover:bg-amber-500' : 'bg-emerald-600 hover:bg-emerald-500'
+                  }`}
+              >
+                {switchingMode
+                  ? 'Aplicando…'
+                  : autoRefresh
+                    ? 'Sí, fijar el código'
+                    : 'Sí, volver a rotativo'}
+              </Button>
+              <Button
+                onClick={() => setShowModeConfirm(false)}
+                disabled={switchingMode}
+                variant="ghost"
+                className="w-full h-11 rounded-xl text-slate-400 hover:text-white hover:bg-white/5"
+              >
+                Cancelar
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Confirmation Dialog */}
       <Dialog open={showGuestConfirm} onOpenChange={setShowGuestConfirm}>
         <DialogContent className="sm:max-w-md bg-slate-900 border-white/10 text-white rounded-3xl p-0 overflow-hidden">
@@ -611,6 +726,7 @@ export default function QRAcceso() {
               <Button
                 onClick={async () => {
                   const { error } = await supabase.from('access_logs').insert({
+                    dojo_id: dojoId,
                     user_id: null,
                     result: 'autorizado',
                     reason: 'Acceso invitado manual',

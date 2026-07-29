@@ -37,11 +37,3 @@ export function nowAR_ISO(): string {
     return iso
 }
 
-/**
- * Devuelve un Date object representando "ahora" en Argentina.
- */
-export function nowAR(): Date {
-    return new Date(
-        new Date().toLocaleString('en-US', { timeZone: TZ })
-    )
-}

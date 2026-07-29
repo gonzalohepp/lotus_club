@@ -70,3 +70,17 @@ supabase/.branches/
 
 # Claude Code local settings
 .claude/
+
+# Reportes y artefactos de análisis
+lint_report.txt
+*.lcov
+
+# Dumps de base de datos (pueden contener datos de personas reales)
+*.dump
+*.sql.gz
+*.pgdump
+
+# Volcados de esquema para inspección local
+schema*.sql
+!supabase/migrations/*.sql
+!database/*.sql

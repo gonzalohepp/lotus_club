@@ -1,21 +1,50 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { hasFeature, ROUTE_FEATURES } from '@/lib/features'
+
+import { featureForPath, resolveFeatures } from '@/lib/features'
+import { ACTIVE_DOJO_COOKIE } from '@/lib/tenant/constants'
+
+/**
+ * middleware.ts — Puerta de entrada multi-tenant.
+ *
+ * Resuelve, en el edge y antes de renderizar:
+ *   1. ¿Hay sesión?
+ *   2. ¿A qué dojos pertenece y cuál está activo?
+ *   3. ¿Su rol EN ESE DOJO le permite entrar a la ruta?
+ *   4. ¿El plan de la ORGANIZACIÓN de ese dojo incluye la feature?
+ *
+ * El paso 3 es lo que cambió con el multi-tenant: antes el rol era global
+ * (`profiles.role`), así que un admin lo era en todos lados. Ahora el rol es por
+ * dojo, y el mismo usuario puede ser admin en Lanús y alumno en Avellaneda.
+ */
+
+/** Rutas del panel de administración (requieren rol de staff en el dojo activo). */
+const ADMIN_PATHS = [
+    '/admin',
+    '/members',
+    '/classes',
+    '/payments',
+    '/torneo',
+    '/metricas',
+    '/access-log',
+    '/qr',
+    '/reportes',
+    '/asistencia-vivo',
+    '/notificaciones',
+]
+
+const STAFF_ROLES = new Set(['admin', 'instructor'])
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl
 
-    // 0. Las rutas de API son públicas (Mercado Pago, etc.)
-    // Retornamos inmediatamente para evitar redirecciones o chequeos de auth
+    // Las rutas de API validan sesión y tenant por su cuenta (requireDojo*),
+    // y algunas son públicas a propósito (webhook de Mercado Pago).
     if (pathname.startsWith('/api')) {
         return NextResponse.next()
     }
 
-    let response = NextResponse.next({
-        request: {
-            headers: request.headers,
-        },
-    })
+    let response = NextResponse.next({ request: { headers: request.headers } })
 
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,38 +55,14 @@ export async function middleware(request: NextRequest) {
                     return request.cookies.get(name)?.value
                 },
                 set(name: string, value: string, options: CookieOptions) {
-                    request.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    })
-                    response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
-                    })
-                    response.cookies.set({
-                        name,
-                        value,
-                        ...options,
-                    })
+                    request.cookies.set({ name, value, ...options })
+                    response = NextResponse.next({ request: { headers: request.headers } })
+                    response.cookies.set({ name, value, ...options })
                 },
                 remove(name: string, options: CookieOptions) {
-                    request.cookies.set({
-                        name,
-                        value: '',
-                        ...options,
-                    })
-                    response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
-                    })
-                    response.cookies.set({
-                        name,
-                        value: '',
-                        ...options,
-                    })
+                    request.cookies.set({ name, value: '', ...options })
+                    response = NextResponse.next({ request: { headers: request.headers } })
+                    response.cookies.set({ name, value: '', ...options })
                 },
             },
         }
@@ -67,60 +72,95 @@ export async function middleware(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
-    // const { pathname } = request.nextUrl // Remove duplicate
-
     const host = request.headers.get('x-forwarded-host') || request.headers.get('host')
     const protocol = request.headers.get('x-forwarded-proto') || 'http'
     const origin = `${protocol}://${host}`
 
-    const adminPaths = [
-        '/admin',
-        '/members',
-        '/classes',
-        '/payments',
-        '/torneo',
-        '/metricas',
-        '/access-log',
-        '/qr',
-        '/reportes',
-        '/asistencia-vivo',
-        '/notificaciones'
-    ]
+    const isPathAdmin = ADMIN_PATHS.some((p) => pathname.startsWith(p))
+    const isPathSuperadmin = pathname.startsWith('/superadmin')
+    const isPathProtected =
+        isPathAdmin ||
+        isPathSuperadmin ||
+        pathname.startsWith('/app') ||
+        pathname.startsWith('/validate') ||
+        pathname.startsWith('/profile')
 
-    const isPathAdmin = adminPaths.some(p => pathname.startsWith(p))
-    const isPathProtected = isPathAdmin || pathname.startsWith('/app') || pathname.startsWith('/validate') || pathname.startsWith('/profile')
-
-    // 0. Las rutas de API son públicas (Mercado Pago, etc.)
-    // (Ya manejado al principio de la función)
-
-    // 1. Si no hay usuario y trata de acceder a rutas protegidas
     if (!user && isPathProtected) {
         return NextResponse.redirect(new URL('/login', origin))
     }
 
-    // 2. Si hay usuario, verificamos su rol para rutas de admin
-    if (user) {
-        if (pathname === '/login') {
-            return NextResponse.redirect(new URL('/app', origin))
+    if (!user) return response
+
+    if (pathname === '/login') {
+        return NextResponse.redirect(new URL('/app', origin))
+    }
+
+    // ---- Panel de plataforma (el dev) -------------------------------------
+    if (isPathSuperadmin) {
+        const { data: platformAdmin } = await supabase
+            .from('platform_admins')
+            .select('user_id')
+            .eq('user_id', user.id)
+            .maybeSingle()
+
+        // 404 en vez de 403: no revelamos que /superadmin existe.
+        if (!platformAdmin) {
+            return NextResponse.rewrite(new URL('/404', origin))
+        }
+        return response
+    }
+
+    if (!isPathAdmin) return response
+
+    // ---- Panel del dojo ---------------------------------------------------
+    const [{ data: memberships }, { data: platformAdmin }, { data: orgRoles }] = await Promise.all([
+        supabase
+            .from('dojo_members')
+            .select('dojo_id, role, dojos!inner ( is_active, organizations!inner ( plan, features ) )')
+            .eq('user_id', user.id)
+            .eq('is_active', true),
+        supabase.from('platform_admins').select('user_id').eq('user_id', user.id).maybeSingle(),
+        supabase.from('org_members').select('org_id, role').eq('user_id', user.id).eq('is_active', true),
+    ])
+
+    const isPlatformAdmin = !!platformAdmin
+    // Superadmin de marca: es staff de todas las sedes de su organización sin
+    // necesitar una fila en dojo_members. Sin este chequeo quedaría rebotado a
+    // /validate igual que un alumno.
+    const isOrgStaff = (orgRoles ?? []).length > 0
+
+    // El dojo activo sale de la cookie que escribe el switcher; si apunta a algo
+    // que ya no existe o al que perdió acceso, cae al primero disponible.
+    const requestedDojo = request.cookies.get(ACTIVE_DOJO_COOKIE)?.value
+    const active =
+        (memberships ?? []).find((m) => m.dojo_id === requestedDojo) ?? (memberships ?? [])[0] ?? null
+
+    if (!isPlatformAdmin && !isOrgStaff) {
+        if (!active) {
+            console.warn(`[middleware] ${user.email} sin dojo activo intentó entrar a ${pathname}`)
+            return NextResponse.redirect(new URL('/validate', origin))
         }
 
-        if (isPathAdmin) {
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('user_id', user.id)
-                .single()
+        if (!STAFF_ROLES.has(active.role)) {
+            console.warn(`[middleware] ${active.role} ${user.email} bloqueado en ${pathname}`)
+            return NextResponse.redirect(new URL('/validate', origin))
+        }
+    }
 
-            if (profile?.role !== 'admin' && profile?.role !== 'instructor') {
-                console.warn(`[middleware] Blocked ${profile?.role || 'member'} ${user.email} from ${pathname}`)
-                return NextResponse.redirect(new URL('/validate', origin))
-            }
+    // ---- Gate por plan de la organización dueña del dojo activo -----------
+    const feature = featureForPath(pathname)
 
-            // 3. Bloqueo por plan: la ruta existe pero la feature está apagada en esta instancia
-            const featureEntry = Object.entries(ROUTE_FEATURES).find(([prefix]) => pathname.startsWith(prefix))
-            if (featureEntry && !hasFeature(featureEntry[1])) {
-                return NextResponse.redirect(new URL('/admin', origin))
-            }
+    if (feature && active && !isPlatformAdmin) {
+        // El join anidado puede venir como objeto o como array de un elemento
+        // según cómo infiera PostgREST la cardinalidad de la relación.
+        const dojo = Array.isArray(active.dojos) ? active.dojos[0] : active.dojos
+        const orgRaw = dojo?.organizations
+        const org = Array.isArray(orgRaw) ? orgRaw[0] : orgRaw
+
+        const features = resolveFeatures(org?.plan ?? 'basic', org?.features ?? {})
+
+        if (!features[feature]) {
+            return NextResponse.redirect(new URL('/admin', origin))
         }
     }
 
@@ -130,11 +170,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
     matcher: [
         /*
-         * Match all request paths except for the ones starting with:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * - logo.png, google-icon.svg, etc (assets)
+         * Todas las rutas salvo estáticos y assets.
          */
         '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],

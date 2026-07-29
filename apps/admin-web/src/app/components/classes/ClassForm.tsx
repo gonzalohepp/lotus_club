@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { X, Save, BookOpen, Clock, Calendar, Users, DollarSign, Type, Palette, AlignLeft, User } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
+import { useTenant } from '@/lib/tenant/context'
 
 export type ClassRow = {
   id?: number
@@ -77,6 +78,9 @@ function getInitialForm(initial?: ClassRow | null): ClassRow {
 }
 
 export default function ClassForm({ initial, onCancel, onSaved }: Props) {
+  const { activeDojo } = useTenant()
+  const dojoId = activeDojo?.id
+
   const initialForm = useMemo(() => getInitialForm(initial), [initial])
   const [form, setForm] = useState<ClassRow>(initialForm)
   const [saving, setSaving] = useState(false)
@@ -110,9 +114,16 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
       price: Number(form.price_principal), // fallback for old views
     }
 
+    if (!dojoId) {
+      setSaving(false)
+      return alert('No hay una sede activa. Elegí una en el selector de arriba.')
+    }
+
+    // `dojo_id` es NOT NULL: una clase pertenece a una sede concreta. En el
+    // update no se toca, para que editar una clase no pueda moverla de sede.
     const { error } = initial?.id
-      ? await supabase.from('classes').update(payload).eq('id', initial.id)
-      : await supabase.from('classes').insert(payload)
+      ? await supabase.from('classes').update(payload).eq('id', initial.id).eq('dojo_id', dojoId)
+      : await supabase.from('classes').insert({ ...payload, dojo_id: dojoId })
 
     setSaving(false)
     if (error) return alert('Error guardando clase: ' + error.message)

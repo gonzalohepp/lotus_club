@@ -1,82 +1,44 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
+import { getTenantContext } from '@/lib/tenant/server'
+import { isStaff } from '@/lib/tenant/types'
+
+/**
+ * /app — Router post-login. Manda a cada persona a donde le corresponde.
+ *
+ * ⚠️ Antes decidía con `profiles.role`, el rol GLOBAL heredado del sistema
+ * single-tenant. Eso rompía en tres casos concretos:
+ *
+ *   · El desarrollador y los superadmins de marca tienen `profiles.role =
+ *     'member'` (se los crea el trigger de alta), así que caían en /validate
+ *     como si fueran alumnos.
+ *   · Un administrador de sede cuyo perfil global quedó en 'member' —el caso
+ *     normal ahora, porque el rol vive en `dojo_members`— tampoco llegaba a
+ *     /admin.
+ *   · Alguien admin en una sede y alumno en otra recibía siempre el mismo
+ *     destino, sin importar en cuál estuviera parado.
+ *
+ * Ahora la decisión sale del contexto de tenant: rol EN LA SEDE ACTIVA, más los
+ * niveles de plataforma y de marca.
+ */
 export default async function HomePage() {
-  const cookieStore = await cookies()
+    const ctx = await getTenantContext()
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          cookieStore.set({ name, value: '', ...options })
-        },
-      },
+    if (!ctx) {
+        redirect('/login')
     }
-  )
 
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
-  // 🔹 Primero intentamos por user_id
-  const { data: initialProfile, error: profileErr } = await supabase
-    .from('profiles')
-    .select('user_id, role, email')
-    .eq('user_id', user.id)
-    .maybeSingle()
-
-  let profile = initialProfile
-
-  // 🔹 Si no hay perfil con ese user_id, probamos por email
-  if (!profile && !profileErr) {
-    const { data: byEmail } = await supabase
-      .from('profiles')
-      .select('user_id, role, email')
-      .ilike('email', user.email ?? '')
-      .maybeSingle()
-
-    profile = byEmail
-  }
-
-  // 🔹 Si sigue sin haber perfil, lo creamos como 'member'
-  if (!profile && !profileErr) {
-    const { data: newProfile, error: createErr } = await supabase
-      .from('profiles')
-      .insert({
-        user_id: user.id,
-        email: user.email,
-        first_name: user.user_metadata?.first_name || '',
-        last_name: user.user_metadata?.last_name || '',
-        role: 'member',
-        access_code: null
-      })
-      .select('user_id, role, email')
-      .single()
-
-    if (createErr) {
-      console.error('[app/page] Error creating member profile:', createErr)
-    } else {
-      profile = newProfile
+    // Desarrollador o staff de marca: siempre al panel, aunque no tengan un rol
+    // explícito en la sede activa.
+    if (ctx.isPlatformAdmin || ctx.orgRole) {
+        redirect('/admin')
     }
-  }
 
-  // 🔹 Redirección por rol
-  const role = profile?.role ?? 'member'
-  if (role === 'admin' || role === 'instructor') {
-    redirect('/admin')
-  } else {
-    // Si es member, va a validate
-    redirect('/validate')
-  }
+    // Sin ninguna sede: la cuenta existe pero todavía no la dieron de alta en
+    // ningún dojo. `/validate` es la pantalla que explica esa situación.
+    if (!ctx.activeDojo) {
+        redirect('/validate')
+    }
+
+    redirect(isStaff(ctx.activeDojo.role) ? '/admin' : '/validate')
 }

@@ -8,6 +8,8 @@ import {
   ShieldCheck, ShieldAlert, History
 } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
+import { useTenant } from '@/lib/tenant/context'
+import { NO_DOJO } from '@/lib/tenant/constants'
 import AdminLayout from '../layouts/AdminLayout'
 import StyledSelect from '../components/common/StyledSelect'
 import { fmtDateTime } from '@/lib/format'
@@ -35,6 +37,11 @@ type AccessLogRaw = {
 }
 
 export default function AccessLogPage() {
+  // El historial de ingresos es por sede: un scan en Lanús no es un ingreso a
+  // Quilmes aunque sea el mismo alumno.
+  const { activeDojo } = useTenant()
+  const dojoId = activeDojo?.id
+
   const [logs, setLogs] = useState<LogRow[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
@@ -52,6 +59,8 @@ export default function AccessLogPage() {
   const setResultadoWrapper = (val: 'todos' | 'autorizado' | 'denegado') => { setResultado(val); setCurrentPage(1); }
 
   useEffect(() => {
+    if (!dojoId) return
+
     const fetchLogs = async () => {
       setIsLoading(true)
 
@@ -65,6 +74,7 @@ export default function AccessLogPage() {
             last_name
           )
         `)
+        .eq('dojo_id', dojoId ?? NO_DOJO)
         .order('scanned_at', { ascending: false })
 
       if (error) {
@@ -85,7 +95,7 @@ export default function AccessLogPage() {
     }
 
     fetchLogs()
-  }, [])
+  }, [dojoId])
 
   const stats = useMemo(() => {
     const total = logs.length

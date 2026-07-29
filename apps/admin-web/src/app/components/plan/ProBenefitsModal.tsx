@@ -2,14 +2,15 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Crown, Check } from 'lucide-react'
-import { mercadoPagoEnabled, type FeatureKey } from '@/lib/features'
+import { type FeatureKey } from '@/lib/features'
+import { useTenant } from '@/lib/tenant/context'
 
 const FEATURE_LABELS: Record<FeatureKey, string> = {
     qr: 'QR de acceso',
     members: 'Gestión de miembros',
     classes: 'Gestión de clases',
     accessLog: 'Historial de accesos',
-    academies: 'Sedes (academias)',
+    dojos: 'Sedes',
     graduations: 'Graduaciones y cinturones',
     payments: 'Cobros y pagos',
     mercadopago: 'Cobros con Mercado Pago',
@@ -20,11 +21,13 @@ const FEATURE_LABELS: Record<FeatureKey, string> = {
 }
 
 const FEATURE_ORDER: FeatureKey[] = [
-    'qr', 'members', 'classes', 'accessLog', 'academies', 'graduations',
+    'qr', 'members', 'classes', 'accessLog', 'dojos', 'graduations',
     'payments', 'mercadopago', 'metrics', 'reports', 'asistenciaVivo', 'notifications',
 ]
 
 export default function ProBenefitsModal({ open, onClose }: { open: boolean, onClose: () => void }) {
+    const { mercadoPago } = useTenant()
+
     return (
         <AnimatePresence>
             {open && (
@@ -65,7 +68,7 @@ export default function ProBenefitsModal({ open, onClose }: { open: boolean, onC
                         {/* Body: benefits list */}
                         <div className="flex-1 overflow-y-auto custom-scrollbar px-8 py-6">
                             <ul className="space-y-3">
-                                {FEATURE_ORDER.filter(key => key !== 'mercadopago' || mercadoPagoEnabled()).map(key => (
+                                {FEATURE_ORDER.filter(key => key !== 'mercadopago' || mercadoPago).map(key => (
                                     <li key={key} className="flex items-center gap-3 p-3 rounded-2xl bg-amber-50/50 dark:bg-amber-500/5">
                                         <div className="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
                                             <Check className="w-4 h-4 text-white" strokeWidth={3} />
@@ -73,7 +76,7 @@ export default function ProBenefitsModal({ open, onClose }: { open: boolean, onC
                                         <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                                             {FEATURE_LABELS[key]}
                                         </span>
-                                        {key === 'academies' && (
+                                        {key === 'dojos' && (
                                             <span className="ml-auto text-xs font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">
                                                 Sedes ilimitadas
                                             </span>

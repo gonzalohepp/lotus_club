@@ -1,88 +1,97 @@
-import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { User } from '@supabase/supabase-js'
+
 import { hasFeature, mercadoPagoEnabled, type FeatureKey } from './features'
+import { getServerSupabase, getTenantContext, requireDojoManager, requireDojoStaff } from './tenant/server'
+
+/**
+ * requireAdmin.ts — Guards de API en modo multi-tenant.
+ *
+ * Los guards viejos preguntaban "¿este usuario es admin?" contra el rol GLOBAL
+ * de `profiles`. Eso ya no alcanza: el rol es por dojo, así que la pregunta
+ * correcta es "¿este usuario es admin EN EL DOJO sobre el que está operando?".
+ *
+ * Toda ruta que toque datos de un dojo debe usar `requireDojoStaff()` o
+ * `requireDojoManager()` (reexportados acá) y filtrar por el `dojoId` que
+ * devuelven. Un guard que no devuelva dojoId es un guard incompleto.
+ */
+
+export { requireDojo, requireDojoManager, requireDojoStaff, requirePlatformAdmin } from './tenant/server'
+export type { TenantGuard } from './tenant/server'
 
 type UserAuthResult =
-  | { error: NextResponse; user?: undefined; supabase?: undefined }
-  | { error?: undefined; user: User; supabase: Awaited<ReturnType<typeof getServerSupabase>> }
+    | { error: NextResponse; user?: undefined; supabase?: undefined }
+    | { error?: undefined; user: User; supabase: Awaited<ReturnType<typeof getServerSupabase>> }
 
-type AdminAuthResult =
-  | { error: NextResponse; user?: undefined }
-  | { error?: undefined; user: User }
-
-async function getServerSupabase() {
-  const cookieStore = await cookies()
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-        set() {
-          // no-op: en un Route Handler no necesitamos escribir cookies
-        },
-        remove() {
-          // no-op
-        },
-      },
-    }
-  )
-}
-
-/** Requiere que haya una sesión válida. No exige ningún rol en particular. */
+/** Requiere sesión válida. No exige ningún rol ni dojo. */
 export async function requireUser(): Promise<UserAuthResult> {
-  const supabase = await getServerSupabase()
+    const supabase = await getServerSupabase()
 
-  const { data: { user } } = await supabase.auth.getUser()
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
 
-  if (!user) {
-    return { error: NextResponse.json({ error: 'No autenticado' }, { status: 401 }) }
-  }
+    if (!user) {
+        return { error: NextResponse.json({ error: 'No autenticado' }, { status: 401 }) }
+    }
 
-  return { user, supabase }
-}
-
-export async function requireAdmin(): Promise<AdminAuthResult> {
-  const auth = await requireUser()
-  if (auth.error) return { error: auth.error }
-
-  const { data: profile } = await auth.supabase
-    .from('profiles')
-    .select('role')
-    .eq('user_id', auth.user.id)
-    .single()
-
-  if (profile?.role !== 'admin') {
-    return { error: NextResponse.json({ error: 'No autorizado' }, { status: 403 }) }
-  }
-
-  return { user: auth.user }
+    return { user, supabase }
 }
 
 /**
- * Corta rutas de features que no están habilitadas en esta instancia (plan
- * Basic). Devuelve 404 en vez de 403 para no revelar que la feature existe.
+ * @deprecated Usá `requireDojoManager()`, que además devuelve el `dojoId` por el
+ * que hay que filtrar. Este alias existe sólo para no romper rutas viejas: sin
+ * el filtro por dojo, un admin de dos sedes ve las dos mezcladas.
  */
-export function requireFeature(key: FeatureKey): { error?: NextResponse } {
-  if (!hasFeature(key)) {
-    return { error: NextResponse.json({ error: 'Not found' }, { status: 404 }) }
-  }
-  return {}
+export async function requireAdmin(): Promise<{ error: NextResponse; user?: undefined } | { error?: undefined; user: User }> {
+    const guard = await requireDojoManager()
+    if (guard.error) return { error: guard.error }
+
+    const auth = await requireUser()
+    if (auth.error) return { error: auth.error }
+
+    return { user: auth.user }
 }
 
 /**
- * Corta las rutas de Mercado Pago cuando el cobro online está apagado en esta
- * instancia (NEXT_PUBLIC_MERCADOPAGO != 'on'). Devuelve 404, igual que
- * requireFeature, para no revelar que la ruta existe.
+ * Corta rutas cuya feature no está incluida en el plan de la ORGANIZACIÓN del
+ * dojo activo. Devuelve 404 en vez de 403 para no revelar que la ruta existe.
+ *
+ * Es async porque el plan ya no es una constante de build: se lee de la base.
  */
-export function requireMercadoPago(): { error?: NextResponse } {
-  if (!mercadoPagoEnabled()) {
-    return { error: NextResponse.json({ error: 'Not found' }, { status: 404 }) }
-  }
-  return {}
+export async function requireFeature(key: FeatureKey): Promise<{ error?: NextResponse }> {
+    const ctx = await getTenantContext()
+    const org = ctx?.activeDojo?.org
+
+    if (!org || !hasFeature(org.plan, org.features, key)) {
+        return { error: NextResponse.json({ error: 'Not found' }, { status: 404 }) }
+    }
+    return {}
 }
+
+/**
+ * Corta las rutas de Mercado Pago cuando el cobro online está apagado: o porque
+ * el plan de la organización no lo incluye, o porque este dojo puntual todavía
+ * no lo prendió.
+ */
+export async function requireMercadoPago(): Promise<{ error?: NextResponse }> {
+    const ctx = await getTenantContext()
+    const dojo = ctx?.activeDojo
+
+    if (!dojo) {
+        return { error: NextResponse.json({ error: 'Not found' }, { status: 404 }) }
+    }
+
+    const enabled = mercadoPagoEnabled(
+        dojo.org.plan,
+        dojo.org.features,
+        (dojo.billing as { mercadopago_enabled?: boolean }).mercadopago_enabled
+    )
+
+    if (!enabled) {
+        return { error: NextResponse.json({ error: 'Not found' }, { status: 404 }) }
+    }
+    return {}
+}
+
+export { getServerSupabase }

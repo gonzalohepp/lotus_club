@@ -12,7 +12,7 @@ const FEATURE_LABELS: Record<FeatureKey, string> = {
     members: 'Gestión de miembros',
     classes: 'Gestión de clases',
     accessLog: 'Historial de accesos',
-    academies: 'Sedes (academias)',
+    dojos: 'Sedes',
     graduations: 'Graduaciones y cinturones',
     payments: 'Cobros y pagos',
     mercadopago: 'Cobros con Mercado Pago',
@@ -23,7 +23,7 @@ const FEATURE_LABELS: Record<FeatureKey, string> = {
 }
 
 const FEATURE_ORDER: FeatureKey[] = [
-    'qr', 'members', 'classes', 'accessLog', 'academies', 'graduations',
+    'qr', 'members', 'classes', 'accessLog', 'dojos', 'graduations',
     'payments', 'mercadopago', 'metrics', 'reports', 'asistenciaVivo', 'notifications',
 ]
 
@@ -95,7 +95,7 @@ export default function UpgradeModal({ open, onClose }: { open: boolean, onClose
                                         {FEATURE_ORDER.map(key => (
                                             <li key={key} className="flex items-center justify-between gap-3 text-sm">
                                                 <span className="text-slate-600 dark:text-slate-300 font-medium">{FEATURE_LABELS[key]}</span>
-                                                {key === 'academies'
+                                                {key === 'dojos'
                                                     ? <FeatureCell override={ACADEMY_OVERRIDE.basic} />
                                                     : <FeatureCell included={FEATURES_BY_PLAN.basic[key]} />}
                                             </li>
@@ -116,7 +116,7 @@ export default function UpgradeModal({ open, onClose }: { open: boolean, onClose
                                         {FEATURE_ORDER.map(key => (
                                             <li key={key} className="flex items-center justify-between gap-3 text-sm">
                                                 <span className="text-slate-700 dark:text-slate-200 font-semibold">{FEATURE_LABELS[key]}</span>
-                                                {key === 'academies'
+                                                {key === 'dojos'
                                                     ? <FeatureCell override={ACADEMY_OVERRIDE.pro} />
                                                     : <FeatureCell included={FEATURES_BY_PLAN.pro[key]} />}
                                             </li>

@@ -1,8 +1,21 @@
 import { NextResponse } from "next/server";
 import MercadoPagoConfig, { Preference } from "mercadopago";
-import { createClient } from "@supabase/supabase-js";
-import { requireUser, requireMercadoPago } from "@/lib/requireAdmin";
-import { getPaymentMultiplier } from "@/lib/pricing";
+import { requireMercadoPago } from "@/lib/requireAdmin";
+import { requireDojo } from "@/lib/tenant/server";
+import { serviceClient } from "@/lib/tenant/admin";
+import { evaluateBilling } from "@/lib/billing";
+
+/**
+ * Crea la preferencia de pago de Mercado Pago para el alumno logueado.
+ *
+ * Todo se resuelve contra LA SEDE ACTIVA:
+ *   · Las clases que se cobran tienen que ser de ese dojo.
+ *   · El recargo sale de `dojos.billing` de esa sede, no de la config por
+ *     defecto: una sede con 10% cobraba 20% antes de este cambio.
+ *   · El `dojo_id` viaja en el `external_reference` porque el webhook llega
+ *     desde Mercado Pago SIN SESIÓN — no hay dojo activo del que leerlo, y
+ *     `payments.dojo_id` es NOT NULL.
+ */
 
 type ClassRow = {
     id: number
@@ -12,11 +25,13 @@ type ClassRow = {
 }
 
 export async function POST(req: Request) {
-    const auth = await requireUser();
-    if (auth.error) return auth.error;
-    const user = auth.user;
+    const guard = await requireDojo();
+    if (guard.error) return guard.error;
 
-    const featureGuard = requireMercadoPago();
+    const { ctx, dojoId } = guard;
+    const dojo = ctx.activeDojo!;
+
+    const featureGuard = await requireMercadoPago();
     if (featureGuard.error) return featureGuard.error;
 
     try {
@@ -39,15 +54,13 @@ export async function POST(req: Request) {
 
         // Precios y estado de mora SIEMPRE se recalculan en el servidor:
         // nunca confiamos en el precio que venga del cliente.
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
+        const supabase = serviceClient();
 
         const classIds = [principalId, ...additionalIds];
         const { data: classesData, error: classesError } = await supabase
             .from("classes")
             .select("id, name, price_principal, price_additional")
+            .eq("dojo_id", dojoId)
             .in("id", classIds);
 
         if (classesError) throw classesError;
@@ -56,20 +69,25 @@ export async function POST(req: Request) {
         const principalClass = classes.find((c) => c.id === principalId);
 
         if (!principalClass) {
+            // Puede ser un id inexistente o una clase de OTRA sede. Misma
+            // respuesta en ambos casos, para no filtrar qué existe en los demás
+            // dojos.
             return NextResponse.json({ error: "Invalid principal_id" }, { status: 400 });
         }
 
         const { data: statusData } = await supabase
             .from("members_with_status")
             .select("is_new_member, next_payment_due, role")
-            .eq("user_id", user.id)
+            .eq("dojo_id", dojoId)
+            .eq("user_id", ctx.userId)
             .maybeSingle();
 
-        const multiplier = getPaymentMultiplier(
-            statusData?.next_payment_due ?? null,
-            !!statusData?.is_new_member,
-            statusData?.role ?? null
-        );
+        const { multiplier } = evaluateBilling(dojo.billing, {
+            endDate: statusData?.next_payment_due ?? null,
+            isNewMember: !!statusData?.is_new_member,
+            role: statusData?.role ?? null,
+            timezone: dojo.timezone,
+        });
 
         const items = [
             {
@@ -95,6 +113,14 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Invalid price computed for selected classes" }, { status: 400 });
         }
 
+        const { data: payerProfile } = await supabase
+            .from("profiles")
+            .select("email")
+            .eq("user_id", ctx.userId)
+            .maybeSingle();
+
+        const payerEmail = payerProfile?.email ?? undefined;
+
         const client = new MercadoPagoConfig({ accessToken });
         const preference = new Preference(client);
 
@@ -105,7 +131,7 @@ export async function POST(req: Request) {
             body: {
                 items,
 
-                payer: user.email ? { email: user.email } : undefined,
+                payer: payerEmail ? { email: payerEmail } : undefined,
 
                 payment_methods: {
                     excluded_payment_methods: [],
@@ -123,7 +149,8 @@ export async function POST(req: Request) {
                 // Guardamos metadata para el webhook. user_id sale de la sesión,
                 // no del body, para que nadie pueda acreditarle el pago a otro user_id.
                 external_reference: JSON.stringify({
-                    user_id: user.id,
+                    user_id: ctx.userId,
+                    dojo_id: dojoId,
                     principal_id: principalId,
                     additional_ids: additionalIds,
                 }),

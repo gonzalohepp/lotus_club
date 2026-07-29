@@ -8,9 +8,14 @@ import { NextResponse } from 'next/server'
 export function requireCronSecret(req: Request) {
   const secret = process.env.CRON_SECRET
 
+  // Sin secreto configurado nadie puede autorizarse, así que hacia afuera es
+  // indistinguible de un secreto incorrecto: se responde 401 en los dos casos.
+  // Un 500 con "Server misconfigured" confirmaba que la ruta existe y filtraba
+  // el estado de configuración del servidor. La causa real queda en el log,
+  // que es donde la necesita quien opera.
   if (!secret) {
     console.error('[requireCronSecret] CRON_SECRET no está configurado en el servidor')
-    return { error: NextResponse.json({ error: 'Server misconfigured' }, { status: 500 }) }
+    return { error: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) }
   }
 
   const header = req.headers.get('authorization')

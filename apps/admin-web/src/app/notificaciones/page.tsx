@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import AdminLayout from '../layouts/AdminLayout'
 import { fmtDateTime } from '@/lib/format'
+import { useTenant } from '@/lib/tenant/context'
+import { NO_DOJO } from '@/lib/tenant/constants'
 import {
     Bell,
     Send,
@@ -45,6 +47,11 @@ type SubscribedUser = {
 }
 
 export default function NotificationsPage() {
+    // Historial y configuración de avisos son por sede: los días de recordatorio
+    // dependen de la lógica de cobro, que cada dojo define por separado.
+    const { activeDojo } = useTenant()
+    const dojoId = activeDojo?.id
+
     const [loading, setLoading] = useState(false)
     const [activeTab, setActiveTab] = useState<'send' | 'history' | 'config' | 'subscribed'>('send')
     const [selectedUser, setSelectedUser] = useState<SubscribedUser | null>(null)
@@ -80,14 +87,27 @@ export default function NotificationsPage() {
             const { data: hist } = await supabase
                 .from('notification_history')
                 .select('*')
+                .eq('dojo_id', dojoId ?? NO_DOJO)
                 .order('sent_at', { ascending: false })
                 .limit(20)
             if (hist) setHistory(hist)
 
-            // 2. Fetch Subscribed Users
+            // 2. Fetch Subscribed Users — sólo los de esta sede.
+            // `push_subscriptions` es global (una suscripción es del navegador
+            // de una persona, no de un dojo), así que el recorte se hace por el
+            // padrón de la sede en vez de por una columna dojo_id.
+            const { data: dojoMembers } = await supabase
+                .from('dojo_members')
+                .select('user_id')
+                .eq('dojo_id', dojoId ?? NO_DOJO)
+                .eq('is_active', true)
+
+            const memberIds = (dojoMembers ?? []).map((m) => m.user_id)
+
             const { data: subsData } = await supabase
                 .from('push_subscriptions')
                 .select('id, user_id, subscription, profiles!inner(*)')
+                .in('user_id', memberIds)
 
             if (subsData) {
                 // Group subscriptions by user_id
@@ -114,8 +134,8 @@ export default function NotificationsPage() {
             const { data: sett } = await supabase
                 .from('notification_settings')
                 .select('*')
-                .eq('id', 'reminders')
-                .single()
+                .eq('dojo_id', dojoId ?? NO_DOJO)
+                .maybeSingle()
             if (sett) {
                 setSettings({
                     day10Enabled: sett.day_10_enabled,
@@ -127,8 +147,9 @@ export default function NotificationsPage() {
                 })
             }
         }
+        if (!dojoId) return
         fetchData()
-    }, [])
+    }, [dojoId])
 
     const saveSettings = async () => {
         const { supabase } = await import('@/lib/supabaseClient')
@@ -141,7 +162,8 @@ export default function NotificationsPage() {
             const { error } = await supabase
                 .from('notification_settings')
                 .upsert({
-                    id: 'reminders',
+                    id: `reminders:${dojoId}`,
+                    dojo_id: dojoId,
                     day_10_enabled: settings.day10Enabled,
                     day_10_days: day10Arr,
                     day_10_time: settings.day10Time,

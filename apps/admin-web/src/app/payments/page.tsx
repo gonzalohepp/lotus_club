@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient'
+import { useTenant } from '@/lib/tenant/context';
+import { NO_DOJO } from '@/lib/tenant/constants'
 import AdminLayout from '../layouts/AdminLayout';
 import { Plus, Download, Check, Receipt, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -46,6 +48,11 @@ type ClassFromDB = {
 const ITEMS_PER_PAGE = 5;
 
 export default function PaymentsPage() {
+  // Los pagos son de una sede. RLS habilita todas las que administrás; el
+  // filtro decide cuál estás mirando.
+  const { activeDojo } = useTenant();
+  const dojoId = activeDojo?.id;
+
   const [rows, setRows] = useState<PaymentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -81,6 +88,7 @@ export default function PaymentsPage() {
     const { data: pays, error: payErr } = await supabase
       .from('payments')
       .select('id,user_id,amount,method,paid_at,period_from,period_to,notes, profiles(first_name, last_name)')
+      .eq('dojo_id', dojoId ?? NO_DOJO)
       .order('paid_at', { ascending: false });
 
     if (payErr) {
@@ -115,7 +123,11 @@ export default function PaymentsPage() {
         .sort((a, b) => a.label.localeCompare(b.label, 'es'))
     );
 
-    const { data: classes } = await supabase.from('classes').select('id,name').order('name', { ascending: true });
+    const { data: classes } = await supabase
+      .from('classes')
+      .select('id,name')
+      .eq('dojo_id', dojoId ?? NO_DOJO)
+      .order('name', { ascending: true });
     setClassOpts((classes ?? []).map((c: ClassFromDB) => ({ value: String(c.id), label: c.name })));
 
     const monthMap: Record<string, string> = {};
@@ -135,14 +147,15 @@ export default function PaymentsPage() {
     );
 
     setLoading(false);
-  }, []);
+  }, [dojoId]);
 
   useEffect(() => {
     // `load` reusa código ya cubierto por otros call-sites (ver onSaved del modal);
     // no vale la pena duplicar sus ~60 líneas solo para este fetch-on-mount.
     // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!dojoId) return;
     load();
-  }, [load]);
+  }, [load, dojoId]);
 
   const filtered = useMemo(() => {
     const mk = (d: string | null) => monthKey(d);

@@ -1,19 +1,30 @@
 import { NextResponse } from 'next/server'
 import webpush, { WebPushError, type PushSubscription } from 'web-push'
-import { createClient } from '@supabase/supabase-js'
 import { requireCronSecret } from '@/lib/requireCronSecret'
+import { serviceClient } from '@/lib/tenant/admin'
 
+/**
+ * Aviso de acceso denegado. Lo dispara un webhook de Supabase al insertarse una
+ * fila en `access_logs`, así que el `record` que llega ya trae el `dojo_id` de
+ * la sede donde se hizo el scan.
+ *
+ * Dos cosas que rompía la versión single-tenant:
+ *   · El chequeo de fraude contaba los rechazos del alumno en TODA la base, así
+ *     que tres intentos repartidos entre dos sedes disparaban una alerta falsa.
+ *   · Buscaba a quién notificar con `profiles.role = 'admin'`, el rol GLOBAL
+ *     heredado. Resultado: un rechazo en Lanús le llegaba también a los
+ *     administradores de Quilmes y de cualquier otra marca.
+ */
 export async function POST(req: Request) {
     const guard = requireCronSecret(req)
     if (guard.error) return guard.error
 
     try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-        const supabase = createClient(supabaseUrl, supabaseKey)
+        const supabase = serviceClient()
 
         const bodyData = await req.json()
         const record = bodyData.record || bodyData
+        const dojoId: string | undefined = record.dojo_id ?? undefined
 
         // 1. Validate it's a denial
         if (record.result !== 'denegado' && record.result !== 'denied') {
@@ -33,23 +44,34 @@ export async function POST(req: Request) {
 
             // Fraud Check: 3 denied logs in 5 minutes
             const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
-            const { count } = await supabase
+            const fraudQuery = supabase
                 .from('access_logs')
                 .select('*', { count: 'exact', head: true })
                 .eq('user_id', record.user_id)
                 .eq('result', 'denegado')
                 .gt('scanned_at', fiveMinsAgo)
 
+            // El patrón sospechoso es insistir en LA MISMA puerta. Tres intentos
+            // repartidos entre dos sedes no son un fraude.
+            const { count } = dojoId ? await fraudQuery.eq('dojo_id', dojoId) : await fraudQuery
+
             if (count && count >= 3) {
                 isFraudAttempt = true
             }
         }
 
-        // 3. Find ALL Admins
+        // 3. A quién avisar: el staff de LA SEDE donde ocurrió el rechazo.
+        if (!dojoId) {
+            console.warn('[security-alert] access_log sin dojo_id, no se puede determinar a quién avisar')
+            return NextResponse.json({ message: 'No dojo_id in record, skipping' })
+        }
+
         const { data: admins } = await supabase
-            .from('profiles')
+            .from('dojo_members')
             .select('user_id')
-            .eq('role', 'admin')
+            .eq('dojo_id', dojoId)
+            .eq('is_active', true)
+            .in('role', ['admin', 'instructor'])
 
         if (!admins || admins.length === 0) {
             return NextResponse.json({ message: 'No admins found to notify' })

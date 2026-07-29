@@ -8,6 +8,7 @@ import {
   Calendar,
   GraduationCap,
   AlertCircle,
+  ShieldCheck,
   Clock,
   CheckCircle,
   CheckCircle2,
@@ -30,8 +31,9 @@ import SubscriptionModal from '../components/profile/SubscriptionModal'
 import PhotoCropper from '../components/profile/PhotoCropper'
 import MemberGrades from '../components/profile/MemberGrades'
 import { fmtARS, fmtDate, fmtSchedule } from '@/lib/format'
-import { getPaymentStatusMessage } from '@/lib/pricing'
-import { hasFeature, mercadoPagoEnabled } from '@/lib/features'
+import { billingMessage, evaluateBilling } from '@/lib/billing'
+import { useTenant } from '@/lib/tenant/context'
+import { NO_DOJO } from '@/lib/tenant/constants'
 
 
 type MemberRow = {
@@ -212,6 +214,10 @@ function ClassItem({ c, idx }: { c: ClassRow; idx: number }) {
 
 /* ============ Main Page ============ */
 export default function ProfilePage() {
+  // El alumno ve su ficha EN LA SEDE ACTIVA: si entrena en dos, su cuota, sus
+  // clases y su historial de ingresos son distintos en cada una.
+  const { can, mercadoPago, activeDojo, billing, isPlatformAdmin, orgRole } = useTenant()
+  const dojoId = activeDojo?.id
   const [member, setMember] = useState<MemberRow | null>(null)
   const [classes, setClasses] = useState<ClassRow[]>([])
   const [attendance, setAttendance] = useState<AttendanceRow[]>([])
@@ -239,7 +245,9 @@ export default function ProfilePage() {
       if (!email) { setNotLogged(true); setLoading(false); return }
 
       const { data: vw } = await supabase
-        .from('members_with_status').select('*').ilike('email', email).maybeSingle()
+        .from('members_with_status').select('*')
+        .eq('dojo_id', dojoId ?? NO_DOJO)
+        .ilike('email', email).maybeSingle()
       if (!vw) { setMember(null); setLoading(false); return }
 
       const { data: prof } = await supabase
@@ -252,6 +260,7 @@ export default function ProfilePage() {
       const { data: enr } = await supabase
         .from('class_enrollments')
         .select('class_id, is_principal, classes:class_id (id,name,instructor,color,price,price_principal,price_additional,days,start_time,end_time)')
+        .eq('dojo_id', dojoId ?? NO_DOJO)
         .eq('user_id', vw.user_id)
 
       const mappedClasses = ((enr ?? []) as unknown[]).map((r: unknown) => {
@@ -263,6 +272,7 @@ export default function ProfilePage() {
       const { data: att } = await supabase
         .from('access_logs')
         .select('scanned_at, result, reason')
+        .eq('dojo_id', dojoId ?? NO_DOJO)
         .eq('user_id', vw.user_id)
         .order('scanned_at', { ascending: false })
         .limit(10)
@@ -272,6 +282,7 @@ export default function ProfilePage() {
         const { data: classAtt } = await supabase
           .from('class_attendance')
           .select('date, created_at, classes(name)')
+          .eq('dojo_id', dojoId ?? NO_DOJO)
           .eq('user_id', vw.user_id)
           .gte('date', earliest)
 
@@ -289,7 +300,7 @@ export default function ProfilePage() {
 
       setLoading(false)
     })()
-  }, [])
+  }, [dojoId])
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return
@@ -353,6 +364,26 @@ export default function ProfilePage() {
   const isSpecialRole = member?.role && ['admin', 'instructor', 'becado'].includes(member.role)
   const isLifetime = member?.next_payment_due === '2099-12-31'
 
+  /**
+   * Mensaje de estado de cuota derivado de las reglas de ESTA sede. Antes salía
+   * de `getPaymentStatusMessage()`, que tenía "día 10" y "20%" fijos: a un
+   * alumno de una sede con otra política le mostraba números que no eran los
+   * suyos.
+   */
+  const paymentStatusMessage = useMemo(() => {
+    const result = evaluateBilling(billing, {
+      endDate: member?.next_payment_due,
+      isNewMember: (member as { is_new_member?: boolean } | null)?.is_new_member ?? false,
+      role: member?.role,
+      timezone: activeDojo?.timezone,
+    })
+
+    if (result.phase === 'al_dia' && (daysLeft ?? 0) > 0 && !isSpecialRole && !isLifetime) {
+      return `Quedan ${daysLeft} días de entrenamiento`
+    }
+    return billingMessage(billing, result)
+  }, [billing, member, activeDojo?.timezone, daysLeft, isSpecialRole, isLifetime])
+
   const vencimientoLabel = useMemo(() => {
     if (isSpecialRole || isLifetime) return 'Sin vencimiento'
     if (!member?.next_payment_due) return '—'
@@ -393,9 +424,30 @@ export default function ProfilePage() {
                   animate={{ opacity: 1, scale: 1 }}
                   className="max-w-md w-full rounded-3xl border border-white/10 bg-white/5 p-12 text-center shadow-2xl backdrop-blur-xl"
                 >
-                  <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
-                  <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">Acceso Restringido</h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-lg">No pudimos encontrar tu perfil. Verificá tu sesión o contactá a recepción.</p>
+                  {/* Hay dos motivos muy distintos para llegar acá y antes los
+                      dos mostraban el mismo cartel rojo de "acceso restringido":
+                      no tener sesión (un problema) o ser staff de plataforma /
+                      marca, que no es alumno de ninguna sede y por lo tanto no
+                      tiene ficha que mostrar (lo normal). */}
+                  {isPlatformAdmin || orgRole ? (
+                    <>
+                      <ShieldCheck className="w-16 h-16 text-blue-500 mx-auto mb-6" />
+                      <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">
+                        No tenés ficha de alumno
+                      </h2>
+                      <p className="text-slate-500 dark:text-slate-400">
+                        Tu acceso es {isPlatformAdmin ? 'de plataforma' : 'de marca'}, no de una sede.
+                        Esta pantalla muestra la cuota y las clases de un alumno, y vos no estás
+                        inscripto en {activeDojo?.name ?? 'ninguna sede'}.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
+                      <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">Acceso Restringido</h2>
+                      <p className="text-slate-500 dark:text-slate-400 text-lg">No pudimos encontrar tu perfil. Verificá tu sesión o contactá a recepción.</p>
+                    </>
+                  )}
                 </motion.div>
               </div>
 
@@ -482,7 +534,7 @@ export default function ProfilePage() {
                     )}
                   </div>
 
-                  {mercadoPagoEnabled() && !isSpecialRole && !isLifetime && (
+                  {mercadoPago && !isSpecialRole && !isLifetime && (
                     <button onClick={() => setShowPayModal(true)} className="w-full h-14 rounded-2xl bg-[#009EE3] mb-4 relative overflow-hidden">
                       <img src="/mp_button.png" alt="Pagar con Mercado Pago" className="absolute inset-0 w-full h-full object-contain" />
                     </button>
@@ -504,7 +556,7 @@ export default function ProfilePage() {
                       onClick={() => setSheetAsistencia(true)}
                       accent="emerald"
                     />
-                    {hasFeature('graduations') && (
+                    {can('graduations') && (
                       <SectionButton
                         icon={<Shield className="w-5 h-5" />}
                         label="Mis Graduaciones"
@@ -624,9 +676,9 @@ export default function ProfilePage() {
                             </div>
                           )}
                           <p className="text-xs font-bold text-slate-400 mt-2">
-                            {getPaymentStatusMessage(member?.next_payment_due, member?.role)}
+                            {paymentStatusMessage}
                           </p>
-                          {mercadoPagoEnabled() && !isSpecialRole && !isLifetime && (
+                          {mercadoPago && !isSpecialRole && !isLifetime && (
                             <div className="mt-4">
                               <button onClick={() => setShowPayModal(true)} className="w-full h-14 relative transition-all hover:scale-105 active:scale-95 rounded-2xl overflow-hidden shadow-lg bg-[#009EE3]">
                                 <img src="/mp_button.png" alt="Pagar Suscripción" className="absolute inset-0 w-full h-full object-contain" />
@@ -672,7 +724,7 @@ export default function ProfilePage() {
                       </div>
 
                       {/* Grades */}
-                      {hasFeature('graduations') && (
+                      {can('graduations') && (
                         <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
                           <MemberGrades userId={member.user_id} readOnly={true} />
                         </div>

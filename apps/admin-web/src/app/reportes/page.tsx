@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from 'react'
 import AdminLayout from '../layouts/AdminLayout'
 import { supabase } from '@/lib/supabaseClient'
+import { useTenant } from '@/lib/tenant/context'
+import { NO_DOJO } from '@/lib/tenant/constants'
 import {
     Users,
     UserX,
@@ -127,6 +129,10 @@ export default function ReportesPage() {
 /* ================= Componente Reporte Asistencia ================= */
 
 function AsistenciaReport() {
+    // Reportes de asistencia de la sede activa.
+    const { activeDojo } = useTenant()
+    const dojoId = activeDojo?.id
+
     const [records, setRecords] = useState<AttendanceRecord[]>([])
     const [loading, setLoading] = useState(true)
     const [classes, setClasses] = useState<{ id: number, name: string, category: string }[]>([])
@@ -143,7 +149,11 @@ function AsistenciaReport() {
     useEffect(() => {
         async function loadInitial() {
             setLoading(true)
-            const { data: cls } = await supabase.from('classes').select('id, name, category').order('name')
+            const { data: cls } = await supabase
+                .from('classes')
+                .select('id, name, category')
+                .eq('dojo_id', dojoId ?? NO_DOJO)
+                .order('name')
             setClasses(cls || [])
 
             const { data: att, error } = await supabase
@@ -157,6 +167,7 @@ function AsistenciaReport() {
                     classes (name, category),
                     profiles:user_id (first_name, last_name, email)
                 `)
+                .eq('dojo_id', dojoId ?? NO_DOJO)
                 .order('date', { ascending: false })
                 .order('created_at', { ascending: false })
 
@@ -177,8 +188,9 @@ function AsistenciaReport() {
             }
             setLoading(false)
         }
+        if (!dojoId) return
         loadInitial()
-    }, [])
+    }, [dojoId])
 
     // Unique member names for filter
     const memberOptions = useMemo(() => {
@@ -411,6 +423,10 @@ function AsistenciaReport() {
 /* ================= Componente Reporte Ausencia ================= */
 
 function AusenciaReport() {
+    // Reporte de ausentismo de la sede activa.
+    const { activeDojo } = useTenant()
+    const dojoId = activeDojo?.id
+
     const [members, setMembers] = useState<Member[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
@@ -422,6 +438,7 @@ function AusenciaReport() {
             const { data: membersData } = await supabase
                 .from('members_with_status')
                 .select('user_id, first_name, last_name, email, phone, status, next_payment_due, role')
+                .eq('dojo_id', dojoId ?? NO_DOJO)
 
             if (!membersData) return
 
@@ -429,6 +446,7 @@ function AusenciaReport() {
             const { data: logs } = await supabase
                 .from('access_logs')
                 .select('user_id, scanned_at')
+                .eq('dojo_id', dojoId ?? NO_DOJO)
                 .eq('result', 'autorizado')
                 .gt('scanned_at', thirtyDaysAgo)
                 .order('scanned_at', { ascending: false })
@@ -451,8 +469,9 @@ function AusenciaReport() {
             setMembers(enrichedMembers)
             setLoading(false)
         }
+        if (!dojoId) return
         fetchData()
-    }, [now])
+    }, [now, dojoId])
 
     const absentMembers = useMemo(() => {
         const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000

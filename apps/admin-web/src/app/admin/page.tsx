@@ -2,7 +2,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { fmtARS } from '@/lib/format'
-import { hasFeature } from '@/lib/features'
+import { useTenant } from '@/lib/tenant/context'
+import { NO_DOJO } from '@/lib/tenant/constants'
 import AdminLayout from '../layouts/AdminLayout'
 import StatsCard from '../components/dashboard/StatsCard'
 import RecentActivity from '../components/dashboard/RecentActivity'
@@ -50,6 +51,11 @@ function normalizeResult(value: string | null | undefined): 'authorized' | 'deni
 }
 
 export default function AdminDashboard() {
+  // `can` refleja el plan de la organización dueña del dojo activo.
+  const { can, activeDojo } = useTenant()
+  // `dashboard_stats` ahora devuelve UNA FILA POR DOJO. Sin el filtro, el
+  // .maybeSingle() de abajo falla apenas exista una segunda sede.
+  const dojoId = activeDojo?.id
   const [stats, setStats] = useState<Stats | null>(null)
   const [payments, setPayments] = useState<PayRow[]>([])
   const [access, setAccess] = useState<AccessRow[]>([])
@@ -63,17 +69,19 @@ export default function AdminDashboard() {
         { data: p, error: pe },
         { data: a, error: ae },
       ] = await Promise.all([
-        supabase.from('dashboard_stats').select('*').maybeSingle(),
-        hasFeature('payments')
+        supabase.from('dashboard_stats').select('*').eq('dojo_id', dojoId ?? NO_DOJO).maybeSingle(),
+        can('payments')
           ? supabase
             .from('payments')
             .select('amount, method, paid_at, profiles!payments_user_id_fkey(first_name,last_name,avatar_url)')
+            .eq('dojo_id', dojoId ?? NO_DOJO)
             .order('paid_at', { ascending: false })
             .limit(5)
           : Promise.resolve({ data: [] as PayRow[], error: null }),
         supabase
           .from('access_logs')
           .select('scanned_at, result, reason, profiles!access_logs_user_id_fkey(first_name,last_name,avatar_url)')
+          .eq('dojo_id', dojoId ?? NO_DOJO)
           .order('scanned_at', { ascending: false })
           .limit(10),
       ])
@@ -121,6 +129,8 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
+    if (!dojoId) return
+
     fetchData()
 
     // Real-time Subscriptions
@@ -147,7 +157,8 @@ export default function AdminDashboard() {
     return () => {
       supabase.removeChannel(accessChannel)
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dojoId])
 
   // Fallback por si revenue_this_month viniera null en la vista (no debería).
   const monthRevenue = useMemo(() => {
@@ -183,7 +194,7 @@ export default function AdminDashboard() {
                   Nuevo Miembro
                 </button>
               </Link>
-              {hasFeature('payments') && (
+              {can('payments') && (
                 <Link href="/payments" className="flex-1 md:flex-none">
                   <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-semibold hover:bg-slate-50 dark:hover:bg-white/10 transition-all active:scale-95">
                     <DollarSign className="w-4 h-4" />
@@ -206,7 +217,7 @@ export default function AdminDashboard() {
           )}
 
           {/* KPIs */}
-          <section className={hasFeature('payments') ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-10' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10'}>
+          <section className={can('payments') ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-10' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10'}>
             <StatsCard
               title="Total Miembros"
               value={stats?.members_total ?? 0}
@@ -228,7 +239,7 @@ export default function AdminDashboard() {
               color="red"
               loading={loading}
             />
-            {hasFeature('payments') && (
+            {can('payments') && (
               <StatsCard
                 title="Ingresos del Mes"
                 value={fmtARS(monthRevenue)}
@@ -249,8 +260,8 @@ export default function AdminDashboard() {
 
 
           {/* Activity Section */}
-          <div className={hasFeature('payments') ? 'grid lg:grid-cols-3 gap-8 mb-10' : 'grid gap-8 mb-10'}>
-            {hasFeature('payments') && (
+          <div className={can('payments') ? 'grid lg:grid-cols-3 gap-8 mb-10' : 'grid gap-8 mb-10'}>
+            {can('payments') && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}

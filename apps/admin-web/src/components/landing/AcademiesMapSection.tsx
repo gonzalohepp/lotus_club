@@ -15,19 +15,38 @@ const PublicMap = dynamic(() => import('./PublicMap'), {
     ssr: false
 })
 
+/**
+ * Organización cuyas sedes se muestran en esta landing.
+ *
+ * La plataforma es multi-marca pero la landing es una sola, así que sin filtro
+ * el mapa mezclaría las sucursales de todos los clientes. Vacío = muestra
+ * todas, que es lo correcto mientras haya una sola organización.
+ */
+const LANDING_ORG = process.env.NEXT_PUBLIC_LANDING_ORG
+
 export default function AcademiesMapSection({ minimal = false }: { minimal?: boolean }) {
     const { data: academies } = useQuery({
-        queryKey: ['public-academies'],
+        queryKey: ['public-dojos', LANDING_ORG],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('academies')
-                .select('*')
+            // Lee `dojos`, no la tabla `academies` heredada: esa quedó
+            // desincronizada de las sedes reales al pasar a multi-tenant y por
+            // eso el mapa aparecía vacío.
+            let query = supabase
+                .from('dojos')
+                .select('id, name, city, address, lat, lng, phone, team, instructor, instructor_rank, schedules_text, maps_url, organizations!inner(slug)')
                 .eq('is_active', true)
+
+            if (LANDING_ORG) query = query.eq('organizations.slug', LANDING_ORG)
+
+            const { data, error } = await query
+
             if (error) {
-                console.error('Error fetching academies:', error)
+                console.error('Error fetching dojos:', error)
                 return []
             }
-            return data || []
+
+            // El mapa necesita coordenadas; una sede sin lat/lng no se puede pinchar.
+            return (data || []).filter((d) => d.lat != null && d.lng != null)
         }
     })
 

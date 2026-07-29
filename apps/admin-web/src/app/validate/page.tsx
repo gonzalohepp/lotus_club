@@ -11,9 +11,9 @@ import QRScannerHtml5 from '@/components/QRScannerHtml5'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { MemberRow as BaseMemberRow } from '@/types/member'
-import { getPaymentMultiplier } from '@/lib/pricing'
-import { mercadoPagoEnabled } from '@/lib/features'
-import { todayAR, nowAR_ISO } from '@/lib/dateUtils'
+import { evaluateBilling } from '@/lib/billing'
+import { useTenant } from '@/lib/tenant/context'
+import { NO_DOJO } from '@/lib/tenant/constants'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,20 +33,6 @@ type ClassCandidate = {
   is_principal?: boolean
   price_principal?: number | null
   price_additional?: number | null
-}
-
-const DAY_MAP = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sáb']
-
-function isTimeBefore(current: string, target: string, minusMinutes: number = 0): boolean {
-  try {
-    const [cHours, cMins] = current.split(':').map(Number)
-    const [tHours, tMins] = target.split(':').map(Number)
-    const currentTotal = cHours * 60 + cMins
-    const targetTotal = tHours * 60 + tMins - minusMinutes
-    return currentTotal <= targetTotal
-  } catch {
-    return false
-  }
 }
 
 /**
@@ -76,6 +62,10 @@ const fullName = (m: MemberRow | null) =>
   m ? [m.first_name ?? '', m.last_name ?? ''].join(' ').trim() || 'Miembro' : 'Miembro'
 
 function ValidateContent() {
+  const { mercadoPago, activeDojo } = useTenant()
+  // El ingreso se valida y se registra CONTRA UNA SEDE: el mismo alumno puede
+  // estar al día en Lanús y bloqueado en Quilmes.
+  const dojoId = activeDojo?.id
   const router = useRouter()
   const qp = useSearchParams()
 
@@ -88,14 +78,15 @@ function ValidateContent() {
 
   const [userEmail, setUserEmail] = useState<string | null>(null)
 
-  // Multiplicador de precio por mora — calculado desde lib/pricing
+  // Recargo por mora según las reglas de ESTA sede.
   const multiplier = useMemo(() =>
-    getPaymentMultiplier(
-      member?.next_payment_due,
-      member?.is_new_member ?? false,
-      member?.role
-    ),
-    [member?.next_payment_due, member?.is_new_member, member?.role]
+    evaluateBilling(activeDojo?.billing, {
+      endDate: member?.next_payment_due,
+      isNewMember: member?.is_new_member ?? false,
+      role: member?.role,
+      timezone: activeDojo?.timezone,
+    }).multiplier,
+    [member?.next_payment_due, member?.is_new_member, member?.role, activeDojo?.billing, activeDojo?.timezone]
   )
 
   // Todas las clases inscriptas del miembro (con precios) — se cargan en el denied flow
@@ -127,16 +118,21 @@ function ValidateContent() {
         router.replace('/login')
         return
       }
+      // Sin sede activa todavía no hay a quién buscar: el tenant baja del
+      // layout server-side y llega un tick después del primer render.
+      if (!dojoId) return
+
       const { data: rows, error } = await supabase
         .from('members_with_status')
         .select('*')
+        .eq('dojo_id', dojoId)
         .ilike('email', email)
         .limit(1)
 
       if (error) console.error('[validate] preload error', error)
       setMember((rows?.[0] as MemberRow) ?? null)
     })()
-  }, [router])
+  }, [router, dojoId])
 
   // ========= Cargar TODAS las clases con precios (para flujo de pago) =========
   const loadEnrolledClassesWithPrices = useCallback(async (userId: string) => {
@@ -149,6 +145,7 @@ function ValidateContent() {
           price_principal, price_additional
         )
       `)
+      .eq('dojo_id', dojoId ?? NO_DOJO)
       .eq('user_id', userId)
 
     if (error) {
@@ -162,31 +159,40 @@ function ValidateContent() {
         const cl = e.classes as unknown as ClassCandidate
         return { ...cl, is_principal: e.is_principal }
       })
-  }, [])
+  }, [dojoId])
 
-  // ========= Finalizar y Registrar =========
+  // ========= Confirmar el ingreso =========
+  /**
+   * Registra el ingreso llamando a `/api/access/checkin`.
+   *
+   * Ya no escribe `access_logs` ni `class_attendance` desde el navegador: el
+   * alumno perdió el INSERT directo sobre esas tablas a propósito. Si la
+   * decisión de "autorizado" la tomara el cliente, cualquiera podría marcarse
+   * presente desde la consola sin escanear y con la cuota vencida.
+   *
+   * El servidor vuelve a verificar cuota, sede e inscripción antes de escribir.
+   */
   const finalizeAccess = useCallback(
     async (m: MemberRow, success: boolean, reason: string, selectedIds: number[] = []) => {
       setIsFinalizing(true)
       try {
-        if (selectedIds.length > 0) {
-          const today = todayAR() // YYYY-MM-DD forzado Argentina
-          const { error: attErr } = await supabase.from('class_attendance').insert(
-            selectedIds.map((id) => ({
-              user_id: m.user_id,
-              class_id: id,
-              date: today,
-            }))
-          )
-          if (attErr) console.error('[validate] attendance error', attErr)
-        }
+        // El rechazo ya quedó registrado por /api/access/validate; acá sólo se
+        // muestra. Confirmar sólo tiene sentido en el camino autorizado.
+        if (success) {
+          const res = await fetch('/api/access/checkin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ class_ids: selectedIds }),
+          })
+          const json = await res.json().catch(() => ({}))
 
-        await supabase.from('access_logs').insert({
-          user_id: m.user_id,
-          result: success ? 'autorizado' : 'denegado',
-          reason,
-          scanned_at: nowAR_ISO(),
-        })
+          if (!res.ok || json.allowed === false) {
+            setAllowed(false)
+            setResultMsg(json.reason ?? json.error ?? 'No se pudo registrar el ingreso')
+            setOpenResult(true)
+            return
+          }
+        }
 
         setAllowed(success)
         setResultMsg(reason)
@@ -197,6 +203,9 @@ function ValidateContent() {
         }
       } catch (e) {
         console.error('[validate] finalize error', e)
+        setAllowed(false)
+        setResultMsg('No se pudo conectar con el servidor')
+        setOpenResult(true)
       } finally {
         setIsFinalizing(false)
         setShowClassSelection(false)
@@ -208,7 +217,7 @@ function ValidateContent() {
   // ========= Redirigir a Mercado Pago =========
   const redirectToMP = useCallback(
     async (m: MemberRow, selectedIds: number[]) => {
-      if (!mercadoPagoEnabled()) {
+      if (!mercadoPago) {
         toast.error('El pago online no está disponible', {
           description: 'Acercate a recepción para regularizar tu cuota.',
         })
@@ -299,125 +308,52 @@ function ValidateContent() {
           return
         }
 
-        const { data: dbToken, error: tokenErr } = await supabase
-          .from('qr_tokens')
-          .select('*')
-          .eq('token', token)
-          .gt('expires_at', new Date().toISOString())
-          .maybeSingle()
-
-        if (tokenErr || !dbToken) {
-          setAllowed(false)
-          setResultMsg('El código QR ha expirado o no es válido. Escanea el de la pantalla nuevamente.')
-          setOpenResult(true)
-          return
-        }
-
-        // 2) Verificación de membresía
-        const emailToCheck = userEmail || memberRef.current?.email || undefined
-        if (!emailToCheck) {
-          setAllowed(false)
-          setResultMsg('Sesión inválida')
-          setOpenResult(true)
-          return
-        }
-
-        const { data: row, error } = await supabase
-          .from('members_with_status')
-          .select('*')
-          .ilike('email', emailToCheck)
-          .limit(1)
-          .maybeSingle()
-
-        if (error) throw error
-
-        const m = (row as MemberRow) ?? null
-        if (!m) {
-          setAllowed(false)
-          setResultMsg('No se encontró el miembro')
-          setOpenResult(true)
-          return
-        }
-
-        setMember(m)
-
-        if (m.status !== 'activo') {
-          let reason = 'Cuenta pendiente de aprobación'
-          if (m.status === 'suspendido') reason = 'Membresía suspendida'
-          else if (m.status === 'vencido' || m.status === 'inactivo') reason = 'Cuota vencida o cuenta inactiva'
-
-          await finalizeAccess(m, false, reason)
-          return
-        }
-
-        // 3) Cooldown check
-        const twoMinsAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString()
-        const { data: recentEntries } = await supabase
-          .from('access_logs')
-          .select('id')
-          .eq('user_id', m.user_id)
-          .eq('result', 'autorizado')
-          .gt('scanned_at', twoMinsAgo)
-          .limit(1)
-
-        if (recentEntries && recentEntries.length > 0) {
-          setAllowed(false)
-          setResultMsg('Acceso ya registrado recientemente. Espera 2 minutos para volver a escanear.')
-          setOpenResult(true)
-          return
-        }
-
-        // 4) Buscar clases candidatas (día y horario)
-        const now = new Date()
-        const dayName = DAY_MAP[now.getDay()]
-        const currentTime = now.toLocaleTimeString('es-AR', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
+        // Toda la validación —token, sede, cuota, cooldown y clases del día—
+        // se resuelve en el servidor. Antes vivía acá, en el navegador del
+        // alumno, que es exactamente quien no debería decidir si puede entrar.
+        const res = await fetch('/api/access/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
         })
+        const data = await res.json().catch(() => ({}))
 
-        const { data: enrollments, error: enrErr } = await supabase
-          .from('class_enrollments')
-          .select(`
-            is_principal,
-            classes:class_id (
-              id, name, instructor, color, days, start_time, end_time,
-              price_principal, price_additional
-            )
-          `)
-          .eq('user_id', m.user_id)
-
-        if (enrErr) console.error('[validate] error fetching classes', enrErr)
-
-        const allClasses = (enrollments ?? [])
-          .filter((e) => e.classes)
-          .map((e) => {
-            const cl = e.classes as unknown as ClassCandidate
-            return { ...cl, is_principal: e.is_principal }
-          })
-
-        // Guardar todas las clases para uso en el flujo de pago
-        setAllEnrolledClasses(allClasses)
-
-        const candidates = allClasses.filter((cl) => {
-          if (!cl.days || !cl.end_time) return false
-          if (!cl.days.includes(dayName)) return false
-          return isTimeBefore(currentTime, cl.end_time, 20)
-        })
-
-        if (candidates.length > 0) {
-          setCandidateClasses(candidates)
-          setSelectedClassIds(new Set())
-          setShowClassSelection(true)
-        } else if (allClasses.length > 0) {
-          // No hay candidatas por horario, pero sí clases inscriptas → dejar elegir
-          setCandidateClasses(allClasses)
-          setSelectedClassIds(new Set())
-          setShowClassSelection(true)
-        } else {
-          // Sin clases inscriptas → acceso directo
-          await finalizeAccess(m, true, 'Acceso autorizado - ¡Bienvenido!')
+        if (!res.ok) {
+          setAllowed(false)
+          setResultMsg(data.error ?? 'No se pudo validar el acceso')
+          setOpenResult(true)
+          return
         }
+
+        if (data.member) setMember(data.member as MemberRow)
+
+        if (!data.allowed) {
+          // El rechazo ya quedó registrado del lado del servidor.
+          setAllowed(false)
+          setResultMsg(data.reason ?? 'Acceso denegado')
+          setOpenResult(true)
+
+          // Con la cuota vencida se ofrece regularizar en el momento.
+          if (!data.alreadyIn && data.member) {
+            const clases = await loadEnrolledClassesWithPrices(data.member.user_id)
+            setAllEnrolledClasses(clases)
+          }
+          return
+        }
+
+        // Autorizado sin clases inscritas: el servidor ya registró el ingreso.
+        if (data.checkedIn) {
+          setAllowed(true)
+          setResultMsg(data.reason ?? '¡Bienvenido!')
+          setOpenResult(true)
+          setTimeout(() => router.replace('/profile'), 1500)
+          return
+        }
+
+        // Autorizado con clases: falta que elija a cuál viene.
+        setCandidateClasses(data.classes ?? [])
+        setSelectedClassIds(new Set())
+        setShowClassSelection(true)
       } catch (e) {
         console.error('[validate] unexpected error', e)
         setAllowed(false)

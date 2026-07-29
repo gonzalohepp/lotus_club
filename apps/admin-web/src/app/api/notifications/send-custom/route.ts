@@ -1,19 +1,29 @@
 import { NextResponse } from 'next/server'
 import webpush, { WebPushError, type PushSubscription } from 'web-push'
-import { createClient } from '@supabase/supabase-js'
-import { requireAdmin, requireFeature } from '@/lib/requireAdmin'
+import { requireFeature } from '@/lib/requireAdmin'
+import { requireDojoManager } from '@/lib/tenant/server'
+import { assertMemberOfDojo, serviceClient } from '@/lib/tenant/admin'
 
+/**
+ * Envío manual de notificaciones push a los alumnos de LA SEDE ACTIVA.
+ *
+ * ⚠️ Esta ruta corre con service role, que ignora RLS. Antes resolvía las
+ * audiencias ("todos", "activos", "por vencer") sobre TODA la base, así que un
+ * admin de Lotus Lanús le mandaba push a los alumnos de Quilmes y de cualquier
+ * otra marca de la plataforma. Todas las queries de audiencia van scopeadas
+ * por `dojo_id`, y el target `custom` valida que esa persona sea de la sede.
+ */
 export async function POST(req: Request) {
-    const auth = await requireAdmin()
-    if (auth.error) return auth.error
+    const guard = await requireDojoManager()
+    if (guard.error) return guard.error
 
-    const featureGuard = requireFeature('notifications')
+    const { dojoId } = guard
+
+    const featureGuard = await requireFeature('notifications')
     if (featureGuard.error) return featureGuard.error
 
     try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-        const supabase = createClient(supabaseUrl, supabaseKey)
+        const supabase = serviceClient()
 
         const body = await req.json()
         const { target, customUserId, title, message, url } = body
@@ -30,19 +40,27 @@ export async function POST(req: Request) {
             if (!customUserId) {
                 return NextResponse.json({ error: 'User ID required for custom target' }, { status: 400 })
             }
+            // Sin esto se le podría mandar un push a cualquier persona de la
+            // plataforma pasando su user_id a mano.
+            const belongs = await assertMemberOfDojo(supabase, dojoId, customUserId)
+            if ('error' in belongs) return belongs.error
+
             targetUserIds = [customUserId]
         } else if (target === 'all') {
             const { data, error } = await supabase
-                .from('profiles')
+                .from('dojo_members')
                 .select('user_id')
-                .eq('role', 'member')
+                .eq('dojo_id', dojoId)
+                .eq('is_active', true)
+                .in('role', ['member', 'becado'])
 
-            console.log('[Custom Notification] "all" query (members only) result:', { count: data?.length, error })
+            console.log('[Custom Notification] "all" query result:', { count: data?.length, error })
             targetUserIds = (data || []).map(p => p.user_id)
         } else if (target === 'active') {
             const { data } = await supabase
                 .from('members_with_status')
                 .select('user_id')
+                .eq('dojo_id', dojoId)
                 .eq('status', 'activo')
                 .eq('role', 'member')
             targetUserIds = (data || []).map(p => p.user_id)
@@ -53,6 +71,7 @@ export async function POST(req: Request) {
             const { data } = await supabase
                 .from('memberships')
                 .select('member_id')
+                .eq('dojo_id', dojoId)
                 .gte('end_date', today)
                 .lte('end_date', sevenDaysLater)
 
@@ -116,6 +135,7 @@ export async function POST(req: Request) {
 
         try {
             await supabase.from('notification_history').insert({
+                dojo_id: dojoId,
                 title,
                 message,
                 target,

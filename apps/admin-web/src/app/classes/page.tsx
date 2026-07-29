@@ -8,8 +8,16 @@ import ClassForm, { ClassRow } from '../components/classes/ClassForm'
 import ClassCard from '../components/classes/ClassCard'
 import StyledSelect from '../components/common/StyledSelect'
 import { supabase } from '@/lib/supabaseClient'
+import { useTenant } from '@/lib/tenant/context'
+import { NO_DOJO } from '@/lib/tenant/constants'
 
 export default function ClassesPage() {
+  // Sede activa: las clases son de un dojo, no de la marca. RLS deja ver todas
+  // las sedes a las que tenés acceso, así que sin este filtro un superadmin
+  // vería las clases de todas sus sucursales mezcladas en una sola grilla.
+  const { activeDojo } = useTenant()
+  const dojoId = activeDojo?.id
+
   const [items, setItems] = useState<ClassRow[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
@@ -27,8 +35,9 @@ export default function ClassesPage() {
     return supabase
       .from('classes')
       .select('id,name,instructor,days,start_time,end_time,capacity,max_students,color,category,description,price,price_principal,price_additional,created_at')
+      .eq('dojo_id', dojoId ?? NO_DOJO)
       .order('name', { ascending: true })
-  }, [])
+  }, [dojoId])
 
   const load = useCallback(async () => {
     const { data, error } = await fetchClasses()
@@ -39,6 +48,7 @@ export default function ClassesPage() {
   // Fetch inline (en vez de llamar a `load`) para que el setState quede
   // dentro del .then(), no colgando directo del cuerpo del effect.
   useEffect(() => {
+    if (!dojoId) return
     let ignore = false
     fetchClasses().then(({ data, error }) => {
       if (ignore) return
@@ -46,7 +56,7 @@ export default function ClassesPage() {
       setLoading(false)
     })
     return () => { ignore = true }
-  }, [fetchClasses])
+  }, [fetchClasses, dojoId])
 
   const filtered = useMemo(() => {
     return items.filter((c) => {
@@ -76,7 +86,9 @@ export default function ClassesPage() {
 
   const onDelete = async (id: number) => {
     if (!confirm('¿Eliminar esta clase?')) return
-    const { error } = await supabase.from('classes').delete().eq('id', id)
+    // El `.eq('dojo_id')` es redundante con RLS pero explicita el alcance: esta
+    // pantalla sólo borra clases de la sede en la que estás parado.
+    const { error } = await supabase.from('classes').delete().eq('id', id).eq('dojo_id', dojoId ?? NO_DOJO)
     if (error) {
       alert('Error eliminando clase: ' + error.message)
       return

@@ -3,7 +3,7 @@ import { X, UserPlus, UserCircle2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import MemberForm from './MemberForm'
 import MemberGrades from '../profile/MemberGrades'
-import { hasFeature } from '@/lib/features'
+import { useTenant } from '@/lib/tenant/context'
 
 import { MemberRow, MemberPayload } from '@/types/member'
 
@@ -16,6 +16,7 @@ export default function MemberModal({
   onSubmit: (payload: MemberPayload) => Promise<void>
 }) {
   const [activeTab, setActiveTab] = useState<'info' | 'grades'>('info')
+  const { can } = useTenant()
 
   return (
     <AnimatePresence>
@@ -57,7 +58,7 @@ export default function MemberModal({
                 >
                   Información General
                 </button>
-                {member && hasFeature('graduations') && (
+                {member && can('graduations') && (
                   <button
                     onClick={() => setActiveTab('grades')}
                     className={`pb-4 text-xs font-black uppercase tracking-widest border-b-4 transition-colors ${activeTab === 'grades' ? 'border-blue-500 text-white' : 'border-transparent text-slate-500 hover:text-white'}`}
@@ -82,7 +83,7 @@ export default function MemberModal({
                   onCancel={onClose}
                   onSubmit={async (data) => { await onSubmit(data); onClose() }}
                 />
-              ) : member && hasFeature('graduations') ? (
+              ) : member && can('graduations') ? (
                 <MemberGrades userId={member.user_id} />
               ) : null}
             </div>

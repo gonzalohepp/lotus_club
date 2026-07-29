@@ -17,6 +17,7 @@ import {
   Bell,
   AlertTriangle,
   ShieldAlert,
+  ShieldCheck,
   ArrowRight,
   Wifi,
   WifiOff,
@@ -28,7 +29,10 @@ import { Toaster, toast } from 'sonner'
 import ThemeToggle from '../components/ThemeToggle'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
-import { hasFeature, PLAN, type FeatureKey } from '@/lib/features'
+import { type FeatureKey } from '@/lib/features'
+import { type Capability } from '@/lib/tenant/types'
+import { useTenant } from '@/lib/tenant/context'
+import DojoSwitcher from '@/components/tenant/DojoSwitcher'
 import UpgradeModal from '../components/plan/UpgradeModal'
 import ProBenefitsModal from '../components/plan/ProBenefitsModal'
 
@@ -66,13 +70,19 @@ const NAV_ITEMS: {
   icon: typeof LayoutDashboard
   roles: string[]
   feature?: FeatureKey
+  /**
+   * Capacidad requerida por ROL (distinto de `feature`, que depende del PLAN).
+   * "Academias" es de la marca: el administrador de una sucursal no da de alta
+   * sedes, eso lo hace el superadmin de la organización.
+   */
+  capability?: Capability
 }[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin'] },
   { href: '/qr', label: 'QR de Acceso', icon: QrCode, roles: ['admin', 'instructor'], feature: 'qr' },
   { href: '/validate', label: 'Validar Acceso', icon: QrCode, roles: ['admin', 'instructor', 'becado', 'member'] },
   { href: '/profile', label: 'Mi Perfil', icon: UserIcon, roles: ['admin', 'instructor', 'becado', 'member'] },
   { href: '/members', label: 'Miembros', icon: Users, roles: ['admin'], feature: 'members' },
-  { href: '/admin/academies', label: 'Academias', icon: Building2, roles: ['admin'], feature: 'academies' },
+  { href: '/admin/academies', label: 'Academias', icon: Building2, roles: ['admin'], feature: 'dojos', capability: 'viewDojos' },
   { href: '/classes', label: 'Clases', icon: GraduationCap, roles: ['admin'], feature: 'classes' },
   { href: '/payments', label: 'Pagos', icon: DollarSign, roles: ['admin'], feature: 'payments' },
   { href: '/metricas', label: 'Metricas', icon: ChartLine, roles: ['admin'], feature: 'metrics' },
@@ -92,6 +102,42 @@ export default function AdminLayout({ children, active }: { children: React.Reac
   const [showProBenefits, setShowProBenefits] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
+
+  // Tenant activo: de acá salen el rol (POR DOJO, no global), el plan de la
+  // organización y las features habilitadas.
+  const tenant = useTenant()
+  const { can, allows, org, activeDojo, isPlatformAdmin, orgRole, branding } = tenant
+
+  // El rol sale de la sede activa. Sin fallback a `profiles.role`: ese es el rol
+  // global heredado del sistema single-tenant y hoy dice 'member' para casi
+  // todos, incluido el desarrollador.
+  //
+  // Se declaran acá arriba —y no más abajo, junto al resto de los derivados—
+  // porque el effect de alertas de seguridad los usa, y tenerlos después dejaba
+  // una referencia en zona muerta temporal que funcionaba de casualidad.
+  const role = tenant.role ?? 'member'
+  const isAdmin = role === 'admin' || role === 'instructor'
+
+  // Nombre de marca: el display_name configurado, o el de la organización.
+  // Se parte en dos para conservar el efecto de la última palabra en color,
+  // que es como venía el logo original ("Beleza *Dojo*").
+  const brandName = branding.display_name || org?.name || 'Dojo Access'
+  const brandWords = (() => {
+    const parts = brandName.trim().split(/\s+/)
+    return parts.length > 1
+      ? { head: parts.slice(0, -1).join(' '), tail: parts[parts.length - 1] }
+      : { head: brandName, tail: '' }
+  })()
+
+  // Etiqueta de nivel de acceso para el bloque de usuario del sidebar.
+  const accessLevel = isPlatformAdmin
+    ? { label: 'Desarrollador', className: 'bg-violet-400/20 text-violet-600 dark:text-violet-400' }
+    : orgRole === 'superadmin'
+      ? { label: 'Superadmin', className: 'bg-amber-400/20 text-amber-600 dark:text-amber-400' }
+      : orgRole === 'manager'
+        ? { label: 'Staff de marca', className: 'bg-amber-400/15 text-amber-600 dark:text-amber-400' }
+        : null
+  const plan = org?.plan ?? 'basic'
 
   const { isSupported, subscription, subscribeUser, unsubscribeUser } = usePushNotifications()
   const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BMXQvrbtBZdniuZrLMYD87T0E-742Lo72ktJWrjzB5mcbKYrrCh5X6cAo7z0d09QqOygrZsNFVEz_IBgTWqUp6o'
@@ -202,7 +248,10 @@ export default function AdminLayout({ children, active }: { children: React.Reac
 
   // ========= Real-time Security Alerts =========
   useEffect(() => {
-    if (!profile || (profile.role !== 'admin' && profile.role !== 'instructor')) return
+    // El rol viene de la sede activa, no del global heredado: un admin de sede
+    // cuyo `profiles.role` quedó en 'member' —el caso normal ahora— no recibía
+    // las alertas de acceso denegado de su propio dojo.
+    if (!profile || !isAdmin) return
 
     const userId = profile.user_id
     // Subscribing to security alerts
@@ -290,12 +339,14 @@ export default function AdminLayout({ children, active }: { children: React.Reac
   }, [profile])
 
   /* State and Hooks for Navigation & Protection */
-  const role = profile?.role || 'member'
   const nav = useMemo(
-    () => NAV_ITEMS.filter(item => item.roles.includes(role) && (!item.feature || hasFeature(item.feature))),
-    [role]
+    () => NAV_ITEMS.filter(item =>
+      item.roles.includes(role)
+      && (!item.feature || can(item.feature))
+      && (!item.capability || allows(item.capability))
+    ),
+    [role, can, allows]
   )
-  const isAdmin = role === 'admin' || role === 'instructor'
 
   // Optimized Route protection
   useEffect(() => {
@@ -305,7 +356,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
     // Public or special paths
     if (currentPath === '/login' || currentPath === '/auth/callback') return
 
-    const userRole = profile.role || 'member'
+    const userRole = role
     // Ordenado por especificidad (href más largo primero) para que, por ej.,
     // /admin/academies matchee su propia entrada (y su feature gate) en vez
     // de caer en el prefijo más corto de /admin (el dashboard, sin gate).
@@ -314,7 +365,8 @@ export default function AdminLayout({ children, active }: { children: React.Reac
       .find(item => currentPath === item.href || currentPath.startsWith(item.href + '/'))
     const allowed = !!matchingItem
       && matchingItem.roles.includes(userRole)
-      && (!matchingItem.feature || hasFeature(matchingItem.feature))
+      && (!matchingItem.feature || can(matchingItem.feature))
+      && (!matchingItem.capability || allows(matchingItem.capability))
 
     if (!allowed && currentPath !== '/validate') {
       const defaultPath = userRole === 'admin' ? '/admin' : '/profile'
@@ -335,7 +387,12 @@ export default function AdminLayout({ children, active }: { children: React.Reac
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="w-20 h-20 mx-auto mb-4">
-            <img src="/logo.png" alt="Logo" className="w-20 h-20 object-contain animate-pulse" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={branding.logo_url || '/logo.png'}
+              alt={brandName}
+              className="w-20 h-20 object-contain animate-pulse"
+            />
           </div>
           <p className="text-muted-foreground animate-pulse font-medium tracking-widest uppercase text-[10px]">Cargando…</p>
         </div>
@@ -369,9 +426,16 @@ export default function AdminLayout({ children, active }: { children: React.Reac
         {/* Header */}
         <div className="border-b border-border p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={branding.logo_url || '/logo.png'}
+              alt={brandName}
+              className="w-10 h-10 object-contain"
+            />
             <div>
-              <h2 className="font-bold text-lg text-foreground tracking-tight leading-tight">Beleza <span className="text-brand">Dojo</span></h2>
+              <h2 className="font-bold text-lg text-foreground tracking-tight leading-tight">
+                {brandWords.head}{brandWords.tail && <span className="text-brand"> {brandWords.tail}</span>}
+              </h2>
               <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
                 {role === 'admin' ? 'Admin Panel' : role === 'instructor' ? 'Instructor Panel' : 'Portal de Alumno'}
               </p>
@@ -415,8 +479,23 @@ export default function AdminLayout({ children, active }: { children: React.Reac
           </nav>
         </div>
 
+        {/* Consola de plataforma — sólo el desarrollador. El superadmin de una
+            marca administra sus sedes desde "Academias", pero nunca ve esto:
+            acá se listan las demás organizaciones y sus planes. */}
+        {isPlatformAdmin && (
+          <div className="px-4 pb-3">
+            <Link
+              href="/superadmin"
+              className="w-full h-11 flex items-center justify-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-400/10 text-amber-600 dark:text-amber-400 font-black uppercase tracking-widest text-[11px] transition-colors hover:bg-amber-400/20"
+            >
+              <ShieldAlert className="w-4 h-4" />
+              Consola de plataforma
+            </Link>
+          </div>
+        )}
+
         {/* Upgrade CTA (solo plan Basic) */}
-        {PLAN === 'basic' && role === 'admin' && (
+        {plan === 'basic' && role === 'admin' && (
           <div className="px-4 pb-4">
             <button
               onClick={() => setShowUpgrade(true)}
@@ -429,8 +508,8 @@ export default function AdminLayout({ children, active }: { children: React.Reac
           </div>
         )}
 
-        {/* Badge de plan Pro (solo instancias Pro) */}
-        {PLAN === 'pro' && role === 'admin' && (
+        {/* Badge de plan Pro (solo organizaciones Pro) */}
+        {plan === 'pro' && role === 'admin' && (
           <div className="px-4 pb-4">
             <button
               onClick={() => setShowProBenefits(true)}
@@ -456,6 +535,15 @@ export default function AdminLayout({ children, active }: { children: React.Reac
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-foreground truncate">{displayName}</p>
               <p className="text-[10px] text-muted-foreground truncate leading-none">{profile?.email}</p>
+              {/* Nivel de acceso. Sin esto no hay forma de saber, mirando la
+                  pantalla, si estás viendo una sede porque sos su admin o
+                  porque tu rol te da acceso a todas. */}
+              {accessLevel && (
+                <span className={`mt-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${accessLevel.className}`}>
+                  <ShieldCheck className="w-2.5 h-2.5" />
+                  {accessLevel.label}
+                </span>
+              )}
             </div>
           </div>
 
@@ -485,6 +573,9 @@ export default function AdminLayout({ children, active }: { children: React.Reac
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
+
+            {/* Sede activa: todo lo que se ve abajo está filtrado por este dojo */}
+            <DojoSwitcher />
           </div>
 
           <div className="flex items-center gap-1 rounded-2xl border border-border bg-slate-50/80 dark:bg-white/5 p-1.5">

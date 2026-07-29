@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import AdminLayout from '../layouts/AdminLayout'
 import { supabase } from '@/lib/supabaseClient'
+import { useTenant } from '@/lib/tenant/context'
+import { NO_DOJO } from '@/lib/tenant/constants'
 import {
     Users,
     Clock,
@@ -16,7 +18,8 @@ import {
     X,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getPaymentMultiplier } from '@/lib/pricing'
+import { evaluateBilling } from '@/lib/billing'
+import type { BillingConfig } from '@/lib/tenant/types'
 import { todayAR } from '@/lib/dateUtils'
 
 type ClassRow = {
@@ -62,7 +65,13 @@ function getClassEmoji(name: string) {
     return '🥋'
 }
 
-const getMemberStatus = (a: AttendanceRecord) => {
+/**
+  * Etiquetas de estado del alumno. `billing` llega por parámetro porque esta es
+  * una función de módulo, no un componente: no puede leer el contexto del tenant
+  * con un hook. Sin ella caería a la política por defecto y mostraría "+20%" en
+  * una sede que cobra otra cosa.
+  */
+const getMemberStatus = (a: AttendanceRecord, billing: BillingConfig | null, timezone?: string) => {
     const tags: { label: string; color: string; bg: string }[] = []
     if (!a.member_data) {
         return [{ label: 'Sin datos', color: 'text-slate-500', bg: 'bg-slate-500/10' }]
@@ -82,9 +91,14 @@ const getMemberStatus = (a: AttendanceRecord) => {
         tags.push({ label: 'Vencido', color: 'text-red-500', bg: 'bg-red-500/10' })
     }
 
-    const multiplier = getPaymentMultiplier(next_payment_due, is_new_member ?? false, role)
+    const { multiplier, surchargePct } = evaluateBilling(billing, {
+        endDate: next_payment_due,
+        isNewMember: is_new_member ?? false,
+        role,
+        timezone,
+    })
     if (multiplier > 1) {
-        tags.push({ label: '+20% Recargo', color: 'text-orange-500', bg: 'bg-orange-500/10' })
+        tags.push({ label: `+${surchargePct}% Recargo`, color: 'text-orange-500', bg: 'bg-orange-500/10' })
     }
     return tags
 }
@@ -101,6 +115,9 @@ function BottomSheet({
     cl: ClassRow | null
     attendees: AttendanceRecord[]
 }) {
+    // Las reglas de cobro de la sede activa, para las etiquetas de recargo.
+    const { billing, activeDojo } = useTenant()
+
     useEffect(() => {
         if (!open) return
         const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -167,7 +184,7 @@ function BottomSheet({
                                 </div>
                             ) : (
                                 attendees.map((a, idx) => {
-                                    const tags = getMemberStatus(a)
+                                    const tags = getMemberStatus(a, billing, activeDojo?.timezone)
                                     return (
                                         <motion.div
                                             key={idx}
@@ -270,6 +287,10 @@ function MobileClassCard({
 
 /* ── Página principal ── */
 export default function AsistenciaVivoPage() {
+    // La asistencia en vivo muestra quién está entrenando AHORA en esta sede.
+    const { activeDojo, billing } = useTenant()
+    const dojoId = activeDojo?.id
+
     const [classes, setClasses] = useState<ClassRow[]>([])
     const [attendance, setAttendance] = useState<AttendanceRecord[]>([])
     const [loading, setLoading] = useState(true)
@@ -294,6 +315,7 @@ export default function AsistenciaVivoPage() {
             const { data: clsData } = await supabase
                 .from('classes')
                 .select('*')
+                .eq('dojo_id', dojoId ?? NO_DOJO)
                 .order('start_time')
 
             setClasses(clsData || [])
@@ -306,6 +328,7 @@ export default function AsistenciaVivoPage() {
                     class_id,
                     profiles:user_id (first_name, last_name, email)
                 `)
+                .eq('dojo_id', dojoId ?? NO_DOJO)
                 .eq('date', today)
 
             const rawAttendance = ((attData as AttendanceRaw[]) || []).map(r => ({
@@ -318,6 +341,7 @@ export default function AsistenciaVivoPage() {
                 const { data: membersData } = await supabase
                     .from('members_with_status')
                     .select('user_id, status, next_payment_due, role, is_new_member')
+                    .eq('dojo_id', dojoId ?? NO_DOJO)
                     .in('user_id', userIds)
 
                 const memberMap = new Map<string, AttendanceRecord['member_data']>()
@@ -335,9 +359,10 @@ export default function AsistenciaVivoPage() {
         } finally {
             setLoading(false)
         }
-    }, [])
+    }, [dojoId])
 
     useEffect(() => {
+        if (!dojoId) return
         fetchData()
         const channel = supabase
             .channel('live_attendance')
@@ -585,7 +610,7 @@ export default function AsistenciaVivoPage() {
                                                                         ) : (
                                                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                                                 {attendees.map((a, idx) => {
-                                                                                    const tags = getMemberStatus(a)
+                                                                                    const tags = getMemberStatus(a, billing, activeDojo?.timezone)
                                                                                     return (
                                                                                         <motion.div
                                                                                             key={idx}

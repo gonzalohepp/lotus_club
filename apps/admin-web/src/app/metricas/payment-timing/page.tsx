@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabaseClient'
+import { useTenant } from '@/lib/tenant/context'
+import { NO_DOJO } from '@/lib/tenant/constants'
 import AdminLayout from '../../layouts/AdminLayout'
 import { CheckCircle, AlertTriangle, XCircle, Filter, Users } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -19,6 +21,11 @@ type PaymentUser = {
 type FilterType = 'all' | 'on_time' | 'late' | 'overdue'
 
 export default function PaymentTimingPage() {
+    // Timing de pagos de la sede activa: promediar dos sucursales con reglas de
+    // cobro distintas daría un número sin significado.
+    const { activeDojo } = useTenant()
+    const dojoId = activeDojo?.id
+
     const [loading, setLoading] = useState(true)
     const [users, setUsers] = useState<PaymentUser[]>([])
     const [filter, setFilter] = useState<FilterType>('all')
@@ -40,6 +47,7 @@ export default function PaymentTimingPage() {
             last_name
           )
         `)
+                .eq('dojo_id', dojoId ?? NO_DOJO)
                 .gte('paid_at', startOfMonth)
                 .order('paid_at', { ascending: false })
 
@@ -73,7 +81,7 @@ export default function PaymentTimingPage() {
         }
 
         fetchPayments()
-    }, [])
+    }, [dojoId])
 
     const counts = useMemo(() => {
         return {

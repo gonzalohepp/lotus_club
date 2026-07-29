@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import MercadoPagoConfig, { Payment } from 'mercadopago'
-import { createClient } from '@supabase/supabase-js'
 import { requireMercadoPago } from '@/lib/requireAdmin'
+import { serviceClient } from '@/lib/tenant/admin'
 import crypto from 'crypto'
 
 // Verifica el header x-signature que manda Mercado Pago según su esquema
@@ -42,7 +42,7 @@ function verifyMpSignature(req: Request, dataId: string): boolean {
 
 export async function POST(req: Request) {
     try {
-        const featureGuard = requireMercadoPago()
+        const featureGuard = await requireMercadoPago()
         if (featureGuard.error) return featureGuard.error
 
         const url = new URL(req.url)
@@ -90,14 +90,44 @@ export async function POST(req: Request) {
         const { status, external_reference } = paymentData
 
         if (status === 'approved' && external_reference) {
-            const { user_id, principal_id, additional_ids } = JSON.parse(external_reference)
+            // El webhook llega desde Mercado Pago SIN sesión: no hay dojo
+            // activo del que leer. Por eso la preferencia guarda `dojo_id` en
+            // el external_reference — es la única forma de saber a qué sede
+            // imputar el pago, y `payments.dojo_id` es NOT NULL.
+            const { user_id, dojo_id, principal_id, additional_ids } = JSON.parse(external_reference)
 
             if (!user_id) throw new Error('No user_id in external_reference')
 
-            const supabase = createClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.SUPABASE_SERVICE_ROLE_KEY!
-            )
+            const supabase = serviceClient()
+
+            // Preferencias creadas antes de que existiera el multi-tenant no
+            // traen dojo_id. En ese caso caemos a la única sede activa de la
+            // persona; si tiene varias no adivinamos y lo dejamos registrado
+            // para revisarlo a mano.
+            let dojoId: string | null = dojo_id ?? null
+
+            if (!dojoId) {
+                const { data: memberships } = await supabase
+                    .from('dojo_members')
+                    .select('dojo_id')
+                    .eq('user_id', user_id)
+                    .eq('is_active', true)
+
+                if (memberships?.length === 1) {
+                    dojoId = memberships[0].dojo_id
+                    console.warn(`Payment ${id}: external_reference sin dojo_id, usando la única sede del alumno (${dojoId}).`)
+                } else {
+                    console.error(`Payment ${id}: sin dojo_id y el alumno tiene ${memberships?.length ?? 0} sedes. No se registra.`)
+                    return NextResponse.json({
+                        received: true,
+                        error: 'No se pudo determinar la sede del pago',
+                    })
+                }
+            }
+
+            // A partir de acá la sede está resuelta sí o sí: los dos caminos de
+            // arriba o la asignan o cortan con return.
+            const resolvedDojoId: string = dojoId as string
 
             // ── IDEMPOTENCIA ──────────────────────────────────────────────
             // MP puede enviar el mismo webhook varias veces. Evitamos duplicados.
@@ -157,13 +187,14 @@ export async function POST(req: Request) {
                 .from('memberships')
                 .upsert(
                     {
+                        dojo_id: resolvedDojoId,
                         member_id: user_id,
                         type: 'monthly',
                         end_date: periodToStr,
                         last_payment_date: paidDateStr,
                         notes: `Pago automático via MP (ID: ${id})`,
                     },
-                    { onConflict: 'member_id' }
+                    { onConflict: 'dojo_id,member_id' }
                 )
 
             if (memErr) throw memErr
@@ -173,6 +204,7 @@ export async function POST(req: Request) {
             // los EXTRACT(month) en la view SQL den el mes correcto.
             // mp_payment_id se usa para la idempotencia.
             const { error: payErr } = await supabase.from('payments').insert({
+                dojo_id: resolvedDojoId,
                 user_id,
                 amount: paymentData.transaction_amount,
                 method: 'mercadopago',
@@ -190,16 +222,22 @@ export async function POST(req: Request) {
             // Si no hay principal_id, mantenemos las inscripciones existentes
             // para no dejar al miembro sin clases por un error de datos.
             if (principal_id) {
-                await supabase.from('class_enrollments').delete().eq('user_id', user_id)
+                // Sólo se tocan las inscripciones de ESTA sede: si el alumno
+                // también entrena en otra, sus clases de allá no se borran.
+                await supabase
+                    .from('class_enrollments')
+                    .delete()
+                    .eq('dojo_id', resolvedDojoId)
+                    .eq('user_id', user_id)
 
-                const enrollments: { user_id: string; class_id: number; is_principal: boolean }[] = [
-                    { user_id, class_id: principal_id, is_principal: true },
+                const enrollments: { dojo_id: string; user_id: string; class_id: number; is_principal: boolean }[] = [
+                    { dojo_id: resolvedDojoId, user_id, class_id: principal_id, is_principal: true },
                 ]
 
                 if (Array.isArray(additional_ids)) {
                     additional_ids.forEach((classId: number) => {
                         if (classId !== principal_id) {
-                            enrollments.push({ user_id, class_id: classId, is_principal: false })
+                            enrollments.push({ dojo_id: resolvedDojoId, user_id, class_id: classId, is_principal: false })
                         }
                     })
                 }

@@ -11,19 +11,33 @@ import { Search, MapPin, ExternalLink, Clock, Navigation, GraduationCap, Info, X
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 
+/**
+ * Sede en el mapa público. Los datos salen de `dojos` (antes de la tabla
+ * `academies`, heredada), por eso `id` es uuid y no entero.
+ *
+ * Cada filial de la red tiene su propio equipo e instructor a cargo — es lo
+ * primero que busca quien mira el mapa, más que el nombre de la sede.
+ */
 interface Academy {
-    id: number
+    id: string
     name: string
-    city: string
-    address: string
+    city: string | null
+    address: string | null
     lat: number
     lng: number
+    phone?: string | null
+    /** Equipo o academia afiliada: "Beleza Dojo", "Kizuna Team Jiu Jitsu"… */
+    team?: string | null
+    instructor?: string | null
+    /** Graduación del instructor: "Faixa preta 3er grau". */
+    instructor_rank?: string | null
+    /** Horarios en prosa, tal como los informó cada filial. */
+    schedules_text?: string | null
+    /** Link de Google Maps propio, cuando la filial lo informó. */
+    maps_url?: string | null
     image_url?: string
     website_url?: string
     description?: string
-    schedules?: string
-    professors?: string
-    classes?: string
 }
 
 // ARGENTINA DEFAULT VIEW
@@ -49,11 +63,11 @@ const createCustomIcon = (isSelected: boolean) => {
         className: 'custom-marker',
         html: `
             <div class="relative flex items-center justify-center">
-                ${isSelected ? '<div class="absolute w-14 h-14 bg-blue-500/40 rounded-full animate-ping"></div>' : ''}
-                <div class="relative w-12 h-12 ${isSelected ? 'scale-110 z-10' : ''} bg-blue-600 rounded-full border-[3px] border-white shadow-xl flex items-center justify-center transition-all duration-300 overflow-hidden">
+                ${isSelected ? '<div class="absolute w-14 h-14 bg-black/30 rounded-full animate-ping"></div>' : ''}
+                <div class="relative w-12 h-12 ${isSelected ? 'scale-110 z-10' : ''} bg-black rounded-full border-[3px] border-white shadow-xl flex items-center justify-center transition-all duration-300 overflow-hidden">
                     <span class="text-2xl leading-none pt-1">🥋</span>
                 </div>
-                ${isSelected ? '<div class="absolute -bottom-2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-blue-600"></div>' : ''}
+                ${isSelected ? '<div class="absolute -bottom-2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-black"></div>' : ''}
             </div>
         `,
         iconSize: [48, 48],
@@ -85,8 +99,8 @@ const createClusterIcon = (cluster: any) => {
         className: 'custom-cluster-marker',
         html: `
             <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px;">
-                <div style="position: absolute; width: 40px; height: 40px; background: rgba(59, 130, 246, 0.3); border-radius: 50%; animation: pulse 2s infinite;"></div>
-                <div style="position: relative; width: 36px; height: 36px; background: #2563eb; border: 3px solid white; border-radius: 50%; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 14px; letter-spacing: -0.5px;">
+                <div style="position: absolute; width: 40px; height: 40px; background: rgba(0, 0, 0, 0.25); border-radius: 50%; animation: pulse 2s infinite;"></div>
+                <div style="position: relative; width: 36px; height: 36px; background: #000; border: 3px solid white; border-radius: 50%; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-size: 14px; letter-spacing: -0.5px;">
                    +${count}
                 </div>
             </div>
@@ -184,8 +198,8 @@ export default function PublicMap({
         const s = search.toLowerCase()
         return academies.filter(a =>
             a.name.toLowerCase().includes(s) ||
-            a.city.toLowerCase().includes(s) ||
-            a.address.toLowerCase().includes(s)
+            (a.city ?? '').toLowerCase().includes(s) ||
+            (a.address ?? '').toLowerCase().includes(s)
         )
     }, [academies, search])
 
@@ -308,9 +322,14 @@ export default function PublicMap({
                                 <h4 className={`font-bold text-sm mb-1 ${selected?.id === academy.id ? 'text-white' : 'text-slate-800 dark:text-slate-200 group-hover:text-blue-500'}`}>
                                     {academy.name}
                                 </h4>
+                                {academy.team && academy.team !== academy.name && (
+                                    <p className={`text-[10px] font-black uppercase tracking-wider mb-1 ${selected?.id === academy.id ? 'text-blue-100' : 'text-slate-400'}`}>
+                                        {academy.team}
+                                    </p>
+                                )}
                                 <div className={`flex items-start gap-1.5 text-[10px] font-medium leading-tight ${selected?.id === academy.id ? 'text-blue-100' : 'text-slate-500'}`}>
                                     <MapPin className="w-3 h-3 shrink-0" />
-                                    <span>{academy.city} • {academy.address}</span>
+                                    <span>{[academy.city, academy.address].filter(Boolean).join(' • ') || 'Dirección a confirmar'}</span>
                                 </div>
                             </motion.div>
                         ))}
@@ -404,7 +423,9 @@ export default function PublicMap({
                                     )}
                                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
                                     <div className="absolute bottom-6 left-6 right-6">
-                                        <p className="text-blue-400 text-[10px] font-black uppercase tracking-[0.3em] mb-1">Dojo Sede Oficial</p>
+                                        <p className="text-blue-400 text-[10px] font-black uppercase tracking-[0.3em] mb-1">
+                                            {selected.team || 'Sede oficial'}
+                                        </p>
                                         <h3 className="text-white font-black text-2xl tracking-tight leading-none">{selected.name}</h3>
                                     </div>
                                 </div>
@@ -431,43 +452,50 @@ export default function PublicMap({
                                             </div>
                                             <div>
                                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Dirección</h4>
-                                                <p className="text-sm text-slate-700 dark:text-slate-300 font-bold leading-tight">{selected.address}</p>
-                                                <p className="text-xs text-slate-500">{selected.city}, Argentina</p>
+                                                <p className="text-sm text-slate-700 dark:text-slate-300 font-bold leading-tight">
+                                                    {selected.address || 'A confirmar'}
+                                                </p>
+                                                <p className="text-xs text-slate-500">
+                                                    {[selected.city, 'Argentina'].filter(Boolean).join(', ')}
+                                                </p>
                                             </div>
                                         </div>
 
-                                        {selected.schedules && (
+                                        {selected.schedules_text && (
                                             <div className="flex gap-4">
                                                 <div className="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 flex items-center justify-center shrink-0 border border-cyan-100 dark:border-cyan-800/30">
                                                     <Clock className="w-5 h-5 text-cyan-500" />
                                                 </div>
                                                 <div className="flex-1">
                                                     <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Horarios</h4>
-                                                    <p className="text-sm text-slate-700 dark:text-slate-300 font-medium whitespace-pre-wrap">{selected.schedules}</p>
+                                                    <p className="text-sm text-slate-700 dark:text-slate-300 font-medium leading-relaxed">{selected.schedules_text}</p>
                                                 </div>
                                             </div>
                                         )}
 
-                                        {selected.classes && (
+                                        {selected.team && (
                                             <div className="flex gap-4">
                                                 <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center shrink-0 border border-purple-100 dark:border-purple-800/30">
                                                     <Dumbbell className="w-5 h-5 text-purple-500" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Clases</h4>
-                                                    <p className="text-sm text-slate-700 dark:text-slate-300 font-bold">{selected.classes}</p>
+                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Equipo</h4>
+                                                    <p className="text-sm text-slate-700 dark:text-slate-300 font-bold">{selected.team}</p>
                                                 </div>
                                             </div>
                                         )}
 
-                                        {selected.professors && (
+                                        {selected.instructor && (
                                             <div className="flex gap-4">
                                                 <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center shrink-0 border border-orange-100 dark:border-orange-800/30">
                                                     <GraduationCap className="w-5 h-5 text-orange-500" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Profesores</h4>
-                                                    <p className="text-sm text-slate-700 dark:text-slate-300 font-bold">{selected.professors}</p>
+                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Instructor a cargo</h4>
+                                                    <p className="text-sm text-slate-700 dark:text-slate-300 font-bold">{selected.instructor}</p>
+                                                    {selected.instructor_rank && (
+                                                        <p className="text-xs text-slate-500 mt-0.5">{selected.instructor_rank}</p>
+                                                    )}
                                                 </div>
                                             </div>
                                         )}
@@ -478,7 +506,7 @@ export default function PublicMap({
                             {/* Footer Actions */}
                             <div className="p-6 border-t border-slate-100 dark:border-slate-800 space-y-3 bg-slate-50/50 dark:bg-slate-900/50">
                                 <a
-                                    href={`https://www.google.com/maps/dir/?api=1&destination=${selected.lat},${selected.lng}`}
+                                    href={selected.maps_url || `https://www.google.com/maps/dir/?api=1&destination=${selected.lat},${selected.lng}`}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="flex items-center justify-center gap-3 w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs uppercase tracking-[0.2em] shadow-xl shadow-blue-500/20 transition-all hover:-translate-y-0.5"

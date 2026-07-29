@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabaseClient'
+import { useTenant } from '@/lib/tenant/context'
+import { NO_DOJO } from '@/lib/tenant/constants'
 import AdminLayout from '../layouts/AdminLayout'
 import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis,
@@ -52,6 +54,11 @@ interface EnrollmentRow { user_id: string; class_id: number }
 
 /* =============== página =============== */
 export default function MetricasPage() {
+  // Todas las métricas son de la sede activa: mezclar dos sucursales en un
+  // mismo gráfico de ingresos o de asistencia no significa nada.
+  const { activeDojo } = useTenant()
+  const dojoId = activeDojo?.id
+
   const [loading, setLoading] = useState(true)
 
   const [payments, setPayments] = useState<Payment[]>([])
@@ -74,6 +81,7 @@ export default function MetricasPage() {
       const { data: viewData } = await supabase
         .from('members_with_status')
         .select('user_id, status, role')
+        .eq('dojo_id', dojoId ?? NO_DOJO)
 
       const allViewRows = (viewData || [])
       setTotalMembers(allViewRows.filter(r => r.role !== 'admin').length)
@@ -87,6 +95,7 @@ export default function MetricasPage() {
       const { data: memb } = await supabase
         .from('memberships')
         .select('member_id,start_date,end_date,type')
+        .eq('dojo_id', dojoId ?? NO_DOJO)
         .gte('start_date', sixMonthsAgo.toISOString().slice(0, 10))
       setMemberships((memb || []) as Membership[])
 
@@ -94,6 +103,7 @@ export default function MetricasPage() {
       const { data: pays } = await supabase
         .from('payments')
         .select('user_id,amount,method,paid_at,period_from,period_to')
+        .eq('dojo_id', dojoId ?? NO_DOJO)
         .gte('paid_at', ninetyDaysAgo.toISOString())
         .order('paid_at', { ascending: true })
       setPayments((pays || []) as Payment[])
@@ -102,6 +112,7 @@ export default function MetricasPage() {
       const { count: accCount } = await supabase
         .from('access_logs')
         .select('*', { count: 'exact', head: true })
+        .eq('dojo_id', dojoId ?? NO_DOJO)
         .eq('result', 'autorizado')
         .gte('scanned_at', todayLocal + 'T00:00:00')
       setAccessLogsToday(accCount || 0)
@@ -118,25 +129,29 @@ export default function MetricasPage() {
             avatar_url
           )
         `)
+        .eq('dojo_id', dojoId ?? NO_DOJO)
         .gte('scanned_at', addDays(today(), -30).toISOString())
       setRecentAccesses((recentAcc || []) as AccessWithProfile[])
 
       const { data: cls } = await supabase
         .from('classes')
         .select('id,name')
+        .eq('dojo_id', dojoId ?? NO_DOJO)
         .order('name', { ascending: true })
       setClasses((cls ?? []) as ClassRow[])
 
       const { data: enr } = await supabase
         .from('class_enrollments')
         .select('user_id,class_id')
+        .eq('dojo_id', dojoId ?? NO_DOJO)
       setEnrollments((enr ?? []) as EnrollmentRow[])
 
       setLoading(false)
     }
 
+    if (!dojoId) return
     fetchData()
-  }, [])
+  }, [dojoId])
 
   /* ================= KPIs ================= */
   const expiring7d = useMemo(() => {

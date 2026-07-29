@@ -6,6 +6,8 @@ import { motion } from 'framer-motion'
 import { User, Mail, Phone, Hash, Shield, Calendar, BookOpen, AlertCircle, Save, Plus, Award, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabaseClient'
+import { useTenant } from '@/lib/tenant/context'
+import { NO_DOJO } from '@/lib/tenant/constants'
 import { MemberRow, MemberPayload, ClassOption } from '@/types/member'
 
 export default function MemberForm({
@@ -17,6 +19,10 @@ export default function MemberForm({
   onSubmit: (payload: MemberPayload) => Promise<void>
   onCancel: () => void
 }) {
+  // Las clases y la membresía que edita este formulario son de la sede activa.
+  const { activeDojo } = useTenant()
+  const dojoId = activeDojo?.id
+
   const [classes, setClasses] = useState<ClassOption[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [form, setForm] = useState({
@@ -36,8 +42,13 @@ export default function MemberForm({
   const [manualCode, setManualCode] = useState(false)
 
   useEffect(() => {
-    supabase.from('classes').select('id,name,price_principal,price_additional,color').then(({ data }) => setClasses((data as unknown as ClassOption[]) ?? []))
-  }, [])
+    if (!dojoId) return
+    supabase
+      .from('classes')
+      .select('id,name,price_principal,price_additional,color')
+      .eq('dojo_id', dojoId)
+      .then(({ data }) => setClasses((data as unknown as ClassOption[]) ?? []))
+  }, [dojoId])
 
   useEffect(() => {
     if (member) {
@@ -59,6 +70,7 @@ export default function MemberForm({
       // 1. Fetch exact enrollment status (principal vs additional)
       supabase.from('class_enrollments')
         .select('class_id, is_principal')
+        .eq('dojo_id', dojoId ?? NO_DOJO)
         .eq('user_id', member.user_id)
         .then(({ data: enrollments }) => {
           if (enrollments && enrollments.length > 0) {
@@ -75,6 +87,7 @@ export default function MemberForm({
       // 2. Fetch exact membership dates
       supabase.from('memberships')
         .select('start_date, last_payment_date')
+        .eq('dojo_id', dojoId ?? NO_DOJO)
         .eq('member_id', member.user_id)
         .maybeSingle()
         .then(({ data }) => {
@@ -87,7 +100,7 @@ export default function MemberForm({
           }
         })
     }
-  }, [member])
+  }, [member, dojoId])
 
   // Autocomplete Access Code
   useEffect(() => {
