@@ -30,7 +30,7 @@ export default function RecentAccess({ rows, loading }: { rows: AccessRow[]; loa
     return (
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-20 w-full bg-slate-100 animate-pulse rounded-2xl" />
+          <div key={i} className="h-20 w-full bg-carbon-100 animate-pulse rounded-2xl" />
         ))}
       </div>
     )
@@ -38,8 +38,8 @@ export default function RecentAccess({ rows, loading }: { rows: AccessRow[]; loa
 
   if (!rows.length) {
     return (
-      <div className="rounded-3xl border border-dashed border-slate-200 p-12 text-center">
-        <p className="text-slate-500 font-medium italic">Sin registros de acceso hoy</p>
+      <div className="rounded-3xl border border-dashed border-carbon-200 p-12 text-center">
+        <p className="text-carbon-500 font-medium italic">Sin registros de acceso hoy</p>
       </div>
     )
   }
@@ -56,13 +56,13 @@ export default function RecentAccess({ rows, loading }: { rows: AccessRow[]; loa
         return (
           <motion.div
             key={i}
-            initial={{ opacity: 0, x: -10 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.05 }}
-            className="flex items-center justify-between p-4 rounded-2xl border border-white/10 bg-white dark:bg-slate-800/50 dark:backdrop-blur-xl dark:border-slate-700 shadow-lg shadow-slate-200/50 dark:shadow-none"
+            className="flex items-center justify-between p-4 rounded-2xl border border-white/10 bg-white dark:bg-carbon-800/50 dark:backdrop-blur-xl dark:border-carbon-700 shadow-lg shadow-carbon-200/50 dark:shadow-none"
           >
             <div className="flex items-center gap-4">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${ok ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-600'
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${ok ? 'bg-kuro-500/10 text-kuro-600' : 'bg-alert-500/10 text-alert-600'
                 }`}>
                 {r.profiles?.avatar_url ? (
                   <div className="relative w-full h-full">
@@ -78,17 +78,17 @@ export default function RecentAccess({ rows, loading }: { rows: AccessRow[]; loa
                 )}
               </div>
               <div>
-                <div className="font-bold text-slate-900 dark:text-white">{name}</div>
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
+                <div className="font-bold text-carbon-900 dark:text-white">{name}</div>
+                <div className="text-[10px] font-black text-carbon-400 uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
                   <Clock className="w-3 h-3" />
-                  {new Date(r.scanned_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(r.scanned_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                   <span className="opacity-30">•</span>
                   {ok ? 'Acceso Autorizado' : `DENEGADO: ${r.reason ?? 'TOKEN INVÁLIDO'}`}
                 </div>
               </div>
             </div>
 
-            <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${ok ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+            <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${ok ? 'bg-kuro-100 text-kuro-700 dark:bg-kuro-900/30 dark:text-kuro-400' : 'bg-alert-100 text-alert-700 dark:bg-alert-900/30 dark:text-alert-400'
               }`}>
               {ok ? 'Valido' : 'No valido'}
             </div>

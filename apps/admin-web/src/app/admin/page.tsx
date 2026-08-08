@@ -52,7 +52,15 @@ function normalizeResult(value: string | null | undefined): 'authorized' | 'deni
 
 export default function AdminDashboard() {
   // `can` refleja el plan de la organización dueña del dojo activo.
-  const { can, activeDojo } = useTenant()
+  const { can, allows, activeDojo } = useTenant()
+
+  /**
+   * Para mostrar plata hacen falta las dos condiciones: que el PLAN incluya
+   * pagos (`can`) y que el ROL pueda verlos (`allows`). Con sólo `can`, al head
+   * coach le aparecían el tile de ingresos y la lista de pagos —vacíos por RLS,
+   * pero visibles.
+   */
+  const showMoney = can('payments') && allows('viewFinance')
   // `dashboard_stats` ahora devuelve UNA FILA POR DOJO. Sin el filtro, el
   // .maybeSingle() de abajo falla apenas exista una segunda sede.
   const dojoId = activeDojo?.id
@@ -70,7 +78,7 @@ export default function AdminDashboard() {
         { data: a, error: ae },
       ] = await Promise.all([
         supabase.from('dashboard_stats').select('*').eq('dojo_id', dojoId ?? NO_DOJO).maybeSingle(),
-        can('payments')
+        showMoney
           ? supabase
             .from('payments')
             .select('amount, method, paid_at, profiles!payments_user_id_fkey(first_name,last_name,avatar_url)')
@@ -160,6 +168,14 @@ export default function AdminDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dojoId])
 
+  /** Porcentaje de socios al día. Se muestra en el tile para no obligar al
+   *  admin a comparar dos números de tarjetas distintas. */
+  const activeRatio = useMemo(() => {
+    const total = stats?.members_total ?? 0
+    if (!total) return 0
+    return Math.round(((stats?.members_active ?? 0) / total) * 100)
+  }, [stats?.members_total, stats?.members_active])
+
   // Fallback por si revenue_this_month viniera null en la vista (no debería).
   const monthRevenue = useMemo(() => {
     if (stats?.revenue_this_month != null) return Number(stats.revenue_this_month) || 0
@@ -176,29 +192,30 @@ export default function AdminDashboard() {
     <AdminLayout active="/admin">
       <div className="relative min-h-screen">
         <div>
-          <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 pb-8 border-b border-slate-200 dark:border-white/10">
+          <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 pb-8 border-b border-carbon-200 dark:border-white/10">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-tight leading-none mb-2">
+              <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-carbon-900 dark:text-white">
                 Dashboard general
               </h1>
-              <p className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-2 text-sm">
+              <p className="text-carbon-500 dark:text-carbon-400 font-medium flex items-center gap-2 text-sm">
                 <Clock className="w-4 h-4" />
                 Actualizado en tiempo real • {new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}
               </p>
             </div>
 
+            {/* CTA primario negro y secundario Palm Leaf, como define el manual. */}
             <div className="flex flex-wrap gap-2">
               <Link href="/members" className="flex-1 md:flex-none">
-                <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand text-white font-semibold active:scale-95 transition-all hover:bg-brand-dark">
+                <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#121113] dark:bg-[#F7F7F2] text-[#F7F7F2] dark:text-[#121113] font-bold active:scale-95 transition-all hover:brightness-150 dark:hover:brightness-95">
                   <Plus className="w-5 h-5" />
                   Nuevo Miembro
                 </button>
               </Link>
-              {can('payments') && (
+              {showMoney && (
                 <Link href="/payments" className="flex-1 md:flex-none">
-                  <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-semibold hover:bg-slate-50 dark:hover:bg-white/10 transition-all active:scale-95">
+                  <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#899878] text-[#121113] font-bold hover:brightness-110 transition-all active:scale-95">
                     <DollarSign className="w-4 h-4" />
-                    Pago
+                    Registrar pago
                   </button>
                 </Link>
               )}
@@ -209,76 +226,104 @@ export default function AdminDashboard() {
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="p-4 mb-8 text-red-700 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 font-medium"
+              className="p-4 mb-8 text-alert-700 bg-alert-50 border border-alert-200 rounded-2xl flex items-center gap-3 font-medium"
             >
-              <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 flex-shrink-0 font-bold">!</div>
+              <div className="w-8 h-8 rounded-full bg-alert-100 flex items-center justify-center text-alert-600 flex-shrink-0 font-bold">!</div>
               Error: {error}
             </motion.div>
           )}
 
-          {/* KPIs */}
-          <section className={can('payments') ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-10' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10'}>
+          {/* KPIs — con jerarquía: la plata del mes es el número que manda y
+              ocupa el doble de ancho. Antes eran cinco tarjetas iguales, todas
+              con el mismo peso visual. */}
+          {/* 5 columnas cuando hay plata: el hero ocupa 2 y los otros tres 1
+              cada uno, así entra todo en una sola fila. */}
+          <section className={`grid grid-cols-2 gap-4 mb-10 ${showMoney ? 'lg:grid-cols-5' : 'lg:grid-cols-3'}`}>
+            {showMoney && (
+              <StatsCard
+                title="Ingresos del mes"
+                value={fmtARS(monthRevenue)}
+                icon={<DollarSign className="w-5 h-5" />}
+                tone="hero"
+                hint={new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}
+                loading={loading}
+                className="col-span-2"
+              />
+            )}
+
             <StatsCard
-              title="Total Miembros"
-              value={stats?.members_total ?? 0}
-              icon={<Users className="w-5 h-5" />}
-              color="blue"
-              loading={loading}
-            />
-            <StatsCard
-              title="Activos"
+              title="Socios al día"
               value={stats?.members_active ?? 0}
               icon={<UserCheck className="w-5 h-5" />}
-              color="green"
+              tone="brand"
+              /* El ratio activos/total antes había que sacarlo de cabeza
+                 comparando dos tarjetas separadas. */
+              meter={activeRatio}
+              hint={`de ${stats?.members_total ?? 0} socios · ${activeRatio}%`}
               loading={loading}
             />
+
             <StatsCard
               title="Vencidos"
               value={stats?.members_inactive ?? 0}
               icon={<UserX className="w-5 h-5" />}
-              color="red"
+              tone={(stats?.members_inactive ?? 0) > 0 ? 'alert' : 'neutral'}
+              hint={(stats?.members_inactive ?? 0) > 0 ? 'Requieren gestión de cobro' : 'Nadie con la cuota vencida'}
               loading={loading}
             />
-            {can('payments') && (
+
+            <StatsCard
+              title="Accesos hoy"
+              value={stats?.accesses_success_today ?? 0}
+              icon={<ClipboardCheck className="w-5 h-5" />}
+              tone="neutral"
+              /* La vista ya trae autorizados y rechazados por separado; la
+                 tarjeta anterior los sumaba y perdía el dato accionable. */
+              hint={
+                (stats?.accesses_denied_today ?? 0) > 0
+                  ? `${stats?.accesses_denied_today} rechazado${(stats?.accesses_denied_today ?? 0) === 1 ? '' : 's'} en la puerta`
+                  : 'Sin rechazos en la puerta'
+              }
+              loading={loading}
+            />
+
+            {!showMoney && (
               <StatsCard
-                title="Ingresos del Mes"
-                value={fmtARS(monthRevenue)}
-                icon={<DollarSign className="w-5 h-5" />}
-                color="purple"
+                title="Total socios"
+                value={stats?.members_total ?? 0}
+                icon={<Users className="w-5 h-5" />}
+                tone="neutral"
                 loading={loading}
               />
             )}
-            <StatsCard
-              title="Accesos Hoy"
-              value={(stats?.accesses_success_today ?? 0) + (stats?.accesses_denied_today ?? 0)}
-              icon={<ClipboardCheck className="w-5 h-5" />}
-              color="blue"
-              loading={loading}
-            />
           </section>
 
 
 
           {/* Activity Section */}
-          <div className={can('payments') ? 'grid lg:grid-cols-3 gap-8 mb-10' : 'grid gap-8 mb-10'}>
-            {can('payments') && (
+          <div className={showMoney ? 'grid lg:grid-cols-3 gap-8 mb-10' : 'grid gap-8 mb-10'}>
+            {showMoney && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
                 className="lg:col-span-2 space-y-6"
               >
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-brand" />
-                    Pagos recientes
-                  </h2>
-                  <Link href="/payments" className="text-sm font-semibold text-brand-dark dark:text-brand hover:underline flex items-center gap-1">
-                    Ver todos <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
-                <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                  <RecentActivity rows={payments} loading={loading} />
+                <div className="rounded-2xl border border-carbon-200 dark:border-white/10 bg-white dark:bg-white/5 overflow-hidden">
+                  <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-carbon-200 dark:border-white/10">
+                    <h2 className="text-sm font-black uppercase tracking-widest text-carbon-900 dark:text-white flex items-center gap-2">
+                      <span className="rounded-lg bg-[#899878]/15 p-1.5 text-[#5F6E50] dark:text-[#899878]">
+                        <Activity className="w-4 h-4" />
+                      </span>
+                      Pagos recientes
+                    </h2>
+                    <Link href="/payments" className="text-xs font-bold text-[#5F6E50] dark:text-[#899878] hover:underline flex items-center gap-1 shrink-0">
+                      Ver todos <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                  <div className="max-h-[420px] overflow-y-auto p-3 custom-scrollbar">
+                    <RecentActivity rows={payments} loading={loading} />
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -289,11 +334,22 @@ export default function AdminDashboard() {
               transition={{ delay: 0.3 }}
               className="space-y-6"
             >
-              <h2 className="text-lg font-bold text-rose-500 tracking-tight flex items-center gap-2">
-                <UserX className="w-5 h-5" />
-                Próximos vencimientos
-              </h2>
-              <ExpiringMembers rows={stats?.expiring_next_7d ?? []} loading={loading} />
+              <div className="rounded-2xl border border-carbon-200 dark:border-white/10 bg-white dark:bg-white/5 overflow-hidden">
+                <div className="px-5 py-4 border-b border-carbon-200 dark:border-white/10">
+                  <h2 className="text-sm font-black uppercase tracking-widest text-carbon-900 dark:text-white flex items-center gap-2">
+                    <span className="rounded-lg bg-alert-600/12 p-1.5 text-alert-600 dark:text-alert-400">
+                      <UserX className="w-4 h-4" />
+                    </span>
+                    Próximos vencimientos
+                  </h2>
+                  <p className="mt-1 text-[11px] font-medium text-carbon-500 dark:text-carbon-400">
+                    Cuotas que vencen en los próximos 7 días
+                  </p>
+                </div>
+                <div className="max-h-[420px] overflow-y-auto p-3 custom-scrollbar">
+                  <ExpiringMembers rows={stats?.expiring_next_7d ?? []} loading={loading} />
+                </div>
+              </div>
             </motion.div>
           </div>
 
@@ -303,16 +359,22 @@ export default function AdminDashboard() {
             transition={{ delay: 0.4 }}
             className="space-y-6"
           >
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                <ClipboardCheck className="w-5 h-5 text-brand" />
-                Historial de accesos
-              </h2>
-              <Link href="/access-log" className="text-sm font-semibold text-brand-dark dark:text-brand hover:underline flex items-center gap-1">
-                Ver historial completo <ArrowRight className="w-4 h-4" />
-              </Link>
+            <div className="rounded-2xl border border-carbon-200 dark:border-white/10 bg-white dark:bg-white/5 overflow-hidden">
+              <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-carbon-200 dark:border-white/10">
+                <h2 className="text-sm font-black uppercase tracking-widest text-carbon-900 dark:text-white flex items-center gap-2">
+                  <span className="rounded-lg bg-[#899878]/15 p-1.5 text-[#5F6E50] dark:text-[#899878]">
+                    <ClipboardCheck className="w-4 h-4" />
+                  </span>
+                  Historial de accesos
+                </h2>
+                <Link href="/access-log" className="text-xs font-bold text-[#5F6E50] dark:text-[#899878] hover:underline flex items-center gap-1 shrink-0">
+                  Ver completo <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+              <div className="p-3">
+                <RecentAccess rows={access} loading={loading} />
+              </div>
             </div>
-            <RecentAccess rows={access} loading={loading} />
           </motion.div>
         </div>
       </div>
