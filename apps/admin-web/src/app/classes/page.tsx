@@ -34,7 +34,7 @@ export default function ClassesPage() {
   const fetchClasses = useCallback(() => {
     return supabase
       .from('classes')
-      .select('id,name,instructor,days,start_time,end_time,capacity,max_students,color,category,description,price,price_principal,price_additional,created_at')
+      .select('id,name,instructor,instructor_id,secondary_instructor,secondary_instructor_id,days,start_time,end_time,capacity,max_students,color,category,description,price,price_principal,price_additional,created_at')
       .eq('dojo_id', dojoId ?? NO_DOJO)
       .order('name', { ascending: true })
   }, [dojoId])
@@ -101,8 +101,8 @@ export default function ClassesPage() {
     <AdminLayout active="/classes">
       {/* Background Decor */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -left-[10%] -top-[10%] h-[40%] w-[40%] rounded-full bg-blue-500/5 blur-[120px]" />
-        <div className="absolute -right-[5%] bottom-[5%] h-[30%] w-[30%] rounded-full bg-indigo-500/5 blur-[100px]" />
+        <div className="absolute -left-[10%] -top-[10%] h-[40%] w-[40%] rounded-full bg-kuro-500/5 blur-[120px]" />
+        <div className="absolute -right-[5%] bottom-[5%] h-[30%] w-[30%] rounded-full bg-kuro-500/5 blur-[100px]" />
       </div>
 
       <div className="relative">
@@ -114,14 +114,14 @@ export default function ClassesPage() {
             className="space-y-1"
           >
             <div className="flex items-center gap-2 mb-1">
-              <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-900/20 px-2.5 py-0.5 text-xs font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 ring-1 ring-inset ring-blue-600/20 dark:ring-blue-400/20">
+              <span className="inline-flex items-center rounded-full bg-kuro-50 dark:bg-kuro-900/20 px-2.5 py-0.5 text-xs font-black uppercase tracking-widest text-kuro-600 dark:text-kuro-400 ring-1 ring-inset ring-kuro-600/20 dark:ring-kuro-400/20">
                 Administración
               </span>
             </div>
-            <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white md:text-5xl">
-              Gestión de <span className="text-blue-600 dark:text-blue-400">Clases</span>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-carbon-900 dark:text-white">
+              Gestión de <span className="text-kuro-600 dark:text-kuro-400">Clases</span>
             </h1>
-            <p className="max-w-md text-slate-500 dark:text-slate-400 font-medium">
+            <p className="max-w-md text-carbon-500 dark:text-carbon-400 font-medium">
               Horarios, instructores y disponibilidad de las actividades del Dojo.
             </p>
           </motion.div>
@@ -132,7 +132,7 @@ export default function ClassesPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onCreate}
-            className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-blue-600 px-8 py-4 text-white shadow-xl shadow-blue-500/25 transition-all hover:bg-blue-700"
+            className="group relative flex items-center gap-3 overflow-hidden rounded-xl bg-kuro-600 px-6 py-3 text-white shadow-xl shadow-kuro-500/25 transition-all hover:bg-kuro-700"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
             <Plus className="h-6 w-6" />
@@ -148,10 +148,10 @@ export default function ClassesPage() {
           className="mb-12 flex flex-col gap-5 md:flex-row md:items-center"
         >
           <div className="relative flex-1 group">
-            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-carbon-400 group-focus-within:text-kuro-600 transition-colors" />
             <input
               type="text"
-              className="h-14 w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white pl-12 pr-4 font-medium shadow-sm outline-none ring-blue-500/10 transition-all focus:border-blue-500/50 focus:ring-4"
+              className="h-14 w-full rounded-2xl border border-carbon-200 dark:border-carbon-700 bg-white dark:bg-carbon-800 text-carbon-900 dark:text-white pl-12 pr-4 font-medium shadow-sm outline-none ring-kuro-500/10 transition-all focus:border-kuro-500/50 focus:ring-4"
               placeholder="Buscar por nombre, instructor o descripción..."
               value={query}
               onChange={(e) => { setQuery(e.target.value); setCurrentPage(1); }}
@@ -203,23 +203,23 @@ export default function ClassesPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex h-64 flex-col items-center justify-center rounded-[32px] border border-dashed border-slate-200 bg-white/50 backdrop-blur-sm"
+              className="flex h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-carbon-200 bg-white/50 backdrop-blur-sm"
             >
-              <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500/20 border-t-blue-500" />
-              <p className="mt-4 text-sm font-black uppercase tracking-widest text-slate-400">Actualizando Clases...</p>
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-kuro-500/20 border-t-kuro-500" />
+              <p className="mt-4 text-sm font-black uppercase tracking-widest text-carbon-400">Actualizando Clases...</p>
             </motion.div>
           ) : filtered.length === 0 ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex h-64 flex-col items-center justify-center rounded-[32px] border border-dashed border-slate-200 bg-white/50 backdrop-blur-sm px-6 text-center"
+              className="flex h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-carbon-200 bg-white/50 backdrop-blur-sm px-6 text-center"
             >
-              <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 mb-4">
+              <div className="w-16 h-16 rounded-2xl bg-carbon-50 flex items-center justify-center text-carbon-300 mb-4">
                 <BookOpen className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900">No se encontraron clases</h3>
-              <p className="text-slate-500 max-w-xs mt-1">Ajusta los filtros o crea una nueva clase para empezar.</p>
+              <h3 className="text-xl font-bold text-carbon-900">No se encontraron clases</h3>
+              <p className="text-carbon-500 max-w-xs mt-1">Ajusta los filtros o crea una nueva clase para empezar.</p>
             </motion.div>
           ) : (
             <div className="space-y-12">
@@ -251,7 +251,7 @@ export default function ClassesPage() {
                   <button
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    className="h-12 w-12 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 disabled:opacity-30 hover:bg-slate-50 transition-all font-bold"
+                    className="h-12 w-12 rounded-xl border border-carbon-200 flex items-center justify-center text-carbon-600 disabled:opacity-30 hover:bg-carbon-50 transition-all font-bold"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
                   </button>
@@ -261,8 +261,8 @@ export default function ClassesPage() {
                       key={i}
                       onClick={() => setCurrentPage(i + 1)}
                       className={`h-12 w-12 rounded-xl font-black text-xs transition-all ${currentPage === i + 1
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                        : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-400'
+                        ? 'bg-kuro-600 text-white shadow-lg shadow-kuro-500/20'
+                        : 'bg-white border border-carbon-200 text-carbon-500 hover:border-carbon-400'
                         }`}
                     >
                       {i + 1}
@@ -272,7 +272,7 @@ export default function ClassesPage() {
                   <button
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    className="h-12 w-12 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 disabled:opacity-30 hover:bg-slate-50 transition-all font-bold"
+                    className="h-12 w-12 rounded-xl border border-carbon-200 flex items-center justify-center text-carbon-600 disabled:opacity-30 hover:bg-carbon-50 transition-all font-bold"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
                   </button>
@@ -292,7 +292,7 @@ export default function ClassesPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowForm(false)}
-              className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
+              className="absolute inset-0 bg-carbon-950/40 backdrop-blur-sm"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -300,7 +300,7 @@ export default function ClassesPage() {
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="relative w-full max-w-4xl h-full max-h-[85vh] flex flex-col"
             >
-              <div className="flex-1 rounded-[32px] bg-white shadow-2xl overflow-hidden">
+              <div className="flex-1 rounded-2xl bg-white shadow-2xl overflow-hidden">
                 <ClassForm
                   initial={editing}
                   onCancel={() => setShowForm(false)}
@@ -327,8 +327,8 @@ export default function ClassesPage() {
             exit={{ opacity: 0, y: 100 }}
             className="fixed bottom-10 left-1/2 z-[200] -translate-x-1/2"
           >
-            <div className="flex items-center gap-3 rounded-2xl bg-slate-900 px-8 py-4 text-white shadow-2xl">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500">
+            <div className="flex items-center gap-3 rounded-xl bg-carbon-900 px-6 py-3 text-white shadow-2xl">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-kuro-500">
                 <Plus className="h-4 w-4 text-white" />
               </div>
               <p className="text-sm font-black uppercase tracking-widest text-white">¡Clase Guardada!</p>

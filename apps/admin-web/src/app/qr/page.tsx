@@ -21,7 +21,8 @@ import { useTenant } from '@/lib/tenant/context'
 import { NO_DOJO } from '@/lib/tenant/constants'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { nowAR_ISO } from '@/lib/dateUtils'
+
+import GuestAccessDialog from '../components/qr/GuestAccessDialog'
 
 /* ================= HELPERS ================= */
 
@@ -184,7 +185,6 @@ export default function QRAcceso() {
 
   // UI State for Guest Access
   const [showGuestConfirm, setShowGuestConfirm] = useState(false)
-  const [showGuestSuccess, setShowGuestSuccess] = useState(false)
   const [fullScreen, setFullScreen] = useState(false)
 
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -272,8 +272,8 @@ export default function QRAcceso() {
     img.onload = () => {
       // Background
       const grad = ctx.createLinearGradient(0, 0, 0, canvas.height)
-      grad.addColorStop(0, '#0f172a')
-      grad.addColorStop(1, '#1e293b')
+      grad.addColorStop(0, '#222725')
+      grad.addColorStop(1, '#2C322E')
       ctx.fillStyle = grad
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
@@ -281,9 +281,11 @@ export default function QRAcceso() {
       ctx.fillStyle = '#ffffff'
       ctx.font = 'bold 36px sans-serif'
       ctx.textAlign = 'center'
-      ctx.fillText('ACCESO A BELEZA DOJO', canvas.width / 2, 80)
+      // Igual que en la versión imprimible: la marca sale de la sede activa,
+      // no fija. Antes el PNG descargado decía "BELEZA DOJO" para cualquiera.
+      ctx.fillText(`ACCESO A ${(activeDojo?.name ?? 'TU DOJO').toUpperCase()}`, canvas.width / 2, 80)
 
-      ctx.fillStyle = '#94a3b8'
+      ctx.fillStyle = '#A4A5A0'
       ctx.font = '20px sans-serif'
       ctx.fillText('Escanea este código para ingresar', canvas.width / 2, 115)
 
@@ -297,7 +299,7 @@ export default function QRAcceso() {
       ctx.drawImage(img, 110, 170, 380, 380)
 
       // Footer
-      ctx.fillStyle = '#3b82f6'
+      ctx.fillStyle = '#899878'
       ctx.font = 'bold 28px sans-serif'
       // El cartel impreso lleva el nombre de la sede: es lo que le sirve a
       // quien lo pega en la puerta y a quien lo escanea.
@@ -327,30 +329,30 @@ export default function QRAcceso() {
               display:flex; justify-content:center; align-items:center; 
               min-height:100vh; margin:0; 
               font-family: system-ui, -apple-system, sans-serif;
-              background: #0f172a;
+              background: #222725;
               color: white;
             }
             .container { 
               text-align:center; padding:60px; 
-              background: white; color: #0f172a;
+              background: white; color: #222725;
               border-radius: 32px;
               box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             }
             h1 { margin:0 0 10px; font-size: 32px; letter-spacing: -1px; }
-            p { color:#64748b; margin:0 0 30px; }
+            p { color:#848580; margin:0 0 30px; }
             img { 
               width: 300px; height: 300px;
-              border: 2px solid #e2e8f0; 
+              border: 2px solid #DCDDD8; 
               border-radius: 20px; 
               margin-bottom: 30px;
             }
-            .brand { color:#3b82f6; font-size: 24px; font-weight: 800; margin-bottom: 8px; }
-            .meta { font-size:14px; color:#94a3b8; }
+            .brand { color:#899878; font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+            .meta { font-size:14px; color:#A4A5A0; }
           </style>
         </head>
         <body>
           <div class="container">
-            <h1>ACCESO A BELEZA DOJO</h1>
+            <h1>ACCESO A ${(activeDojo?.name ?? 'TU DOJO').toUpperCase()}</h1>
             <p>Escanea el código para validar tu ingreso</p>
             <img src="${qrApiUrl}" alt="QR de Acceso" />
             <div class="brand">${activeDojo?.name ?? 'Dojo'}</div>
@@ -369,11 +371,11 @@ export default function QRAcceso() {
 
   return (
     <AdminLayout active="/qr">
-      <div className="relative isolate min-h-screen bg-[#FDFDFD] dark:bg-[#0a0a0a] overflow-hidden transition-colors duration-500">
+      <div className="relative isolate min-h-screen bg-[#F7F7F2] dark:bg-[#121113] overflow-hidden transition-colors duration-500">
         {/* Ambient Background */}
         <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[120px] opacity-40 dark:opacity-20" />
-          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px] opacity-40 dark:opacity-20" />
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-kuro-500/10 rounded-full blur-[120px] opacity-40 dark:opacity-20" />
+          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-kuro-500/10 rounded-full blur-[120px] opacity-40 dark:opacity-20" />
         </div>
 
         <div className="relative">
@@ -386,14 +388,14 @@ export default function QRAcceso() {
               className="space-y-1"
             >
               <div className="flex items-center gap-2 mb-1">
-                <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-900/20 px-2.5 py-0.5 text-xs font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 ring-1 ring-inset ring-blue-600/20 dark:ring-blue-400/20">
+                <span className="inline-flex items-center rounded-full bg-kuro-50 dark:bg-kuro-900/20 px-2.5 py-0.5 text-xs font-black uppercase tracking-widest text-kuro-600 dark:text-kuro-400 ring-1 ring-inset ring-kuro-600/20 dark:ring-kuro-400/20">
                   Control de Acceso
                 </span>
               </div>
-              <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white md:text-5xl">
-                Código <span className="text-blue-600 dark:text-blue-400">QR</span>
+              <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-carbon-900 dark:text-white">
+                Código <span className="text-kuro-600 dark:text-kuro-400">QR</span>
               </h1>
-              <p className="max-w-md text-slate-500 dark:text-slate-400 font-medium italic">
+              <p className="max-w-md text-carbon-500 dark:text-carbon-400 font-medium italic">
                 Punto de acceso seguro para miembros del dojo.
               </p>
             </motion.div>
@@ -406,11 +408,11 @@ export default function QRAcceso() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className={`flex items-center gap-3 p-2 rounded-2xl border shadow-sm transition-all ${autoRefresh
-                  ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800'
-                  : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+                  ? 'bg-kuro-50 dark:bg-kuro-900/20 border-kuro-200 dark:border-kuro-800'
+                  : 'bg-warn-50 dark:bg-warn-900/20 border-warn-200 dark:border-warn-800'
                   }`}
               >
-                <div className={`px-4 py-2 flex items-center gap-2 ${autoRefresh ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'
+                <div className={`px-4 py-2 flex items-center gap-2 ${autoRefresh ? 'text-kuro-700 dark:text-kuro-400' : 'text-warn-700 dark:text-warn-400'
                   }`}>
                   {autoRefresh ? (
                     <Unlock className="w-4 h-4 animate-pulse" />
@@ -432,14 +434,14 @@ export default function QRAcceso() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="group relative overflow-hidden rounded-[40px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 dark:backdrop-blur-xl p-8 lg:p-12 shadow-2xl"
+              className="group relative overflow-hidden rounded-2xl border border-carbon-200 dark:border-carbon-800 bg-white dark:bg-carbon-900/50 dark:backdrop-blur-xl p-8 lg:p-12 shadow-2xl"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-br from-kuro-500/5 to-kuro-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
               <div className="relative z-10 flex flex-col items-center">
                 <div className="relative mb-8">
-                  <div className="absolute -inset-4 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-[32px] blur-lg opacity-30 animate-pulse" />
-                  <div className="relative p-6 bg-white rounded-[24px] shadow-sm border border-slate-100">
+                  <div className="absolute -inset-4 bg-gradient-to-br from-kuro-600 to-kuro-600 rounded-2xl blur-lg opacity-30 animate-pulse" />
+                  <div className="relative p-6 bg-white rounded-[24px] shadow-sm border border-carbon-100">
                     {qrApiUrl ? (
                       <img
                         src={qrApiUrl}
@@ -447,15 +449,15 @@ export default function QRAcceso() {
                         className="w-64 h-64 md:w-80 md:h-80 object-contain rounded-xl"
                       />
                     ) : (
-                      <div className="w-64 h-64 md:w-80 md:h-80 flex items-center justify-center rounded-xl bg-slate-50">
-                        <RefreshCw className="w-8 h-8 text-slate-300 animate-spin" />
+                      <div className="w-64 h-64 md:w-80 md:h-80 flex items-center justify-center rounded-xl bg-carbon-50">
+                        <RefreshCw className="w-8 h-8 text-carbon-300 animate-spin" />
                       </div>
                     )}
 
                     {/* Status Badge */}
                     <div className={`absolute -bottom-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 ${autoRefresh
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-amber-500 text-white'
+                      ? 'bg-kuro-500 text-white'
+                      : 'bg-warn-500 text-white'
                       }`}>
                       {autoRefresh ? (
                         <>
@@ -473,7 +475,7 @@ export default function QRAcceso() {
                     {/* Fullscreen Toggle Button */}
                     <button
                       onClick={() => setFullScreen(true)}
-                      className="absolute -top-3 -right-3 p-3 rounded-2xl bg-slate-900 text-white shadow-xl hover:scale-110 active:scale-95 transition-all"
+                      className="absolute -top-3 -right-3 p-3 rounded-2xl bg-carbon-900 text-white shadow-xl hover:scale-110 active:scale-95 transition-all"
                     >
                       <Maximize2 className="w-5 h-5" />
                     </button>
@@ -482,14 +484,14 @@ export default function QRAcceso() {
 
                 <div className="w-full text-center space-y-6">
                   <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
+                    <p className="text-xs font-bold text-carbon-400 uppercase tracking-widest mb-1">
                       {autoRefresh ? 'Tiempo Restante' : 'Validez'}
                     </p>
-                    <div className="font-variant-numeric text-4xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight">
+                    <div className="font-variant-numeric text-4xl font-black text-carbon-900 dark:text-white tabular-nums tracking-tight">
                       {autoRefresh ? formatTimeLeft(nextRefreshAt, now) : '∞ PERMANENTE'}
                     </div>
                     {!autoRefresh && (
-                      <p className="text-xs text-amber-600 dark:text-amber-400 font-bold mt-2">
+                      <p className="text-xs text-warn-600 dark:text-warn-400 font-bold mt-2">
                         Este QR es válido de forma permanente
                       </p>
                     )}
@@ -501,14 +503,14 @@ export default function QRAcceso() {
                     <div className="grid grid-cols-2 gap-3 w-full">
                       <button
                         onClick={downloadQR}
-                        className="flex items-center justify-center gap-2 py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-slate-900/20"
+                        className="flex items-center justify-center gap-2 py-4 rounded-2xl bg-carbon-900 dark:bg-white text-white dark:text-carbon-900 font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-carbon-900/20"
                       >
                         <Download className="w-4 h-4" />
                         Descargar
                       </button>
                       <button
                         onClick={printQR}
-                        className="flex items-center justify-center gap-2 py-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        className="flex items-center justify-center gap-2 py-4 rounded-2xl bg-white dark:bg-carbon-800 border border-carbon-200 dark:border-carbon-700 text-carbon-900 dark:text-white font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all"
                       >
                         <Printer className="w-4 h-4" />
                         Imprimir
@@ -519,9 +521,9 @@ export default function QRAcceso() {
 
                   <button
                     onClick={() => setShowGuestConfirm(true)}
-                    className="w-full py-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 font-bold text-sm hover:bg-emerald-100 dark:hover:bg-emerald-900/20 transition-all flex items-center justify-center gap-2 relative overflow-hidden"
+                    className="w-full py-4 rounded-2xl bg-kuro-50 dark:bg-kuro-900/10 border border-kuro-200 dark:border-kuro-800 text-kuro-700 dark:text-kuro-400 font-bold text-sm hover:bg-kuro-100 dark:hover:bg-kuro-900/20 transition-all flex items-center justify-center gap-2 relative overflow-hidden"
                   >
-                    <div className="absolute inset-0 bg-emerald-500/10 opacity-0 hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-kuro-500/10 opacity-0 hover:opacity-100 transition-opacity" />
                     <CheckCircle2 className="w-4 h-4" />
                     Registrar Acceso Invitado
                   </button>
@@ -529,7 +531,7 @@ export default function QRAcceso() {
                   {isAdmin && (
                     <button
                       onClick={() => regenerate()}
-                      className="w-full py-3 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-xs font-black uppercase tracking-widest hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors flex items-center justify-center gap-2"
+                      className="w-full py-3 rounded-2xl bg-kuro-50 dark:bg-kuro-900/20 text-kuro-600 dark:text-kuro-400 text-xs font-black uppercase tracking-widest hover:bg-kuro-100 dark:hover:bg-kuro-900/30 transition-colors flex items-center justify-center gap-2"
                     >
                       <RefreshCw className="w-3 h-3" />
                       Generar Nuevo Token al Instante
@@ -547,9 +549,9 @@ export default function QRAcceso() {
                 transition={{ delay: 0.2 }}
                 className="space-y-6"
               >
-                <div className="rounded-[32px] border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/20 backdrop-blur-xl p-8">
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                    <ShieldCheck className="w-6 h-6 text-emerald-500" />
+                <div className="rounded-2xl border border-carbon-200 dark:border-carbon-800 bg-white/50 dark:bg-carbon-900/20 backdrop-blur-xl p-8">
+                  <h3 className="text-lg font-black text-carbon-900 dark:text-white mb-6 flex items-center gap-2">
+                    <ShieldCheck className="w-6 h-6 text-kuro-500" />
                     Instrucciones de Instalación
                   </h3>
                   <div className="space-y-6">
@@ -571,14 +573,14 @@ export default function QRAcceso() {
                       },
                     ].map((step, idx) => (
                       <div key={idx} className="flex gap-4 group">
-                        <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 group-hover:text-blue-500 group-hover:border-blue-200 dark:group-hover:border-blue-800 transition-colors">
+                        <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-white dark:bg-carbon-800 shadow-sm border border-carbon-100 dark:border-carbon-700 flex items-center justify-center text-carbon-400 group-hover:text-kuro-500 group-hover:border-kuro-200 dark:group-hover:border-kuro-800 transition-colors">
                           {step.icon}
                         </div>
                         <div>
-                          <h4 className="font-bold text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          <h4 className="font-bold text-carbon-900 dark:text-white mb-1 group-hover:text-kuro-600 dark:group-hover:text-kuro-400 transition-colors">
                             {step.title}
                           </h4>
-                          <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                          <p className="text-sm text-carbon-500 dark:text-carbon-400 leading-relaxed font-medium">
                             {step.desc}
                           </p>
                         </div>
@@ -588,23 +590,23 @@ export default function QRAcceso() {
                 </div>
 
                 <div className={`rounded-3xl border p-6 flex gap-4 ${autoRefresh
-                  ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/20'
-                  : 'bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/20'
+                  ? 'bg-warn-50 dark:bg-warn-900/10 border-warn-100 dark:border-warn-900/20'
+                  : 'bg-kuro-50 dark:bg-kuro-900/10 border-kuro-100 dark:border-kuro-900/20'
                   }`}>
                   <AlertCircle className={`w-6 h-6 flex-shrink-0 ${autoRefresh
-                    ? 'text-amber-600 dark:text-amber-500'
-                    : 'text-blue-600 dark:text-blue-500'
+                    ? 'text-warn-600 dark:text-warn-500'
+                    : 'text-kuro-600 dark:text-kuro-500'
                     }`} />
                   <div>
                     <h5 className={`font-bold text-sm mb-1 ${autoRefresh
-                      ? 'text-amber-900 dark:text-amber-400'
-                      : 'text-blue-900 dark:text-blue-400'
+                      ? 'text-warn-900 dark:text-warn-400'
+                      : 'text-kuro-900 dark:text-kuro-400'
                       }`}>
                       {autoRefresh ? 'Seguridad del Token' : 'Modo QR Fijo'}
                     </h5>
                     <p className={`text-xs font-medium leading-relaxed ${autoRefresh
-                      ? 'text-amber-800/70 dark:text-amber-500/70'
-                      : 'text-blue-800/70 dark:text-blue-500/70'
+                      ? 'text-warn-800/70 dark:text-warn-500/70'
+                      : 'text-kuro-800/70 dark:text-kuro-500/70'
                       }`}>
                       {autoRefresh
                         ? 'Este código QR contiene un token que expira automáticamente cada 30 segundos para mayor seguridad. Si sospechas que el código ha sido compartido digitalmente, usa el botón "Regenerar" para invalidarlo inmediatamente.'
@@ -621,10 +623,10 @@ export default function QRAcceso() {
 
       {/* Confirmación de cambio de modo del QR */}
       <Dialog open={showModeConfirm} onOpenChange={setShowModeConfirm}>
-        <DialogContent className="sm:max-w-lg bg-slate-900 border-white/10 text-white rounded-3xl p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-lg bg-carbon-900 border-white/10 text-white rounded-3xl p-0 overflow-hidden">
           <div className="p-8">
             <DialogHeader>
-              <div className={`w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center ${autoRefresh ? 'bg-amber-500/15 text-amber-400' : 'bg-emerald-500/15 text-emerald-400'
+              <div className={`w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center ${autoRefresh ? 'bg-warn-500/15 text-warn-400' : 'bg-kuro-500/15 text-kuro-400'
                 }`}>
                 {autoRefresh ? <Lock className="w-7 h-7" /> : <Unlock className="w-7 h-7" />}
               </div>
@@ -633,7 +635,7 @@ export default function QRAcceso() {
                 {autoRefresh ? 'Fijar el código QR' : 'Volver al QR rotativo'}
               </DialogTitle>
 
-              <DialogDescription className="text-slate-400 text-center text-sm mt-2">
+              <DialogDescription className="text-carbon-400 text-center text-sm mt-2">
                 Este cambio aplica a <span className="font-bold text-white">{activeDojo?.name ?? 'esta sede'}</span> y
                 a todos los dispositivos que la abran.
               </DialogDescription>
@@ -642,15 +644,15 @@ export default function QRAcceso() {
             <div className="mt-6 space-y-3">
               {autoRefresh ? (
                 <>
-                  <p className="flex gap-3 text-sm text-slate-300">
-                    <span className="text-emerald-400 shrink-0">✓</span>
+                  <p className="flex gap-3 text-sm text-carbon-300">
+                    <span className="text-kuro-400 shrink-0">✓</span>
                     Vas a poder <b>imprimir el código</b> y pegarlo en la puerta. No hace falta pantalla ni tablet.
                   </p>
-                  <p className="flex gap-3 text-sm text-slate-300">
-                    <span className="text-emerald-400 shrink-0">✓</span>
+                  <p className="flex gap-3 text-sm text-carbon-300">
+                    <span className="text-kuro-400 shrink-0">✓</span>
                     El mismo código sigue sirviendo <b>durante un año</b>.
                   </p>
-                  <p className="flex gap-3 text-sm text-amber-300/90">
+                  <p className="flex gap-3 text-sm text-warn-300/90">
                     <span className="shrink-0">⚠</span>
                     Como no cambia, quien le saque una foto <b>puede compartirla</b> y ese código va a seguir
                     validando. Igual el ingreso exige estar logueado, activo y pertenecer a esta sede.
@@ -658,17 +660,17 @@ export default function QRAcceso() {
                 </>
               ) : (
                 <>
-                  <p className="flex gap-3 text-sm text-slate-300">
-                    <span className="text-emerald-400 shrink-0">✓</span>
+                  <p className="flex gap-3 text-sm text-carbon-300">
+                    <span className="text-kuro-400 shrink-0">✓</span>
                     El código pasa a <b>renovarse cada 30 segundos</b>, así que una foto deja de servir enseguida.
                   </p>
-                  <p className="flex gap-3 text-sm text-rose-300">
+                  <p className="flex gap-3 text-sm text-alert-300">
                     <span className="shrink-0">⚠</span>
                     <span>
                       <b>El QR impreso que tengas pegado deja de funcionar.</b> Hay que retirarlo.
                     </span>
                   </p>
-                  <p className="flex gap-3 text-sm text-amber-300/90">
+                  <p className="flex gap-3 text-sm text-warn-300/90">
                     <span className="shrink-0">⚠</span>
                     Necesitás una <b>pantalla o tablet en la puerta</b> mostrando esta página. Sin eso nadie puede
                     escanear.
@@ -681,7 +683,7 @@ export default function QRAcceso() {
               <Button
                 onClick={applyModeChange}
                 disabled={switchingMode}
-                className={`w-full h-12 rounded-xl font-bold tracking-wide text-white ${autoRefresh ? 'bg-amber-600 hover:bg-amber-500' : 'bg-emerald-600 hover:bg-emerald-500'
+                className={`w-full h-12 rounded-xl font-bold tracking-wide text-white ${autoRefresh ? 'bg-warn-600 hover:bg-warn-500' : 'bg-kuro-600 hover:bg-kuro-500'
                   }`}
               >
                 {switchingMode
@@ -694,7 +696,7 @@ export default function QRAcceso() {
                 onClick={() => setShowModeConfirm(false)}
                 disabled={switchingMode}
                 variant="ghost"
-                className="w-full h-11 rounded-xl text-slate-400 hover:text-white hover:bg-white/5"
+                className="w-full h-11 rounded-xl text-carbon-400 hover:text-white hover:bg-white/5"
               >
                 Cancelar
               </Button>
@@ -703,83 +705,13 @@ export default function QRAcceso() {
         </DialogContent>
       </Dialog>
 
-      {/* Confirmation Dialog */}
-      <Dialog open={showGuestConfirm} onOpenChange={setShowGuestConfirm}>
-        <DialogContent className="sm:max-w-md bg-slate-900 border-white/10 text-white rounded-3xl p-0 overflow-hidden">
-          <div className="p-8 text-center bg-gradient-to-b from-transparent to-black/40">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-black text-white text-center">
-                ¿Registrar Invitado?
-              </DialogTitle>
-              <DialogDescription className="text-slate-400 text-center text-base mt-2">
-                Se registrará un ingreso manual autorizado sin asignar a ningún miembro.
-                Úsalo solo para invitados o casos excepcionales.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="py-8 flex justify-center">
-              <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 relative">
-                <div className="absolute inset-0 bg-emerald-500 blur-xl opacity-20 animate-pulse" />
-                <Smartphone className="w-10 h-10 text-emerald-500 relative z-10" />
-              </div>
-            </div>
-
-            <DialogFooter className="flex-col gap-3 sm:flex-col">
-              <Button
-                onClick={async () => {
-                  const { error } = await supabase.from('access_logs').insert({
-                    dojo_id: dojoId,
-                    user_id: null,
-                    result: 'autorizado',
-                    reason: 'Acceso invitado manual',
-                    scanned_at: nowAR_ISO(),
-                  })
-                  setShowGuestConfirm(false)
-                  if (!error) setShowGuestSuccess(true)
-                }}
-                className="w-full h-12 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold tracking-wide"
-              >
-                Confirmar Acceso
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => setShowGuestConfirm(false)}
-                className="w-full h-12 rounded-xl text-slate-400 hover:text-white hover:bg-white/5"
-              >
-                Cancelar
-              </Button>
-            </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Success Dialog */}
-      <Dialog open={showGuestSuccess} onOpenChange={setShowGuestSuccess}>
-        <DialogContent className="sm:max-w-md bg-slate-900 border-white/10 text-white rounded-3xl p-0 overflow-hidden">
-          <div className="p-8 text-center bg-gradient-to-b from-transparent to-black/40">
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="space-y-4"
-            >
-              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 relative">
-                <div className="absolute inset-0 bg-emerald-500 blur-2xl opacity-20 animate-pulse" />
-                <CheckCircle2 className="w-14 h-14 text-emerald-500 relative z-10" />
-              </div>
-              <h2 className="text-3xl font-black text-white tracking-tight uppercase">Acceso Registrado</h2>
-              <p className="text-emerald-400 font-medium text-lg">El invitado puede ingresar.</p>
-              <div className="pt-6">
-                <Button
-                  onClick={() => setShowGuestSuccess(false)}
-                  className="w-full py-6 rounded-2xl bg-white/10 border border-white/10 hover:bg-white/20 text-white font-bold"
-                >
-                  CERRAR
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Alta de invitado: distingue clase de prueba de visita de otra sede,
+          y deja registrado quién autorizó. Ver GuestAccessDialog. */}
+      <GuestAccessDialog
+        open={showGuestConfirm}
+        onOpenChange={setShowGuestConfirm}
+        dojoId={dojoId}
+      />
       {/* Fullscreen QR Overlay */}
       <AnimatePresence>
         {fullScreen && (
@@ -787,11 +719,11 @@ export default function QRAcceso() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-slate-950 flex flex-col items-center justify-center p-8"
+            className="fixed inset-0 z-[100] bg-carbon-950 flex flex-col items-center justify-center p-8"
           >
             <div className="absolute inset-0 opacity-20 overflow-hidden pointer-events-none">
-              <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600 rounded-full blur-[150px]" />
-              <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600 rounded-full blur-[150px]" />
+              <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-kuro-600 rounded-full blur-[150px]" />
+              <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-kuro-600 rounded-full blur-[150px]" />
             </div>
 
             <button
@@ -803,14 +735,14 @@ export default function QRAcceso() {
 
             <div className="relative z-10 text-center space-y-8 max-w-2xl w-full">
               <h2 className="text-4xl font-black text-white tracking-tight">ESCANEÁ PARA ENTRAR</h2>
-              <div className="relative aspect-square w-full max-w-lg mx-auto p-8 bg-white rounded-[3rem] shadow-2xl shadow-blue-500/20">
+              <div className="relative aspect-square w-full max-w-lg mx-auto p-8 bg-white rounded-[3rem] shadow-2xl shadow-kuro-500/20">
                 <img src={qrApiUrl} className="w-full h-full object-contain" alt="QR Fullscreen" />
-                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-8 py-3 rounded-2xl bg-emerald-500 text-white font-black text-lg shadow-xl">
+                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-8 py-3 rounded-2xl bg-kuro-500 text-white font-black text-lg shadow-xl">
                   ACTIVO
                 </div>
               </div>
               <div className="pt-8">
-                <p className="text-slate-500 font-bold uppercase tracking-widest text-sm mb-2">
+                <p className="text-carbon-500 font-bold uppercase tracking-widest text-sm mb-2">
                   {autoRefresh ? 'Renovación automática segura' : 'Código QR Fijo Permanente'}
                 </p>
                 <div className="text-5xl font-black text-white tabular-nums">

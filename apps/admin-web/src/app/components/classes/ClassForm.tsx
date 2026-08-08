@@ -1,13 +1,18 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { X, Save, BookOpen, Clock, Calendar, Users, DollarSign, Type, Palette, AlignLeft, User } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
 import { useTenant } from '@/lib/tenant/context'
+import StyledSelect from '../common/StyledSelect'
 
 export type ClassRow = {
   id?: number
   name: string
+  /** Espejo de texto del principal: lo leen la búsqueda, la tarjeta y el perfil. */
   instructor: string | null
+  instructor_id: string | null
+  secondary_instructor: string | null
+  secondary_instructor_id: string | null
   days: string[] | null
   start_time: string | null // "HH:mm"
   end_time: string | null   // "HH:mm"
@@ -29,6 +34,9 @@ type Props = {
 }
 
 const DAY_OPTIONS = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sáb', 'Dom']
+/* Colores de DATO: es la paleta que el admin elige por clase y que se guarda en
+   la base. No siguen la marca — el swatch tiene que mostrar el color que dice
+   la etiqueta. */
 const COLOR_OPTIONS = [
   { label: 'Azul', value: 'blue', bg: 'bg-blue-500' },
   { label: 'Rojo', value: 'red', bg: 'bg-red-500' },
@@ -48,6 +56,9 @@ function getInitialForm(initial?: ClassRow | null): ClassRow {
     return {
       name: initial.name ?? '',
       instructor: initial.instructor ?? '',
+      instructor_id: initial.instructor_id ?? null,
+      secondary_instructor: initial.secondary_instructor ?? '',
+      secondary_instructor_id: initial.secondary_instructor_id ?? null,
       days: initial.days ?? [],
       start_time: initial.start_time ?? '',
       end_time: initial.end_time ?? '',
@@ -64,6 +75,9 @@ function getInitialForm(initial?: ClassRow | null): ClassRow {
   return {
     name: '',
     instructor: '',
+    instructor_id: null,
+    secondary_instructor: '',
+    secondary_instructor_id: null,
     days: [],
     start_time: '',
     end_time: '',
@@ -85,6 +99,42 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
   const [form, setForm] = useState<ClassRow>(initialForm)
   const [saving, setSaving] = useState(false)
 
+  /**
+   * Instructores elegibles: staff ACTIVO de la sede activa. Se incluye `admin`
+   * además de `instructor` porque en la mayoría de las academias el que
+   * administra también da clases.
+   */
+  const [staff, setStaff] = useState<{ id: string; name: string }[]>([])
+  useEffect(() => {
+    if (!activeDojo?.id) return
+    supabase
+      .from('dojo_members')
+      .select('user_id, role, profiles!inner(first_name, last_name)')
+      .eq('dojo_id', activeDojo.id)
+      .eq('is_active', true)
+      .in('role', ['admin', 'instructor'])
+      .then(({ data, error }) => {
+        if (error) { console.error('[ClassForm] no se pudo cargar el staff:', error); return }
+        const rows = (data ?? []).map((r) => {
+          const prof = r.profiles as unknown as { first_name: string | null; last_name: string | null }
+          return {
+            id: r.user_id as string,
+            name: `${prof?.first_name ?? ''} ${prof?.last_name ?? ''}`.trim() || 'Sin nombre',
+          }
+        })
+        setStaff(rows.sort((a, b) => a.name.localeCompare(b.name)))
+      })
+  }, [activeDojo?.id])
+
+  /** Al elegir, se guarda el id Y el nombre: el texto es lo que muestran la
+   *  tarjeta, la búsqueda y el perfil del alumno sin hacer join. */
+  const pickInstructor = (which: 'principal' | 'secundario') => (id: string) => {
+    const name = staff.find(x => x.id === id)?.name ?? ''
+    setForm(f => which === 'principal'
+      ? { ...f, instructor_id: id || null, instructor: name || null }
+      : { ...f, secondary_instructor_id: id || null, secondary_instructor: name || null })
+  }
+
   const toggleDay = (d: string) => {
     const curr = new Set(form.days ?? [])
     if (curr.has(d)) curr.delete(d)
@@ -101,6 +151,9 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
     const payload = {
       name: form.name.trim(),
       instructor: form.instructor?.trim() || null,
+      instructor_id: form.instructor_id,
+      secondary_instructor: form.secondary_instructor?.trim() || null,
+      secondary_instructor_id: form.secondary_instructor_id,
       days: (form.days ?? []) as string[],
       start_time: form.start_time || null,
       end_time: form.end_time || null,
@@ -130,21 +183,21 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
     onSaved?.()
   }
 
-  const inputClass = "w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-4 pl-11 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all"
+  const inputClass = "w-full h-12 bg-carbon-50 border border-carbon-200 rounded-2xl px-4 pl-11 text-carbon-900 font-medium placeholder:text-carbon-400 focus:outline-none focus:ring-4 focus:ring-kuro-500/10 focus:border-kuro-500/50 transition-all"
 
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header Form */}
-      <div className="shrink-0 bg-slate-900 px-10 py-8 flex items-center justify-between">
+      <div className="shrink-0 bg-carbon-900 px-10 py-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-blue-400 border border-white/10">
+          <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-kuro-400 border border-white/10">
             <BookOpen className="w-6 h-6" />
           </div>
           <div>
             <h3 className="text-xl font-black text-white tracking-tight uppercase leading-none">
               {initial?.id ? 'Editar Clase' : 'Ficha de Clase'}
             </h3>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">Gestión de Actividades</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-carbon-400 mt-1">Gestión de Actividades</p>
           </div>
         </div>
         <button
@@ -161,15 +214,15 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
           {/* General Section */}
           <section className="space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+              <div className="w-8 h-8 rounded-lg bg-kuro-50 flex items-center justify-center text-kuro-600">
                 <Type className="w-4 h-4" />
               </div>
-              <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Información Base</h4>
+              <h4 className="text-sm font-black text-carbon-900 uppercase tracking-widest">Información Base</h4>
             </div>
 
             <div className="space-y-4">
               <div className="relative group">
-                <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-kuro-500 transition-colors" />
                 <input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -180,7 +233,7 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="relative group">
-                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-kuro-500 transition-colors" />
                   <input
                     type="number"
                     value={form.price_principal ?? ''}
@@ -188,11 +241,11 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
                     placeholder="Precio Principal *"
                     className={inputClass}
                   />
-                  <div className="absolute -bottom-5 left-1 text-[10px] font-bold text-blue-500 uppercase tracking-widest opacity-0 group-focus-within:opacity-100 transition-opacity">Valor Mensual Base</div>
+                  <div className="absolute -bottom-5 left-1 text-[10px] font-bold text-kuro-500 uppercase tracking-widest opacity-0 group-focus-within:opacity-100 transition-opacity">Valor Mensual Base</div>
                 </div>
 
                 <div className="relative group">
-                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-kuro-500 transition-colors" />
                   <input
                     type="number"
                     value={form.price_additional ?? ''}
@@ -200,12 +253,12 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
                     placeholder="Precio Adicional"
                     className={inputClass}
                   />
-                  <div className="absolute -bottom-5 left-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest opacity-0 group-focus-within:opacity-100 transition-opacity">Si se toma como 2da clase</div>
+                  <div className="absolute -bottom-5 left-1 text-[10px] font-bold text-carbon-400 uppercase tracking-widest opacity-0 group-focus-within:opacity-100 transition-opacity">Si se toma como 2da clase</div>
                 </div>
               </div>
 
               <div className="relative group">
-                <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-kuro-500 transition-colors" />
                 <input
                   type="number"
                   value={form.capacity ?? ''}
@@ -218,25 +271,41 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
                 />
               </div>
 
-              <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                <input
-                  value={form.instructor ?? ''}
-                  onChange={(e) => setForm({ ...form, instructor: e.target.value })}
-                  placeholder="Instructor principal"
-                  className={inputClass}
+              {/* Era un texto libre donde se tipeaba el nombre: no quedaba
+                  vínculo con la persona y cualquier typo se guardaba igual.
+                  Ahora sale del staff activo de la sede. */}
+              <div className="space-y-3">
+                <StyledSelect
+                  icon={User}
+                  placeholder={staff.length ? 'Instructor principal' : 'No hay instructores cargados'}
+                  value={form.instructor_id ?? ''}
+                  onChange={pickInstructor('principal')}
+                  options={staff.map(s => ({ value: s.id, label: s.name }))}
+                  triggerClassName="h-14 rounded-2xl"
+                />
+
+                <StyledSelect
+                  icon={User}
+                  placeholder="Instructor secundario (opcional)"
+                  value={form.secondary_instructor_id ?? ''}
+                  onChange={pickInstructor('secundario')}
+                  /* El principal no puede figurar además como secundario. */
+                  options={staff
+                    .filter(s => s.id !== form.instructor_id)
+                    .map(s => ({ value: s.id, label: s.name }))}
+                  triggerClassName="h-14 rounded-2xl"
                 />
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Categoría de Clase</p>
+              <div className="p-4 rounded-2xl bg-carbon-50 border border-carbon-200">
+                <p className="text-[10px] font-black uppercase tracking-widest text-carbon-400 mb-3 ml-1">Categoría de Clase</p>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => setForm({ ...form, category: 'artes-marciales' })}
                     className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${form.category === 'artes-marciales'
-                      ? 'bg-slate-900 text-white shadow-lg'
-                      : 'bg-white border border-slate-200 text-slate-500'
+                      ? 'bg-carbon-900 text-white shadow-lg'
+                      : 'bg-white border border-carbon-200 text-carbon-500'
                       }`}
                   >
                     Artes Marciales
@@ -245,8 +314,8 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
                     type="button"
                     onClick={() => setForm({ ...form, category: 'acondicionamiento-fisico' })}
                     className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${form.category === 'acondicionamiento-fisico'
-                      ? 'bg-slate-900 text-white shadow-lg'
-                      : 'bg-white border border-slate-200 text-slate-500'
+                      ? 'bg-carbon-900 text-white shadow-lg'
+                      : 'bg-white border border-carbon-200 text-carbon-500'
                       }`}
                   >
                     Fisico
@@ -262,12 +331,12 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
               <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
                 <Calendar className="w-4 h-4" />
               </div>
-              <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Días y Horarios</h4>
+              <h4 className="text-sm font-black text-carbon-900 uppercase tracking-widest">Días y Horarios</h4>
             </div>
 
             <div className="space-y-5">
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-1">Seleccionar Días</p>
+              <div className="p-4 rounded-2xl bg-carbon-50 border border-carbon-200">
+                <p className="text-[10px] font-black uppercase tracking-widest text-carbon-400 mb-3 ml-1">Seleccionar Días</p>
                 <div className="flex flex-wrap gap-2">
                   {DAY_OPTIONS.map((d) => {
                     const active = (form.days ?? []).includes(d)
@@ -278,8 +347,8 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
                         whileTap={{ scale: 0.95 }}
                         onClick={() => toggleDay(d)}
                         className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${active
-                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-                          : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-400'
+                          ? 'bg-kuro-600 text-white shadow-lg shadow-kuro-500/30'
+                          : 'bg-white border border-carbon-200 text-carbon-500 hover:border-carbon-400'
                           }`}
                       >
                         {d}
@@ -291,7 +360,7 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="relative group">
-                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-emerald-500 transition-colors" />
                   <input
                     type="time"
                     value={form.start_time ?? ''}
@@ -300,7 +369,7 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
                   />
                 </div>
                 <div className="relative group">
-                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-emerald-500 transition-colors" />
                   <input
                     type="time"
                     value={form.end_time ?? ''}
@@ -310,10 +379,10 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
                 </div>
               </div>
 
-              <div className="relative group p-4 rounded-2xl border border-slate-100">
+              <div className="relative group p-4 rounded-2xl border border-carbon-100">
                 <div className="flex items-center gap-2 mb-3">
-                  <Palette className="w-4 h-4 text-slate-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Cromática</span>
+                  <Palette className="w-4 h-4 text-carbon-400" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-carbon-400 leading-none">Cromática</span>
                 </div>
                 <div className="flex gap-2">
                   {COLOR_OPTIONS.map((c) => (
@@ -321,7 +390,7 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
                       key={c.value}
                       type="button"
                       onClick={() => setForm({ ...form, color: c.value })}
-                      className={`w-8 h-8 rounded-full ${c.bg} transition-all ${form.color === c.value ? 'ring-4 ring-offset-2 ring-slate-900 scale-110 shadow-lg' : 'opacity-40 hover:opacity-100 scale-90'
+                      className={`w-8 h-8 rounded-full ${c.bg} transition-all ${form.color === c.value ? 'ring-4 ring-offset-2 ring-carbon-900 scale-110 shadow-lg' : 'opacity-40 hover:opacity-100 scale-90'
                         }`}
                       title={c.label}
                     />
@@ -337,7 +406,7 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
               <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
                 <AlignLeft className="w-4 h-4" />
               </div>
-              <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">Presentación de la Actividad</h4>
+              <h4 className="text-sm font-black text-carbon-900 uppercase tracking-widest">Presentación de la Actividad</h4>
             </div>
 
             <textarea
@@ -345,20 +414,20 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
               value={form.description ?? ''}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               placeholder="Describe los objetivos o requisitos de la clase..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-[24px] px-6 py-5 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all resize-none italic"
+              className="w-full bg-carbon-50 border border-carbon-200 rounded-[24px] px-6 py-5 text-carbon-900 font-medium placeholder:text-carbon-400 focus:outline-none focus:ring-4 focus:ring-kuro-500/10 focus:border-kuro-500/50 transition-all resize-none italic"
             />
           </section>
         </div>
       </div>
 
       {/* Footer Actions - Sticky */}
-      <div className="shrink-0 p-8 border-t border-slate-100 bg-white flex flex-col sm:flex-row gap-4">
+      <div className="shrink-0 p-8 border-t border-carbon-100 bg-white flex flex-col sm:flex-row gap-4">
         <motion.button
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
           onClick={save}
           disabled={saving}
-          className="flex-1 h-16 bg-blue-600 text-white rounded-[24px] font-black uppercase tracking-widest text-sm shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all flex items-center justify-center gap-3"
+          className="flex-1 h-16 bg-kuro-600 text-white rounded-[24px] font-black uppercase tracking-widest text-sm shadow-xl shadow-kuro-500/30 hover:bg-kuro-700 transition-all flex items-center justify-center gap-3"
         >
           {saving ? (
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -370,7 +439,7 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
 
         <button
           onClick={onCancel}
-          className="h-16 px-10 rounded-[24px] border border-slate-200 text-slate-500 font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all"
+          className="h-16 px-10 rounded-[24px] border border-carbon-200 text-carbon-500 font-black uppercase tracking-widest text-[10px] hover:bg-carbon-50 transition-all"
         >
           Cancelar
         </button>
