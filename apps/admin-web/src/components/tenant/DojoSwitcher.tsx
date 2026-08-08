@@ -34,8 +34,8 @@ export default function DojoSwitcher() {
     // Una sola sede: no hay nada que elegir.
     if (!activeDojo || dojos.length <= 1) {
         return activeDojo ? (
-            <div className="flex items-center gap-2 px-3 h-10 rounded-xl bg-slate-100 dark:bg-slate-800/60">
-                <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
+            <div className="flex items-center gap-2 px-3 h-10 rounded-xl bg-carbon-100 dark:bg-carbon-800/60">
+                <Building2 className="w-4 h-4 text-carbon-400 shrink-0" />
                 <span className="text-sm font-bold truncate">{activeDojo.name}</span>
             </div>
         ) : null
@@ -54,24 +54,24 @@ export default function DojoSwitcher() {
         <div className="relative" ref={ref}>
             <button
                 onClick={() => setOpen((v) => !v)}
-                className="flex items-center gap-2 px-3 h-10 rounded-xl bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-700/60 transition-colors max-w-[240px]"
+                className="flex items-center gap-2 px-3 h-10 rounded-xl bg-carbon-100 dark:bg-carbon-800/60 hover:bg-carbon-200 dark:hover:bg-carbon-700/60 transition-colors max-w-[240px]"
                 aria-haspopup="listbox"
                 aria-expanded={open}
             >
-                <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
+                <Building2 className="w-4 h-4 text-carbon-400 shrink-0" />
                 <span className="text-sm font-bold truncate">{activeDojo.name}</span>
                 <ChevronDown
-                    className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+                    className={`w-4 h-4 text-carbon-400 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
                 />
             </button>
 
             {open && (
                 <div
                     role="listbox"
-                    className="absolute left-0 top-12 z-50 w-72 max-h-[70vh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl py-2"
+                    className="absolute left-0 top-12 z-50 w-72 max-h-[70vh] overflow-y-auto rounded-2xl border border-carbon-200 dark:border-carbon-700 bg-white dark:bg-carbon-900 shadow-2xl py-2"
                 >
                     {(isPlatformAdmin || orgRole) && (
-                        <div className="flex items-center gap-2 px-4 py-2 mb-1 text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+                        <div className="flex items-center gap-2 px-4 py-2 mb-1 text-[10px] font-black uppercase tracking-widest text-warn-600 dark:text-warn-400">
                             <ShieldCheck className="w-3.5 h-3.5" />
                             {isPlatformAdmin ? 'Desarrollador — ves todas las marcas' : 'Superadmin — ves todas tus sedes'}
                         </div>
@@ -79,7 +79,7 @@ export default function DojoSwitcher() {
 
                     {Object.entries(byOrg).map(([orgName, orgDojos]) => (
                         <div key={orgName}>
-                            <div className="px-4 pt-2 pb-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                            <div className="px-4 pt-2 pb-1 text-[10px] font-black uppercase tracking-widest text-carbon-400">
                                 {orgName}
                             </div>
 
@@ -96,18 +96,18 @@ export default function DojoSwitcher() {
                                         }}
                                         className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
                                             isActive
-                                                ? 'bg-slate-100 dark:bg-slate-800'
-                                                : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                                                ? 'bg-carbon-100 dark:bg-carbon-800'
+                                                : 'hover:bg-carbon-50 dark:hover:bg-carbon-800/50'
                                         }`}
                                     >
                                         <div className="min-w-0 flex-1">
                                             <p className="text-sm font-bold truncate">{d.name}</p>
-                                            <p className="text-xs text-slate-400 truncate">
+                                            <p className="text-xs text-carbon-400 truncate">
                                                 {d.city ? `${d.city} · ` : ''}
                                                 {ROLE_LABELS[d.role] ?? d.role}
                                             </p>
                                         </div>
-                                        {isActive && <Check className="w-4 h-4 text-emerald-500 shrink-0" />}
+                                        {isActive && <Check className="w-4 h-4 text-kuro-500 shrink-0" />}
                                     </button>
                                 )
                             })}

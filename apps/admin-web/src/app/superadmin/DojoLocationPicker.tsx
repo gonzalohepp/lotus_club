@@ -147,13 +147,13 @@ export default function DojoLocationPicker({
         <div className="space-y-3">
             <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2 text-xs">
-                    <MapPin className={`w-4 h-4 ${hasCoords ? 'text-emerald-500' : 'text-amber-500'}`} />
+                    <MapPin className={`w-4 h-4 ${hasCoords ? 'text-kuro-500' : 'text-warn-500'}`} />
                     {hasCoords ? (
-                        <span className="font-mono text-slate-500">
+                        <span className="font-mono text-carbon-500">
                             {lat!.toFixed(5)}, {lng!.toFixed(5)}
                         </span>
                     ) : (
-                        <span className="font-bold text-amber-600 dark:text-amber-400">
+                        <span className="font-bold text-warn-600 dark:text-warn-400">
                             Sin ubicación — esta sede no aparece en el mapa de la web
                         </span>
                     )}
@@ -164,7 +164,7 @@ export default function DojoLocationPicker({
                         type="button"
                         onClick={geocode}
                         disabled={searching}
-                        className="flex items-center gap-2 px-4 h-9 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold disabled:opacity-50 transition-opacity"
+                        className="flex items-center gap-2 px-4 h-9 rounded-xl bg-carbon-900 dark:bg-carbon-100 text-white dark:text-carbon-900 text-xs font-bold disabled:opacity-50 transition-opacity"
                     >
                         {searching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
                         Buscar por dirección
@@ -174,7 +174,7 @@ export default function DojoLocationPicker({
                         <button
                             type="button"
                             onClick={() => onChange({ lat: null, lng: null })}
-                            className="p-2 rounded-xl text-slate-400 hover:text-red-500 transition-colors"
+                            className="p-2 rounded-xl text-carbon-400 hover:text-alert-500 transition-colors"
                             title="Quitar la ubicación"
                         >
                             <Trash2 className="w-4 h-4" />
@@ -191,7 +191,7 @@ export default function DojoLocationPicker({
                 />
             </div>
 
-            <p className="flex items-center gap-1.5 text-[10px] text-slate-500">
+            <p className="flex items-center gap-1.5 text-[10px] text-carbon-500">
                 {resolving ? (
                     <>
                         <Loader2 className="w-3 h-3 animate-spin" />

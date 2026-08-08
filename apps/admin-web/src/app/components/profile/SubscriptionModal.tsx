@@ -168,7 +168,7 @@ export default function SubscriptionModal({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        className="absolute inset-0 bg-carbon-900/60 backdrop-blur-sm"
                     />
 
                     <motion.div
@@ -178,15 +178,15 @@ export default function SubscriptionModal({
                         className="relative w-full max-w-4xl overflow-hidden rounded-[32px] bg-white shadow-2xl flex flex-col max-h-[90vh]"
                     >
                         {/* Header */}
-                        <div className="relative h-24 bg-slate-900 flex items-center px-8 shrink-0">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
+                        <div className="relative h-24 bg-carbon-900 flex items-center px-8 shrink-0">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-kuro-500/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
                             <div className="relative z-10 flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                                <div className="w-12 h-12 rounded-xl bg-kuro-500/20 flex items-center justify-center text-kuro-400 border border-kuro-500/20">
                                     <DollarSign className="w-6 h-6" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-black text-white tracking-tight uppercase">Pagar Suscripción</h2>
-                                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Configura tu plan</p>
+                                    <p className="text-carbon-400 text-xs font-bold uppercase tracking-widest">Configura tu plan</p>
                                 </div>
                             </div>
                             <button
@@ -201,28 +201,28 @@ export default function SubscriptionModal({
                         <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
                             {loading ? (
                                 <div className="space-y-4">
-                                    {[1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-100 rounded-2xl animate-pulse" />)}
+                                    {[1, 2, 3].map(i => <div key={i} className="h-20 bg-carbon-100 rounded-2xl animate-pulse" />)}
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     {/* Principal */}
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <Shield className="w-4 h-4 text-blue-500" />
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Clase Principal (Obligatoria)</p>
+                                            <Shield className="w-4 h-4 text-kuro-500" />
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-carbon-400">Clase Principal (Obligatoria)</p>
                                         </div>
                                         <div className="space-y-3">
                                             {classes.map(c => (
                                                 <label
                                                     key={`p-${c.id}`}
                                                     className={`relative flex items-center gap-4 p-4 rounded-2xl border transition-all cursor-pointer group ${principalClass === c.id
-                                                        ? 'bg-blue-600 border-blue-600 shadow-xl shadow-blue-500/20'
-                                                        : 'bg-white border-slate-100 hover:border-blue-200'
+                                                        ? 'bg-kuro-600 border-kuro-600 shadow-xl shadow-kuro-500/20'
+                                                        : 'bg-white border-carbon-100 hover:border-kuro-200'
                                                         }`}
                                                 >
-                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${principalClass === c.id ? 'bg-white border-white' : 'bg-white border-slate-300 group-hover:border-blue-300'
+                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${principalClass === c.id ? 'bg-white border-white' : 'bg-white border-carbon-300 group-hover:border-kuro-300'
                                                         }`}>
-                                                        {principalClass === c.id && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
+                                                        {principalClass === c.id && <div className="w-2.5 h-2.5 rounded-full bg-kuro-600" />}
                                                     </div>
                                                     <input
                                                         type="radio"
@@ -232,8 +232,8 @@ export default function SubscriptionModal({
                                                         onChange={() => handlePrincipalChange(c.id)}
                                                     />
                                                     <div className="flex-1">
-                                                        <p className={`text-sm font-bold leading-none ${principalClass === c.id ? 'text-white' : 'text-slate-900'}`}>{c.name}</p>
-                                                        <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${principalClass === c.id ? 'text-blue-100' : 'text-slate-500'}`}>
+                                                        <p className={`text-sm font-bold leading-none ${principalClass === c.id ? 'text-white' : 'text-carbon-900'}`}>{c.name}</p>
+                                                        <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${principalClass === c.id ? 'text-kuro-100' : 'text-carbon-500'}`}>
                                                             {fmt(c.price_principal)}
                                                         </p>
                                                     </div>
@@ -245,8 +245,8 @@ export default function SubscriptionModal({
                                     {/* Additional */}
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <Plus className="w-4 h-4 text-emerald-500" />
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Clases Adicionales (Opcional)</p>
+                                            <Plus className="w-4 h-4 text-kuro-500" />
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-carbon-400">Clases Adicionales (Opcional)</p>
                                         </div>
                                         <div className="space-y-3">
                                             {classes.map(c => {
@@ -256,13 +256,13 @@ export default function SubscriptionModal({
                                                     <label
                                                         key={`a-${c.id}`}
                                                         className={`relative flex items-center gap-4 p-4 rounded-2xl border transition-all cursor-pointer ${isSelected
-                                                            ? 'bg-emerald-50 border-emerald-500 shadow-lg shadow-emerald-500/10'
+                                                            ? 'bg-kuro-50 border-kuro-500 shadow-lg shadow-kuro-500/10'
                                                             : isPrincipal
-                                                                ? 'opacity-40 cursor-not-allowed bg-slate-50 border-transparent'
-                                                                : 'bg-white border-slate-100 hover:border-emerald-200'
+                                                                ? 'opacity-40 cursor-not-allowed bg-carbon-50 border-transparent'
+                                                                : 'bg-white border-carbon-100 hover:border-kuro-200'
                                                             }`}
                                                     >
-                                                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-slate-300'
+                                                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-kuro-500 border-kuro-500 text-white' : 'bg-white border-carbon-300'
                                                             }`}>
                                                             {isSelected && <Check className="w-3 h-3 stroke-[4]" />}
                                                         </div>
@@ -274,8 +274,8 @@ export default function SubscriptionModal({
                                                             onChange={() => toggleAdditional(c.id)}
                                                         />
                                                         <div className="flex-1">
-                                                            <p className="text-sm font-bold text-slate-900 leading-none">{c.name}</p>
-                                                            <p className="text-[10px] font-black uppercase tracking-widest mt-1 text-emerald-600">
+                                                            <p className="text-sm font-bold text-carbon-900 leading-none">{c.name}</p>
+                                                            <p className="text-[10px] font-black uppercase tracking-widest mt-1 text-kuro-600">
                                                                 + {fmt(c.price_additional || c.price_principal)}
                                                             </p>
                                                         </div>
@@ -289,19 +289,19 @@ export default function SubscriptionModal({
                         </div>
 
                         {/* Footer Summary */}
-                        <div className="bg-slate-950 p-6 md:p-8 shrink-0 relative overflow-hidden text-white">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-[80px] pointer-events-none" />
+                        <div className="bg-carbon-950 p-6 md:p-8 shrink-0 relative overflow-hidden text-white">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-kuro-600/20 rounded-full blur-[80px] pointer-events-none" />
 
                             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">Total Cuota Mensual Estimada</p>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-carbon-400 mb-1">Total Cuota Mensual Estimada</p>
                                     <div className="flex items-baseline gap-2">
                                         <span className="text-4xl md:text-5xl font-black text-white tracking-tight">{fmt(total)}</span>
-                                        <span className="text-xs font-bold text-slate-500 uppercase">ARS / Mes</span>
+                                        <span className="text-xs font-bold text-carbon-500 uppercase">ARS / Mes</span>
                                     </div>
                                     <div className="flex items-center gap-2 mt-2">
-                                        <div className={`w-2 h-2 rounded-full animate-pulse ${isNewMember ? 'bg-blue-400' : multiplier > 1 ? 'bg-orange-500' : 'bg-emerald-500'}`} />
-                                        <span className={`text-[10px] font-black uppercase tracking-widest ${isNewMember ? 'text-blue-400' : multiplier > 1 ? 'text-orange-500' : 'text-emerald-500'}`}>
+                                        <div className={`w-2 h-2 rounded-full animate-pulse ${isNewMember ? 'bg-kuro-400' : multiplier > 1 ? 'bg-warn-500' : 'bg-kuro-500'}`} />
+                                        <span className={`text-[10px] font-black uppercase tracking-widest ${isNewMember ? 'text-kuro-400' : multiplier > 1 ? 'text-warn-500' : 'text-kuro-500'}`}>
                                             {isNewMember ? '✨ Beneficio Alumno Nuevo (Precio Flat)' : multiplier > 1 ? 'Incluye 20% Recargo (Post día 10)' : 'Cálculo Automático'}
                                         </span>
                                     </div>
@@ -311,7 +311,7 @@ export default function SubscriptionModal({
                                     <button
                                         onClick={handlePayment}
                                         disabled={processing || !principalClass}
-                                        className="w-full md:w-auto px-8 h-16 rounded-2xl bg-[#009EE3] hover:bg-[#0088c7] flex items-center justify-center gap-3 text-white font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg shadow-blue-500/30"
+                                        className="w-full md:w-auto px-8 h-16 rounded-2xl bg-[#009EE3] hover:bg-[#0088c7] flex items-center justify-center gap-3 text-white font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg shadow-kuro-500/30"
                                     >
                                         {processing ? (
                                             <><Loader2 className="w-5 h-5 animate-spin" /> Redirigiendo…</>
@@ -320,7 +320,7 @@ export default function SubscriptionModal({
                                         )}
                                     </button>
                                 ) : (
-                                    <div className="w-full md:w-auto px-8 h-16 rounded-2xl bg-slate-700 flex items-center justify-center text-slate-400 font-bold text-sm uppercase tracking-widest opacity-50 cursor-not-allowed">
+                                    <div className="w-full md:w-auto px-8 h-16 rounded-2xl bg-carbon-700 flex items-center justify-center text-carbon-400 font-bold text-sm uppercase tracking-widest opacity-50 cursor-not-allowed">
                                         Pago online próximamente
                                     </div>
                                 )}

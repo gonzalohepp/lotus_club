@@ -74,21 +74,21 @@ function getClassEmoji(name: string) {
 const getMemberStatus = (a: AttendanceRecord, billing: BillingConfig | null, timezone?: string) => {
     const tags: { label: string; color: string; bg: string }[] = []
     if (!a.member_data) {
-        return [{ label: 'Sin datos', color: 'text-slate-500', bg: 'bg-slate-500/10' }]
+        return [{ label: 'Sin datos', color: 'text-carbon-500 dark:text-carbon-400', bg: 'bg-carbon-500/10' }]
     }
     const { status, next_payment_due, role, is_new_member } = a.member_data
     const isActive = status === 'activo'
 
     if (isActive) {
-        tags.push({ label: 'Activo', color: 'text-green-500', bg: 'bg-green-500/10' })
+        tags.push({ label: 'Activo', color: 'text-kuro-500', bg: 'bg-kuro-500/10' })
         if (next_payment_due) {
             const due = new Date(next_payment_due + 'T12:00:00')
             if (new Date() > due) {
-                tags.push({ label: 'Sin pago del mes', color: 'text-amber-500', bg: 'bg-amber-500/10' })
+                tags.push({ label: 'Sin pago del mes', color: 'text-warn-500', bg: 'bg-warn-500/10' })
             }
         }
     } else {
-        tags.push({ label: 'Vencido', color: 'text-red-500', bg: 'bg-red-500/10' })
+        tags.push({ label: 'Vencido', color: 'text-alert-500', bg: 'bg-alert-500/10' })
     }
 
     const { multiplier, surchargePct } = evaluateBilling(billing, {
@@ -98,7 +98,7 @@ const getMemberStatus = (a: AttendanceRecord, billing: BillingConfig | null, tim
         timezone,
     })
     if (multiplier > 1) {
-        tags.push({ label: `+${surchargePct}% Recargo`, color: 'text-orange-500', bg: 'bg-orange-500/10' })
+        tags.push({ label: `+${surchargePct}% Recargo`, color: 'text-warn-500', bg: 'bg-warn-500/10' })
     }
     return tags
 }
@@ -143,7 +143,7 @@ function BottomSheet({
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
                         transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-                        className="fixed bottom-0 left-0 right-0 z-50 bg-slate-950 border-t border-white/10 rounded-t-[2rem] max-h-[80vh] flex flex-col"
+                        className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-carbon-200 dark:border-white/10 rounded-t-[2rem] max-h-[80vh] flex flex-col"
                     >
                         {/* Handle */}
                         <div className="flex justify-center pt-3 pb-1 shrink-0">
@@ -151,26 +151,26 @@ function BottomSheet({
                         </div>
 
                         {/* Header */}
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-carbon-200 dark:border-white/5 shrink-0">
                             <div className="flex items-center gap-3">
                                 <div
                                     className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shadow shrink-0"
-                                    style={{ backgroundColor: cl.color || '#3b82f6' }}
+                                    style={{ backgroundColor: cl.color || '#899878' }}
                                 >
                                     {getClassEmoji(cl.name)}
                                 </div>
                                 <div>
-                                    <p className="text-sm font-black text-white uppercase tracking-tight">{cl.name}</p>
-                                    <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest">
+                                    <p className="text-sm font-black text-carbon-900 dark:text-white uppercase tracking-tight">{cl.name}</p>
+                                    <p className="text-[10px] text-kuro-400 font-bold uppercase tracking-widest">
                                         {cl.start_time?.slice(0, 5)} – {cl.end_time?.slice(0, 5)}
                                     </p>
                                 </div>
                             </div>
                             <button
                                 onClick={onClose}
-                                className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0"
+                                className="w-8 h-8 rounded-full bg-carbon-100 dark:bg-white/10 flex items-center justify-center shrink-0"
                             >
-                                <X className="w-4 h-4 text-white" />
+                                <X className="w-4 h-4 text-carbon-900 dark:text-white" />
                             </button>
                         </div>
 
@@ -178,7 +178,7 @@ function BottomSheet({
                         <div className="overflow-y-auto flex-1 px-4 py-4 space-y-2">
                             {attendees.length === 0 ? (
                                 <div className="py-12 text-center">
-                                    <p className="text-slate-500 font-bold italic text-sm">
+                                    <p className="text-carbon-500 dark:text-carbon-400 font-bold italic text-sm">
                                         Aún no hay ingresos registrados.
                                     </p>
                                 </div>
@@ -191,13 +191,13 @@ function BottomSheet({
                                             initial={{ opacity: 0, y: 6 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: idx * 0.04 }}
-                                            className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/5"
+                                            className="flex items-center gap-3 p-3 bg-carbon-50 dark:bg-white/5 rounded-2xl border border-carbon-200 dark:border-white/5"
                                         >
-                                            <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center font-black text-blue-400 text-[11px] uppercase border border-blue-500/20 shrink-0">
+                                            <div className="w-9 h-9 rounded-xl bg-kuro-500/10 flex items-center justify-center font-black text-kuro-400 text-[11px] uppercase border border-kuro-500/20 shrink-0">
                                                 {a.profiles?.first_name?.[0] || '?'}{a.profiles?.last_name?.[0] || ''}
                                             </div>
                                             <div className="min-w-0 flex-1">
-                                                <p className="text-xs font-bold text-white uppercase tracking-tight truncate">
+                                                <p className="text-xs font-bold text-carbon-900 dark:text-white uppercase tracking-tight truncate">
                                                     {a.profiles?.first_name} {a.profiles?.last_name}
                                                 </p>
                                                 <div className="flex flex-wrap gap-1.5 mt-1">
@@ -215,8 +215,8 @@ function BottomSheet({
                         </div>
 
                         {/* Footer */}
-                        <div className="px-6 py-4 border-t border-white/5 shrink-0">
-                            <p className="text-center text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        <div className="px-6 py-4 border-t border-carbon-200 dark:border-white/5 shrink-0">
+                            <p className="text-center text-[10px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest">
                                 {attendees.length} {attendees.length === 1 ? 'alumno presente' : 'alumnos presentes'}
                             </p>
                         </div>
@@ -250,36 +250,36 @@ function MobileClassCard({
             animate={{ opacity: 1, y: 0 }}
             whileTap={{ scale: 0.97 }}
             onClick={onTap}
-            className="w-full text-left bg-slate-900/60 border border-white/10 rounded-2xl p-4 flex items-center gap-4 active:bg-white/5 transition-colors"
+            className="w-full text-left bg-white dark:bg-white/5/60 border border-carbon-200 dark:border-white/10 rounded-2xl p-4 flex items-center gap-4 active:bg-carbon-50 dark:bg-white/5 transition-colors"
         >
             <div
                 className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 shadow"
-                style={{ backgroundColor: cl.color || '#3b82f6' }}
+                style={{ backgroundColor: cl.color || '#899878' }}
             >
                 {emoji}
             </div>
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-black text-white uppercase tracking-tight truncate">{cl.name}</p>
+                    <p className="text-sm font-black text-carbon-900 dark:text-white uppercase tracking-tight truncate">{cl.name}</p>
                     {isAboutToStart && (
-                        <span className="px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[8px] font-black uppercase tracking-widest whitespace-nowrap">
+                        <span className="px-1.5 py-0.5 rounded bg-warn-500/10 border border-warn-500/20 text-warn-400 text-[8px] font-black uppercase tracking-widest whitespace-nowrap">
                             Por iniciar
                         </span>
                     )}
                 </div>
-                <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mt-0.5">
+                <p className="text-[10px] text-kuro-400 font-bold uppercase tracking-widest mt-0.5">
                     {cl.start_time?.slice(0, 5)} – {cl.end_time?.slice(0, 5)}
                 </p>
                 {cl.instructor && (
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
+                    <p className="text-[10px] text-carbon-500 dark:text-carbon-400 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1">
                         <UserIcon className="w-2.5 h-2.5" />
                         {cl.instructor}
                     </p>
                 )}
             </div>
-            <div className="flex flex-col items-center justify-center bg-white/5 w-12 h-12 rounded-xl border border-white/5 shrink-0">
-                <span className="text-lg font-black text-white leading-none">{attendees.length}</span>
-                <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest">Pres.</span>
+            <div className="flex flex-col items-center justify-center bg-carbon-50 dark:bg-white/5 w-12 h-12 rounded-xl border border-carbon-200 dark:border-white/5 shrink-0">
+                <span className="text-lg font-black text-carbon-900 dark:text-white leading-none">{attendees.length}</span>
+                <span className="text-[7px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest">Pres.</span>
             </div>
         </motion.button>
     )
@@ -404,28 +404,28 @@ export default function AsistenciaVivoPage() {
                 {/* Header */}
                 <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
                     <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-blue-500 font-bold text-xs uppercase tracking-widest">
+                        <div className="flex items-center gap-2 text-kuro-500 font-bold text-xs uppercase tracking-widest">
                             <Activity className="w-4 h-4 animate-pulse" />
                             Monitor en Tiempo Real
                         </div>
-                        <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white uppercase italic">
-                            Asistencia <span className="text-blue-500">en Vivo</span>
+                        <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-carbon-900 dark:text-white">
+                            Asistencia <span className="text-kuro-600 dark:text-kuro-400">en Vivo</span>
                         </h1>
                     </div>
 
                     <div className="flex items-center gap-3 w-full md:w-auto">
-                        <div className="flex-1 md:flex-none bg-slate-900/80 backdrop-blur-xl border border-white/10 px-5 py-3 rounded-2xl flex items-center gap-3 shadow-2xl">
-                            <Clock className="w-4 h-4 text-blue-500 shrink-0" />
+                        <div className="flex-1 md:flex-none bg-white dark:bg-white/5/80 backdrop-blur-xl border border-carbon-200 dark:border-white/10 px-5 py-3 rounded-2xl flex items-center gap-3 shadow-2xl">
+                            <Clock className="w-4 h-4 text-kuro-500 shrink-0" />
                             <div>
-                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-0.5">Hora Actual</p>
-                                <p className="text-lg font-black text-white leading-none">
+                                <p className="text-[9px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest leading-none mb-0.5">Hora Actual</p>
+                                <p className="text-lg font-black text-carbon-900 dark:text-white leading-none">
                                     {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </p>
                             </div>
                         </div>
                         <button
                             onClick={fetchData}
-                            className="p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-95 shrink-0"
+                            className="p-3 bg-kuro-600 hover:bg-kuro-500 text-carbon-900 dark:text-white rounded-xl transition-all shadow-lg shadow-kuro-500/20 active:scale-95 shrink-0"
                         >
                             <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
                         </button>
@@ -435,8 +435,8 @@ export default function AsistenciaVivoPage() {
                 {loading && classes.length === 0 ? (
                     <div className="min-h-[40vh] flex items-center justify-center">
                         <div className="text-center space-y-4">
-                            <Zap className="w-12 h-12 text-blue-500 animate-pulse mx-auto" />
-                            <p className="text-slate-500 font-black uppercase tracking-widest text-xs">Sincronizando dojo...</p>
+                            <Zap className="w-12 h-12 text-kuro-500 animate-pulse mx-auto" />
+                            <p className="text-carbon-500 dark:text-carbon-400 font-black uppercase tracking-widest text-xs">Sincronizando dojo...</p>
                         </div>
                     </div>
                 ) : (
@@ -447,14 +447,14 @@ export default function AsistenciaVivoPage() {
                             {/* Clases en curso */}
                             <section>
                                 <div className="flex items-center gap-2 mb-3">
-                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
-                                    <h2 className="text-sm font-black text-white uppercase tracking-tight">Clases en Curso</h2>
+                                    <div className="w-2 h-2 rounded-full bg-kuro-500 animate-ping" />
+                                    <h2 className="text-sm font-black text-carbon-900 dark:text-white uppercase tracking-tight">Clases en Curso</h2>
                                 </div>
 
                                 {activeClasses.length === 0 ? (
-                                    <div className="p-8 text-center rounded-2xl border border-dashed border-white/10">
-                                        <AlertCircle className="w-8 h-8 text-slate-700 mx-auto mb-3" />
-                                        <p className="text-slate-500 font-bold text-xs uppercase tracking-widest italic">
+                                    <div className="p-8 text-center rounded-2xl border border-dashed border-carbon-200 dark:border-white/10">
+                                        <AlertCircle className="w-8 h-8 text-carbon-700 mx-auto mb-3" />
+                                        <p className="text-carbon-500 dark:text-carbon-400 font-bold text-xs uppercase tracking-widest italic">
                                             No hay clases en este momento
                                         </p>
                                     </div>
@@ -477,29 +477,29 @@ export default function AsistenciaVivoPage() {
                             {futureClasses.length > 0 && (
                                 <section>
                                     <div className="flex items-center gap-2 mb-3">
-                                        <Calendar className="w-4 h-4 text-blue-500" />
-                                        <h2 className="text-sm font-black text-white uppercase tracking-widest">Próximas Clases</h2>
+                                        <Calendar className="w-4 h-4 text-kuro-500" />
+                                        <h2 className="text-sm font-black text-carbon-900 dark:text-white uppercase tracking-widest">Próximas Clases</h2>
                                     </div>
                                     <div className="space-y-2">
                                         {futureClasses.map(fcl => (
                                             <div
                                                 key={fcl.id}
-                                                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-900/40 border border-white/5"
+                                                className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-white/5/40 border border-carbon-200 dark:border-white/5"
                                             >
                                                 <div
                                                     className="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0"
-                                                    style={{ backgroundColor: fcl.color || '#3b82f6' }}
+                                                    style={{ backgroundColor: fcl.color || '#899878' }}
                                                 >
                                                     {getClassEmoji(fcl.name)}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-xs font-black text-white uppercase tracking-tight truncate">{fcl.name}</p>
-                                                    <p className="text-[10px] text-slate-500 font-bold flex items-center gap-1 mt-0.5">
+                                                    <p className="text-xs font-black text-carbon-900 dark:text-white uppercase tracking-tight truncate">{fcl.name}</p>
+                                                    <p className="text-[10px] text-carbon-500 dark:text-carbon-400 font-bold flex items-center gap-1 mt-0.5">
                                                         <Clock className="w-2.5 h-2.5" />
                                                         {fcl.start_time?.slice(0, 5)}
                                                     </p>
                                                 </div>
-                                                <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Hoy</span>
+                                                <span className="text-[9px] font-black text-carbon-600 dark:text-carbon-300 uppercase tracking-widest">Hoy</span>
                                             </div>
                                         ))}
                                     </div>
@@ -512,15 +512,15 @@ export default function AsistenciaVivoPage() {
 
                             <div className="lg:col-span-2 space-y-6">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
-                                    <h2 className="text-lg font-black text-white uppercase tracking-tight">Clases en Curso</h2>
+                                    <div className="w-2 h-2 rounded-full bg-kuro-500 animate-ping" />
+                                    <h2 className="text-lg font-black text-carbon-900 dark:text-white uppercase tracking-tight">Clases en Curso</h2>
                                 </div>
 
                                 {activeClasses.length === 0 ? (
-                                    <div className="p-12 text-center rounded-[2.5rem] border-2 border-dashed border-white/5 backdrop-blur-sm">
-                                        <AlertCircle className="w-12 h-12 text-slate-700 mx-auto mb-4" />
-                                        <p className="text-slate-400 font-bold uppercase tracking-widest text-sm italic">No hay clases programadas para este momento</p>
-                                        <p className="text-slate-600 text-[10px] mt-2 font-black uppercase tracking-tight">Monitorizando el siguiente horario...</p>
+                                    <div className="p-12 text-center rounded-[2.5rem] border-2 border-dashed border-carbon-200 dark:border-white/5 backdrop-blur-sm">
+                                        <AlertCircle className="w-12 h-12 text-carbon-700 mx-auto mb-4" />
+                                        <p className="text-carbon-500 dark:text-carbon-400 font-bold uppercase tracking-widest text-sm italic">No hay clases programadas para este momento</p>
+                                        <p className="text-carbon-600 dark:text-carbon-300 text-[10px] mt-2 font-black uppercase tracking-tight">Monitorizando el siguiente horario...</p>
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
@@ -534,7 +534,7 @@ export default function AsistenciaVivoPage() {
                                                     layout
                                                     initial={{ opacity: 0, y: 10 }}
                                                     animate={{ opacity: 1, y: 0 }}
-                                                    className="bg-slate-900/50 border border-white/10 backdrop-blur-xl rounded-[2rem] overflow-hidden shadow-xl"
+                                                    className="bg-white dark:bg-white/5/50 border border-carbon-200 dark:border-white/10 backdrop-blur-xl rounded-2xl overflow-hidden shadow-xl"
                                                 >
                                                     <button
                                                         onClick={() => toggleExpand(cl.id)}
@@ -543,19 +543,19 @@ export default function AsistenciaVivoPage() {
                                                         <div className="flex items-center gap-4">
                                                             <div
                                                                 className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 shadow-lg"
-                                                                style={{ backgroundColor: cl.color || '#3b82f6' }}
+                                                                style={{ backgroundColor: cl.color || '#899878' }}
                                                             >
                                                                 {emoji}
                                                             </div>
                                                             <div className="min-w-0">
                                                                 <div className="flex items-center gap-2">
-                                                                    <h3 className="text-xl font-black text-white tracking-tight uppercase italic truncate">{cl.name}</h3>
+                                                                    <h3 className="text-xl font-black text-carbon-900 dark:text-white tracking-tight uppercase italic truncate">{cl.name}</h3>
                                                                     {(() => {
                                                                         const [sH, sM] = (cl.start_time || '00:00').split(':').map(Number)
                                                                         const currMins = currentTime.getHours() * 60 + currentTime.getMinutes()
                                                                         if (currMins < sH * 60 + sM) {
                                                                             return (
-                                                                                <span className="px-2 py-0.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[8px] font-black uppercase tracking-widest whitespace-nowrap">
+                                                                                <span className="px-2 py-0.5 rounded-lg bg-warn-500/10 border border-warn-500/20 text-warn-500 text-[8px] font-black uppercase tracking-widest whitespace-nowrap">
                                                                                     Por Iniciar
                                                                                 </span>
                                                                             )
@@ -564,12 +564,12 @@ export default function AsistenciaVivoPage() {
                                                                     })()}
                                                                 </div>
                                                                 <div className="flex items-center gap-3 mt-1">
-                                                                    <p className="text-slate-500 font-bold flex items-center gap-1 text-[9px] uppercase tracking-widest">
+                                                                    <p className="text-carbon-500 dark:text-carbon-400 font-bold flex items-center gap-1 text-[9px] uppercase tracking-widest">
                                                                         <UserIcon className="w-2.5 h-2.5" />
                                                                         {cl.instructor || 'Sin Instructor'}
                                                                     </p>
-                                                                    <span className="w-1 h-1 rounded-full bg-slate-700" />
-                                                                    <p className="text-blue-500 font-bold flex items-center gap-1 text-[9px] uppercase tracking-widest">
+                                                                    <span className="w-1 h-1 rounded-full bg-carbon-700" />
+                                                                    <p className="text-kuro-500 font-bold flex items-center gap-1 text-[9px] uppercase tracking-widest">
                                                                         <Clock className="w-2.5 h-2.5" />
                                                                         {cl.start_time?.slice(0, 5)} - {cl.end_time?.slice(0, 5)}
                                                                     </p>
@@ -578,12 +578,12 @@ export default function AsistenciaVivoPage() {
                                                         </div>
 
                                                         <div className="flex items-center gap-4 shrink-0">
-                                                            <div className="flex flex-col items-center justify-center bg-white/5 w-14 h-14 rounded-2xl border border-white/5">
-                                                                <span className="text-lg font-black text-white leading-none">{attendees.length}</span>
-                                                                <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Pres.</span>
+                                                            <div className="flex flex-col items-center justify-center bg-carbon-50 dark:bg-white/5 w-14 h-14 rounded-2xl border border-carbon-200 dark:border-white/5">
+                                                                <span className="text-lg font-black text-carbon-900 dark:text-white leading-none">{attendees.length}</span>
+                                                                <span className="text-[8px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest">Pres.</span>
                                                             </div>
-                                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center border border-white/5 transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-white/10' : ''}`}>
-                                                                <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center border border-carbon-200 dark:border-white/5 transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-carbon-100 dark:bg-white/10' : ''}`}>
+                                                                <svg className="w-4 h-4 text-carbon-500 dark:text-carbon-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                                                                 </svg>
                                                             </div>
@@ -599,14 +599,14 @@ export default function AsistenciaVivoPage() {
                                                                 transition={{ duration: 0.3, ease: 'easeInOut' }}
                                                                 className="overflow-hidden"
                                                             >
-                                                                <div className="p-6 pt-0 bg-black/20 border-t border-white/5">
+                                                                <div className="p-6 pt-0 bg-black/20 border-t border-carbon-200 dark:border-white/5">
                                                                     <div className="pt-6 space-y-4">
-                                                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2 mb-4">
-                                                                            <CheckCircle className="w-3 h-3 text-green-500" />
+                                                                        <p className="text-[9px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-[0.2em] flex items-center gap-2 mb-4">
+                                                                            <CheckCircle className="w-3 h-3 text-kuro-500" />
                                                                             Listado de Alumnos
                                                                         </p>
                                                                         {attendees.length === 0 ? (
-                                                                            <p className="text-slate-600 font-bold italic text-sm py-4">Aún no hay ingresos para esta clase.</p>
+                                                                            <p className="text-carbon-600 dark:text-carbon-300 font-bold italic text-sm py-4">Aún no hay ingresos para esta clase.</p>
                                                                         ) : (
                                                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                                                 {attendees.map((a, idx) => {
@@ -617,18 +617,18 @@ export default function AsistenciaVivoPage() {
                                                                                             initial={{ opacity: 0, x: -5 }}
                                                                                             animate={{ opacity: 1, x: 0 }}
                                                                                             transition={{ delay: idx * 0.05 }}
-                                                                                            className="flex items-center gap-3 p-3 bg-white/2 rounded-xl border border-white/5 hover:bg-white/5 transition-colors"
+                                                                                            className="flex items-center gap-3 p-3 bg-white/2 rounded-xl border border-carbon-200 dark:border-white/5 hover:bg-white/5 transition-colors"
                                                                                         >
-                                                                                            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center font-black text-blue-500 text-[10px] uppercase border border-blue-500/20">
+                                                                                            <div className="w-8 h-8 rounded-lg bg-kuro-500/10 flex items-center justify-center font-black text-kuro-500 text-[10px] uppercase border border-kuro-500/20">
                                                                                                 {a.profiles?.first_name?.[0] || '?'}{a.profiles?.last_name?.[0] || ''}
                                                                                             </div>
                                                                                             <div className="min-w-0 flex-1">
-                                                                                                <p className="text-xs font-bold text-white uppercase tracking-tight truncate leading-tight">
+                                                                                                <p className="text-xs font-bold text-carbon-900 dark:text-white uppercase tracking-tight truncate leading-tight">
                                                                                                     {a.profiles?.first_name} {a.profiles?.last_name}
                                                                                                 </p>
                                                                                                 <div className="flex flex-wrap items-center gap-2 mt-1">
                                                                                                     {tags.map((t, idx2) => (
-                                                                                                        <div key={idx2} className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${t.bg} ${t.color} border border-white/5 shadow-sm whitespace-nowrap`}>
+                                                                                                        <div key={idx2} className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${t.bg} ${t.color} border border-carbon-200 dark:border-white/5 shadow-sm whitespace-nowrap`}>
                                                                                                             {t.label}
                                                                                                         </div>
                                                                                                     ))}
@@ -653,42 +653,42 @@ export default function AsistenciaVivoPage() {
 
                             <aside className="space-y-6">
                                 <div className="flex items-center gap-2">
-                                    <Calendar className="w-4 h-4 text-blue-500" />
-                                    <h2 className="text-sm font-black text-white uppercase tracking-widest">Próximas Clases</h2>
+                                    <Calendar className="w-4 h-4 text-kuro-500" />
+                                    <h2 className="text-sm font-black text-carbon-900 dark:text-white uppercase tracking-widest">Próximas Clases</h2>
                                 </div>
                                 <div className="space-y-3">
                                     {futureClasses.length === 0 ? (
-                                        <p className="text-slate-600 text-xs font-bold italic">No hay más clases por hoy.</p>
+                                        <p className="text-carbon-600 dark:text-carbon-300 text-xs font-bold italic">No hay más clases por hoy.</p>
                                     ) : (
                                         futureClasses.map((fcl) => (
                                             <div
                                                 key={fcl.id}
-                                                className="p-5 rounded-3xl bg-slate-900/30 border border-white/5 flex items-center gap-4 group hover:bg-white/5 transition-all"
+                                                className="p-5 rounded-3xl bg-white dark:bg-white/5/30 border border-carbon-200 dark:border-white/5 flex items-center gap-4 group hover:bg-white/5 transition-all"
                                             >
                                                 <div
                                                     className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-lg"
-                                                    style={{ backgroundColor: fcl.color || '#3b82f6' }}
+                                                    style={{ backgroundColor: fcl.color || '#899878' }}
                                                 >
                                                     {getClassEmoji(fcl.name)}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="text-xs font-black text-white uppercase tracking-tight truncate">{fcl.name}</p>
-                                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
+                                                    <p className="text-xs font-black text-carbon-900 dark:text-white uppercase tracking-tight truncate">{fcl.name}</p>
+                                                    <p className="text-[10px] text-carbon-500 dark:text-carbon-400 font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
                                                         <Clock className="w-3 h-3" />
                                                         {fcl.start_time?.slice(0, 5)}
                                                     </p>
                                                 </div>
-                                                <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest group-hover:text-blue-500 transition-colors">Hoy</div>
+                                                <div className="text-[9px] font-black text-carbon-600 dark:text-carbon-300 uppercase tracking-widest group-hover:text-kuro-500 transition-colors">Hoy</div>
                                             </div>
                                         ))
                                     )}
                                 </div>
-                                <div className="p-8 rounded-[2rem] bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-2xl relative overflow-hidden group">
+                                <div className="p-8 rounded-2xl bg-gradient-to-br from-kuro-600 to-kuro-700 text-carbon-900 dark:text-white shadow-2xl relative overflow-hidden group">
                                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform duration-700">
                                         <Users className="w-24 h-24" />
                                     </div>
                                     <h3 className="text-lg font-black uppercase italic leading-none mb-2 relative z-10">Control Total</h3>
-                                    <p className="text-blue-100 text-xs font-bold leading-relaxed relative z-10">
+                                    <p className="text-kuro-100 text-xs font-bold leading-relaxed relative z-10">
                                         Este panel se actualiza automáticamente cuando un alumno valida su acceso en la entrada.
                                     </p>
                                 </div>

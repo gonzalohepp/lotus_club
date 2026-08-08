@@ -101,19 +101,19 @@ export default function PaymentTimingPage() {
 
     return (
         <AdminLayout active="/metricas">
-            <div className="relative min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+            <div className="relative min-h-screen bg-gradient-to-b from-carbon-50 to-white dark:from-carbon-900 dark:to-carbon-800">
                 <div>
                     {/* Header */}
                     <header className="mb-10">
                         <div className="flex items-center gap-2 mb-4">
-                            <span className="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                            <span className="inline-flex items-center rounded-full bg-kuro-50 dark:bg-kuro-900/20 px-3 py-1 text-xs font-black uppercase tracking-widest text-kuro-600 dark:text-kuro-400">
                                 Comportamiento de Pagos
                             </span>
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-none mb-3">
-                            Análisis de <span className="text-emerald-600 dark:text-emerald-400">Puntualidad</span>
+                        <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-carbon-900 dark:text-white">
+                            Análisis de <span className="text-kuro-600 dark:text-kuro-400">Puntualidad</span>
                         </h1>
-                        <p className="text-slate-500 text-lg font-medium">
+                        <p className="text-carbon-500 text-lg font-medium">
                             Seguimiento detallado de comportamiento de pago (mes actual)
                         </p>
                     </header>
@@ -145,8 +145,8 @@ export default function PaymentTimingPage() {
 
                     {/* Filter Buttons */}
                     <div className="flex items-center gap-3 mb-6">
-                        <Filter className="w-5 h-5 text-slate-400" />
-                        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl gap-1">
+                        <Filter className="w-5 h-5 text-carbon-400" />
+                        <div className="flex bg-carbon-100 dark:bg-carbon-800 p-1 rounded-2xl gap-1">
                             <FilterButton
                                 active={filter === 'all'}
                                 onClick={() => setFilter('all')}
@@ -181,58 +181,58 @@ export default function PaymentTimingPage() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden"
+                        className="bg-white dark:bg-carbon-800 rounded-3xl border border-carbon-200 dark:border-carbon-700 shadow-xl overflow-hidden"
                     >
-                        <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-                            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                                <Users className="w-5 h-5 text-emerald-500" />
+                        <div className="p-6 border-b border-carbon-200 dark:border-carbon-700">
+                            <h3 className="text-lg font-black text-carbon-900 dark:text-white flex items-center gap-2">
+                                <Users className="w-5 h-5 text-kuro-500" />
                                 Listado de Usuarios ({filteredUsers.length})
                             </h3>
                         </div>
 
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-slate-50 dark:bg-slate-900/50">
+                                <thead className="bg-carbon-50 dark:bg-carbon-900/50">
                                     <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-widest text-slate-500">Usuario</th>
-                                        <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-widest text-slate-500">Fecha</th>
-                                        <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-widest text-slate-500">Día</th>
-                                        <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-widest text-slate-500">Monto</th>
-                                        <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-widest text-slate-500">Estado</th>
+                                        <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-widest text-carbon-500">Usuario</th>
+                                        <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-widest text-carbon-500">Fecha</th>
+                                        <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-widest text-carbon-500">Día</th>
+                                        <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-widest text-carbon-500">Monto</th>
+                                        <th className="px-6 py-4 text-left text-xs font-black uppercase tracking-widest text-carbon-500">Estado</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                <tbody className="divide-y divide-carbon-200 dark:divide-carbon-700">
                                     {loading && (
                                         <tr>
-                                            <td colSpan={5} className="px-6 py-10 text-center text-slate-400">
+                                            <td colSpan={5} className="px-6 py-10 text-center text-carbon-400">
                                                 Cargando...
                                             </td>
                                         </tr>
                                     )}
                                     {!loading && filteredUsers.length === 0 && (
                                         <tr>
-                                            <td colSpan={5} className="px-6 py-10 text-center text-slate-400">
+                                            <td colSpan={5} className="px-6 py-10 text-center text-carbon-400">
                                                 No hay pagos registrados en esta categoría
                                             </td>
                                         </tr>
                                     )}
                                     {!loading && filteredUsers.map((user) => (
-                                        <tr key={`${user.user_id}-${user.paid_at}`} className="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
+                                        <tr key={`${user.user_id}-${user.paid_at}`} className="hover:bg-carbon-50 dark:hover:bg-carbon-900/30 transition-colors">
                                             <td className="px-6 py-4">
-                                                <div className="font-bold text-slate-900 dark:text-white">
+                                                <div className="font-bold text-carbon-900 dark:text-white">
                                                     {user.first_name} {user.last_name}
                                                 </div>
-                                                <div className="text-xs text-slate-400">#{user.user_id.slice(0, 8)}</div>
+                                                <div className="text-xs text-carbon-400">#{user.user_id.slice(0, 8)}</div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">
+                                            <td className="px-6 py-4 text-sm text-carbon-600 dark:text-carbon-300">
                                                 {new Date(user.paid_at).toLocaleDateString('es-AR')}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-sm font-black">
+                                                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-carbon-100 dark:bg-carbon-700 text-sm font-black">
                                                     {user.day}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">
+                                            <td className="px-6 py-4 font-bold text-carbon-900 dark:text-white">
                                                 ${user.amount.toLocaleString('es-AR')}
                                             </td>
                                             <td className="px-6 py-4">
@@ -252,9 +252,9 @@ export default function PaymentTimingPage() {
 
 function KpiCard({ title, count, icon, color, loading }: { title: string; count: number; icon: ReactNode; color: 'green' | 'yellow' | 'red'; loading: boolean }) {
     const colors: Record<'green' | 'yellow' | 'red', string> = {
-        green: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800',
-        yellow: 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
-        red: 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800'
+        green: 'bg-kuro-50 dark:bg-kuro-900/20 text-kuro-600 dark:text-kuro-400 border-kuro-200 dark:border-kuro-800',
+        yellow: 'bg-warn-50 dark:bg-warn-900/20 text-warn-600 dark:text-warn-400 border-warn-200 dark:border-warn-800',
+        red: 'bg-alert-50 dark:bg-alert-900/20 text-alert-600 dark:text-alert-400 border-alert-200 dark:border-alert-800'
     }
 
     return (
@@ -287,16 +287,16 @@ function FilterButton({ active, onClick, label, count, color = 'blue' }: {
     color?: FilterButtonColor
 }) {
     const colorMap: Record<FilterButtonColor, string> = {
-        green: active ? 'bg-green-500 text-white' : 'text-green-600 dark:text-green-400',
-        yellow: active ? 'bg-yellow-500 text-white' : 'text-yellow-600 dark:text-yellow-400',
-        red: active ? 'bg-red-500 text-white' : 'text-red-600 dark:text-red-400',
-        blue: active ? 'bg-blue-500 text-white' : 'text-blue-600 dark:text-blue-400'
+        green: active ? 'bg-kuro-500 text-white' : 'text-kuro-600 dark:text-kuro-400',
+        yellow: active ? 'bg-warn-500 text-white' : 'text-warn-600 dark:text-warn-400',
+        red: active ? 'bg-alert-500 text-white' : 'text-alert-600 dark:text-alert-400',
+        blue: active ? 'bg-kuro-500 text-white' : 'text-kuro-600 dark:text-kuro-400'
     }
 
     return (
         <button
             onClick={onClick}
-            className={`px-4 py-2 rounded-xl text-sm font-black transition-all ${active ? colorMap[color] + ' shadow-lg' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+            className={`px-4 py-2 rounded-xl text-sm font-black transition-all ${active ? colorMap[color] + ' shadow-lg' : 'text-carbon-600 dark:text-carbon-400 hover:bg-carbon-200 dark:hover:bg-carbon-700'}`}
         >
             {label} {count !== undefined && `(${count})`}
         </button>
@@ -306,7 +306,7 @@ function FilterButton({ active, onClick, label, count, color = 'blue' }: {
 function StatusBadge({ day }: { day: number }) {
     if (day <= 10) {
         return (
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-black">
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-kuro-100 dark:bg-kuro-900/30 text-kuro-700 dark:text-kuro-400 text-xs font-black">
                 <CheckCircle className="w-3 h-3" />
                 A Término
             </span>
@@ -314,14 +314,14 @@ function StatusBadge({ day }: { day: number }) {
     }
     if (day <= 20) {
         return (
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-xs font-black">
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-warn-100 dark:bg-warn-900/30 text-warn-700 dark:text-warn-400 text-xs font-black">
                 <AlertTriangle className="w-3 h-3" />
                 +20% Recargo
             </span>
         )
     }
     return (
-        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-black">
+        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-alert-100 dark:bg-alert-900/30 text-alert-700 dark:text-alert-400 text-xs font-black">
             <XCircle className="w-3 h-3" />
             Fuera de Término
         </span>

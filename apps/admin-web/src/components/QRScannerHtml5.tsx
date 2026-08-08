@@ -34,7 +34,7 @@ export default function QRScannerHtml5({ onDecode, onError, paused = false }: Pr
       position: absolute;
       width: 40px;
       height: 40px;
-      border-color: #3b82f6;
+      border-color: #899878;
       border-style: solid;
       animation: pulse-corner 2s ease-in-out infinite;
     }
@@ -119,7 +119,7 @@ export default function QRScannerHtml5({ onDecode, onError, paused = false }: Pr
   }, [paused, onError])
 
   return (
-    <div className="relative w-full max-w-[420px] mx-auto overflow-hidden rounded-3xl bg-slate-900/5 shadow-inner">
+    <div className="relative w-full max-w-[420px] mx-auto overflow-hidden rounded-3xl bg-carbon-900/5 shadow-inner">
       <style>{overlayStyles}</style>
 
       {/* El host del scanner (video) */}
@@ -144,7 +144,7 @@ export default function QRScannerHtml5({ onDecode, onError, paused = false }: Pr
 
             {/* Línea de escaneo */}
             <div
-              className="absolute left-4 right-4 h-0.5 bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)]"
+              className="absolute left-4 right-4 h-0.5 bg-kuro-500 shadow-[0_0_15px_rgba(59,130,246,0.8)]"
               style={{ animation: 'scan-line 3s linear infinite' }}
             />
           </div>

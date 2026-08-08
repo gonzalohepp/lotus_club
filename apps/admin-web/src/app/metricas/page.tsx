@@ -8,7 +8,7 @@ import { NO_DOJO } from '@/lib/tenant/constants'
 import AdminLayout from '../layouts/AdminLayout'
 import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis,
-  CartesianGrid, Tooltip, Cell,
+  CartesianGrid, Tooltip,
 } from 'recharts'
 import {
   TrendingUp, Users, DollarSign, AlertTriangle,
@@ -52,12 +52,39 @@ interface AccessWithProfile extends Access {
 interface ClassRow { id: number; name: string }
 interface EnrollmentRow { user_id: string; class_id: number }
 
+
+/**
+ * Recharts recibe colores como valores JS, no como clases, así que no puede
+ * heredar el tema por CSS. El tema vive como clase `dark` en <html>.
+ */
+function useIsDark() {
+  const [isDark, setIsDark] = useState(false)
+  useEffect(() => {
+    const root = document.documentElement
+    const read = () => setIsDark(root.classList.contains('dark'))
+    read()
+    const obs = new MutationObserver(read)
+    obs.observe(root, { attributes: true, attributeFilter: ['class'] })
+    return () => obs.disconnect()
+  }, [])
+  return isDark
+}
+
+/** Cromo de los gráficos por tema. Los acentos no cambian: rinden en ambos. */
+const VIZ = {
+  light: { surface: '#FFFFFF', grid: '#E7E8E4', axis: '#72736F' },
+  dark: { surface: '#222725', grid: '#2C322E', axis: '#848580' },
+} as const
+
 /* =============== página =============== */
 export default function MetricasPage() {
   // Todas las métricas son de la sede activa: mezclar dos sucursales en un
   // mismo gráfico de ingresos o de asistencia no significa nada.
   const { activeDojo } = useTenant()
   const dojoId = activeDojo?.id
+
+  const isDark = useIsDark()
+  const C = isDark ? VIZ.dark : VIZ.light
 
   const [loading, setLoading] = useState(true)
 
@@ -275,15 +302,21 @@ export default function MetricasPage() {
     })).filter(c => c.count > 0)
   }, [classes, enrollments, activeUserIds])
 
-  const COLORS = ['#6366F1', '#8B5CF6', '#EC4899', '#10b981', '#f59e0b', '#ef4444']
+  /**
+   * Una sola serie = un solo color. Antes ciclaba seis tonos sobre categorías
+   * que no tienen orden natural (las clases), lo que codificaba el largo de la
+   * barra en el tono: información que la barra ya da, y encima con un arcoíris
+   * que es justo la estética que el manual de Kuro descarta.
+   */
+  const BAR_COLOR = '#899878'
 
   return (
     <AdminLayout active="/metricas">
-      <div className="relative isolate min-h-screen bg-[#0a0a0a] overflow-hidden">
+      <div className="relative isolate min-h-screen bg-background overflow-hidden">
         {/* Background */}
         <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[100px] opacity-20" />
-          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px] opacity-20" />
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-kuro-500/10 rounded-full blur-[100px] opacity-20" />
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-kuro-500/10 rounded-full blur-[100px] opacity-20" />
         </div>
 
         <div className="relative">
@@ -291,14 +324,14 @@ export default function MetricasPage() {
           <header className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
             <div className="space-y-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="inline-flex items-center rounded-full bg-indigo-900/30 px-2.5 py-0.5 text-xs font-black uppercase tracking-widest text-indigo-400 ring-1 ring-inset ring-indigo-400/20">
+                <span className="inline-flex items-center rounded-full bg-kuro-900/30 px-2.5 py-0.5 text-xs font-black uppercase tracking-widest text-kuro-400 ring-1 ring-inset ring-kuro-400/20">
                   Dashboard
                 </span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white">
-                Panel de <span className="text-indigo-400">Métricas</span>
+              <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-carbon-900 dark:text-white">
+                Panel de <span className="text-kuro-600 dark:text-kuro-400">Métricas</span>
               </h1>
-              <p className="text-slate-500 font-medium text-sm">
+              <p className="text-carbon-500 dark:text-carbon-400 font-medium text-sm">
                 Resumen del estado del dojo en tiempo real.
               </p>
             </div>
@@ -306,14 +339,14 @@ export default function MetricasPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => exportToExcel(payments, `Pagos_${new Date().toISOString().slice(0, 10)}`)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold uppercase tracking-widest text-slate-300 hover:bg-slate-700 transition-all"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-carbon-100 dark:bg-white/10 border border-carbon-200 dark:border-white/15 text-xs font-bold uppercase tracking-widest text-carbon-600 dark:text-carbon-300 hover:bg-carbon-200 dark:hover:bg-white/15 transition-all"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Pagos</span>
               </button>
               <button
                 onClick={() => exportToExcel(recentAccesses, `Asistencia_${new Date().toISOString().slice(0, 10)}`)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold uppercase tracking-widest text-slate-300 hover:bg-slate-700 transition-all"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-carbon-100 dark:bg-white/10 border border-carbon-200 dark:border-white/15 text-xs font-bold uppercase tracking-widest text-carbon-600 dark:text-carbon-300 hover:bg-carbon-200 dark:hover:bg-white/15 transition-all"
               >
                 <FileDown className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Asistencia</span>
@@ -362,10 +395,10 @@ export default function MetricasPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-4 md:p-6 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden"
+              className="p-4 md:p-6 rounded-2xl bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 overflow-hidden"
             >
-              <h3 className="text-sm font-black text-white mb-4 flex items-center gap-2 uppercase tracking-widest">
-                <span className="p-1.5 rounded-lg bg-orange-900/30 text-orange-400">
+              <h3 className="text-sm font-black text-carbon-900 dark:text-white mb-4 flex items-center gap-2 uppercase tracking-widest">
+                <span className="p-1.5 rounded-lg bg-warn-900/30 text-warn-400">
                   <Activity className="w-4 h-4" />
                 </span>
                 Horarios Pico (30d)
@@ -375,15 +408,15 @@ export default function MetricasPage() {
                   <AreaChart data={peakHours}>
                     <defs>
                       <linearGradient id="colorPeak" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#E2A52A" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#E2A52A" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
-                    <XAxis dataKey="hour" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }} />
-                    <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', fontSize: '12px', fontWeight: 700 }} />
-                    <Area type="monotone" dataKey="count" stroke="#f97316" strokeWidth={2} fillOpacity={1} fill="url(#colorPeak)" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={C.grid} />
+                    <XAxis dataKey="hour" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: C.axis }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: C.axis }} />
+                    <Tooltip contentStyle={{ background: C.surface, border: `1px solid ${C.grid}`, borderRadius: '12px', fontSize: '12px', fontWeight: 700 }} />
+                    <Area type="monotone" dataKey="count" stroke="#E2A52A" strokeWidth={2} fillOpacity={1} fill="url(#colorPeak)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -393,25 +426,25 @@ export default function MetricasPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-4 md:p-6 rounded-2xl bg-slate-900 border border-slate-800"
+              className="p-4 md:p-6 rounded-2xl bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                <h3 className="text-sm font-black text-white flex items-center gap-2 uppercase tracking-widest">
-                  <span className="p-1.5 rounded-lg bg-pink-900/30 text-pink-400">
+                <h3 className="text-sm font-black text-carbon-900 dark:text-white flex items-center gap-2 uppercase tracking-widest">
+                  <span className="p-1.5 rounded-lg bg-kuro-900/30 text-kuro-400">
                     <Users className="w-4 h-4" />
                   </span>
                   Top 5 Alumnos
                 </h3>
-                <div className="flex bg-slate-800 p-0.5 rounded-lg overflow-x-auto">
+                <div className="flex bg-carbon-100 dark:bg-white/10 p-0.5 rounded-lg overflow-x-auto">
                   <button
                     onClick={() => setSelectedClass('general')}
-                    className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-md transition-all whitespace-nowrap ${selectedClass === 'general' ? 'bg-slate-700 text-blue-400' : 'text-slate-500 hover:text-slate-300'}`}
+                    className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-md transition-all whitespace-nowrap ${selectedClass === 'general' ? 'bg-[#899878] text-[#121113]' : 'text-carbon-500 dark:text-carbon-400 hover:text-carbon-800 dark:hover:text-carbon-200'}`}
                   >General</button>
                   {classes.map(c => (
                     <button
                       key={c.id}
                       onClick={() => setSelectedClass(c.id)}
-                      className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-md transition-all whitespace-nowrap ${selectedClass === c.id ? 'bg-slate-700 text-blue-400' : 'text-slate-500 hover:text-slate-300'}`}
+                      className={`px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-md transition-all whitespace-nowrap ${selectedClass === c.id ? 'bg-[#899878] text-[#121113]' : 'text-carbon-500 dark:text-carbon-400 hover:text-carbon-800 dark:hover:text-carbon-200'}`}
                     >{c.name.split(' ')[0]}</button>
                   ))}
                 </div>
@@ -419,21 +452,21 @@ export default function MetricasPage() {
 
               <div className="space-y-2.5">
                 {topUsers.map((u, i) => (
-                  <div key={u.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 transition-colors">
+                  <div key={u.id} className="flex items-center justify-between p-3 rounded-xl bg-carbon-100 dark:bg-white/10/50 hover:bg-carbon-800 transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center font-bold text-xs">
+                      <div className="w-7 h-7 rounded-full bg-carbon-700 flex items-center justify-center font-bold text-xs">
                         {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
                       </div>
-                      <span className="text-sm font-bold text-slate-200 truncate max-w-[180px]">
+                      <span className="text-sm font-bold text-carbon-800 dark:text-carbon-200 truncate max-w-[180px]">
                         {u.name}
                       </span>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full bg-emerald-900/30 text-emerald-400 text-xs font-black">
+                    <span className="px-2.5 py-1 rounded-full bg-kuro-900/30 text-kuro-400 text-xs font-black">
                       {u.count}
                     </span>
                   </div>
                 ))}
-                {topUsers.length === 0 && <p className="text-center text-slate-500 text-sm py-8 italic">Sin datos en este periodo</p>}
+                {topUsers.length === 0 && <p className="text-center text-carbon-500 dark:text-carbon-400 text-sm py-8 italic">Sin datos en este periodo</p>}
               </div>
             </motion.div>
           </div>
@@ -445,10 +478,10 @@ export default function MetricasPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="p-4 md:p-6 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden"
+              className="p-4 md:p-6 rounded-2xl bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 overflow-hidden"
             >
-              <h3 className="text-sm font-black text-white mb-4 flex items-center gap-2 uppercase tracking-widest">
-                <span className="p-1.5 rounded-lg bg-indigo-900/30 text-indigo-400">
+              <h3 className="text-sm font-black text-carbon-900 dark:text-white mb-4 flex items-center gap-2 uppercase tracking-widest">
+                <span className="p-1.5 rounded-lg bg-kuro-900/30 text-kuro-400">
                   <TrendingUp className="w-4 h-4" />
                 </span>
                 Alumnos Activos por Clase
@@ -456,15 +489,11 @@ export default function MetricasPage() {
               <div className="h-[200px] md:h-[260px] w-full -ml-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={attendanceByClass}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
-                    <XAxis dataKey="className" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} />
-                    <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', fontSize: '12px', fontWeight: 700 }} />
-                    <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={30}>
-                      {attendanceByClass.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Bar>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={C.grid} />
+                    <XAxis dataKey="className" axisLine={false} tickLine={false} tick={{ fill: C.axis, fontSize: 10, fontWeight: 700 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: C.axis, fontSize: 10, fontWeight: 700 }} />
+                    <Tooltip contentStyle={{ background: C.surface, border: `1px solid ${C.grid}`, borderRadius: '12px', fontSize: '12px', fontWeight: 700 }} />
+                    <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={30} fill={BAR_COLOR} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -475,16 +504,16 @@ export default function MetricasPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="p-4 md:p-6 rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden"
+              className="p-4 md:p-6 rounded-2xl bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 overflow-hidden"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-                <h3 className="text-sm font-black text-white flex items-center gap-2 uppercase tracking-widest">
-                  <span className="p-1.5 rounded-lg bg-emerald-900/30 text-emerald-400">
+                <h3 className="text-sm font-black text-carbon-900 dark:text-white flex items-center gap-2 uppercase tracking-widest">
+                  <span className="p-1.5 rounded-lg bg-kuro-900/30 text-kuro-400">
                     <DollarSign className="w-4 h-4" />
                   </span>
                   Ingresos (30d)
                 </h3>
-                <span className={`text-[10px] font-black px-2 py-1 rounded-full self-start sm:self-auto ${growth >= 0 ? 'bg-emerald-900/30 text-emerald-400' : 'bg-red-900/30 text-red-400'}`}>
+                <span className={`text-[10px] font-black px-2 py-1 rounded-full self-start sm:self-auto ${growth >= 0 ? 'bg-kuro-900/30 text-kuro-400' : 'bg-alert-900/30 text-alert-400'}`}>
                   {growth > 0 ? '+' : ''}{growth.toFixed(1)}% vs mes ant.
                 </span>
               </div>
@@ -493,15 +522,15 @@ export default function MetricasPage() {
                   <AreaChart data={revenueTrend}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#899878" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#899878" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1e293b" />
-                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} tickFormatter={(value) => `$${value}`} />
-                    <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', fontSize: '12px', fontWeight: 700 }} />
-                    <Area type="monotone" dataKey="amount" stroke="#10B981" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={C.grid} />
+                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: C.axis, fontSize: 10, fontWeight: 700 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: C.axis, fontSize: 10, fontWeight: 700 }} tickFormatter={(value) => `$${value}`} />
+                    <Tooltip contentStyle={{ background: C.surface, border: `1px solid ${C.grid}`, borderRadius: '12px', fontSize: '12px', fontWeight: 700 }} />
+                    <Area type="monotone" dataKey="amount" stroke="#899878" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -525,10 +554,10 @@ function KpiCard({ label, value, icon, color, loading, trend, description }: {
   description?: string
 }) {
   const colorMap = {
-    indigo: { bg: 'bg-indigo-900/20', text: 'text-indigo-400', ring: 'ring-indigo-400/20', icon: 'bg-indigo-900/30 text-indigo-400' },
-    emerald: { bg: 'bg-emerald-900/20', text: 'text-emerald-400', ring: 'ring-emerald-400/20', icon: 'bg-emerald-900/30 text-emerald-400' },
-    rose: { bg: 'bg-rose-900/20', text: 'text-rose-400', ring: 'ring-rose-400/20', icon: 'bg-rose-900/30 text-rose-400' },
-    blue: { bg: 'bg-blue-900/20', text: 'text-blue-400', ring: 'ring-blue-400/20', icon: 'bg-blue-900/30 text-blue-400' },
+    indigo: { bg: 'bg-kuro-900/20', text: 'text-kuro-400', ring: 'ring-kuro-400/20', icon: 'bg-kuro-900/30 text-kuro-400' },
+    emerald: { bg: 'bg-kuro-900/20', text: 'text-kuro-400', ring: 'ring-kuro-400/20', icon: 'bg-kuro-900/30 text-kuro-400' },
+    rose: { bg: 'bg-alert-900/20', text: 'text-alert-400', ring: 'ring-alert-400/20', icon: 'bg-alert-900/30 text-alert-400' },
+    blue: { bg: 'bg-kuro-900/20', text: 'text-kuro-400', ring: 'ring-kuro-400/20', icon: 'bg-kuro-900/30 text-kuro-400' },
   }
   const c = colorMap[color]
 
@@ -536,23 +565,23 @@ function KpiCard({ label, value, icon, color, loading, trend, description }: {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`p-5 rounded-2xl border border-slate-800 bg-slate-900 relative overflow-hidden`}
+      className={`p-5 rounded-2xl border border-carbon-200 dark:border-white/10 bg-white dark:bg-white/5 relative overflow-hidden`}
     >
       <div className="flex items-start justify-between mb-3">
         <div className={`p-2 rounded-xl ${c.icon}`}>{icon}</div>
         {trend !== undefined && (
-          <span className={`text-xs font-black px-2 py-0.5 rounded-full ${trend >= 0 ? 'bg-emerald-900/30 text-emerald-400' : 'bg-red-900/30 text-red-400'}`}>
+          <span className={`text-xs font-black px-2 py-0.5 rounded-full ${trend >= 0 ? 'bg-kuro-900/30 text-kuro-400' : 'bg-alert-900/30 text-alert-400'}`}>
             {trend > 0 ? '+' : ''}{trend.toFixed(1)}%
           </span>
         )}
       </div>
-      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</p>
+      <p className="text-[10px] font-black uppercase tracking-widest text-carbon-500 dark:text-carbon-400 mb-1">{label}</p>
       {loading ? (
-        <div className="h-8 w-24 bg-slate-800 rounded animate-pulse" />
+        <div className="h-8 w-24 bg-carbon-100 dark:bg-white/10 rounded animate-pulse" />
       ) : (
-        <p className="text-2xl font-black text-white">{value}</p>
+        <p className="text-2xl font-black text-carbon-900 dark:text-white">{value}</p>
       )}
-      {description && <p className="text-[10px] text-slate-600 mt-1 font-medium">{description}</p>}
+      {description && <p className="text-[10px] text-carbon-600 dark:text-carbon-300 mt-1 font-medium">{description}</p>}
     </motion.div>
   )
 }
@@ -560,14 +589,14 @@ function KpiCard({ label, value, icon, color, loading, trend, description }: {
 function MiniKpi({ icon, label, value, loading, color }: {
   icon: React.ReactNode; label: string; value: string | number; loading: boolean; color?: string
 }) {
-  const textColor = color === 'red' ? 'text-red-400' : color === 'amber' ? 'text-amber-400' : color === 'emerald' ? 'text-emerald-400' : 'text-white'
+  const textColor = color === 'red' ? 'text-alert-400' : color === 'amber' ? 'text-warn-400' : color === 'emerald' ? 'text-kuro-400' : 'text-carbon-900 dark:text-white'
   return (
-    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3">
-      <div className="p-1.5 rounded-lg bg-slate-800 text-slate-400">{icon}</div>
+    <div className="p-3 rounded-xl bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 flex items-center gap-3">
+      <div className="p-1.5 rounded-lg bg-carbon-100 dark:bg-white/10 text-carbon-500 dark:text-carbon-400">{icon}</div>
       <div className="min-w-0">
-        <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 truncate">{label}</p>
+        <p className="text-[9px] font-black uppercase tracking-widest text-carbon-600 dark:text-carbon-300 truncate">{label}</p>
         {loading ? (
-          <div className="h-5 w-10 bg-slate-800 rounded animate-pulse mt-0.5" />
+          <div className="h-5 w-10 bg-carbon-100 dark:bg-white/10 rounded animate-pulse mt-0.5" />
         ) : (
           <p className={`text-lg font-black ${textColor}`}>{value}</p>
         )}

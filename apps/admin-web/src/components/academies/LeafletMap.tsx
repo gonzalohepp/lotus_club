@@ -10,8 +10,8 @@ const selectionIcon = L.divIcon({
     className: 'custom-marker-selection',
     html: `
         <div class="relative flex items-center justify-center">
-            <div class="absolute w-8 h-8 bg-blue-500/20 rounded-full animate-pulse"></div>
-            <div class="relative w-8 h-8 bg-blue-600 rounded-xl rotate-45 border-2 border-white shadow-xl flex items-center justify-center">
+            <div class="absolute w-8 h-8 bg-kuro-500/20 rounded-full animate-pulse"></div>
+            <div class="relative w-8 h-8 bg-kuro-600 rounded-xl rotate-45 border-2 border-white shadow-xl flex items-center justify-center">
                 <div class="-rotate-45">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>

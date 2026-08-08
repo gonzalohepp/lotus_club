@@ -54,10 +54,10 @@ export default function BillingRulesEditor({
     return (
         <div className="space-y-6">
             <div>
-                <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-1">
+                <h3 className="text-sm font-black uppercase tracking-widest text-carbon-400 mb-1">
                     Tramos por día del mes
                 </h3>
-                <p className="text-xs text-slate-500 mb-4">
+                <p className="text-xs text-carbon-500 mb-4">
                     Se evalúan contra el día de hoy, una vez que la cuota venció. El alumno que paga antes del
                     vencimiento nunca entra acá.
                 </p>
@@ -66,7 +66,7 @@ export default function BillingRulesEditor({
                     {tiers.map((tier, i) => (
                         <div
                             key={i}
-                            className="grid grid-cols-[1fr_auto] md:grid-cols-[80px_80px_1fr_100px_auto_auto] gap-2 items-center p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+                            className="grid grid-cols-[1fr_auto] md:grid-cols-[80px_80px_1fr_100px_auto_auto] gap-2 items-center p-3 rounded-xl bg-carbon-50 dark:bg-carbon-800/50 border border-carbon-200 dark:border-carbon-700"
                         >
                             <NumberField
                                 label="Desde día"
@@ -87,14 +87,14 @@ export default function BillingRulesEditor({
                             />
 
                             <div className="col-span-2 md:col-span-1">
-                                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-carbon-400 mb-1">
                                     Etiqueta
                                 </label>
                                 <input
                                     type="text"
                                     value={tier.label}
                                     onChange={(e) => patchTier(i, { label: e.target.value })}
-                                    className="w-full h-9 px-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm"
+                                    className="w-full h-9 px-3 rounded-lg bg-white dark:bg-carbon-900 border border-carbon-200 dark:border-carbon-700 text-sm"
                                 />
                             </div>
 
@@ -107,7 +107,7 @@ export default function BillingRulesEditor({
                             />
 
                             <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-carbon-400 mb-1">
                                     Bloquea
                                 </label>
                                 <button
@@ -115,8 +115,8 @@ export default function BillingRulesEditor({
                                     onClick={() => patchTier(i, { blocks_access: !tier.blocks_access })}
                                     className={`h-9 px-3 rounded-lg text-xs font-bold transition-colors ${
                                         tier.blocks_access
-                                            ? 'bg-red-500 text-white'
-                                            : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
+                                            ? 'bg-alert-500 text-white'
+                                            : 'bg-carbon-200 dark:bg-carbon-700 text-carbon-500'
                                     }`}
                                     title="Si está activo, el QR rechaza el ingreso en este tramo"
                                 >
@@ -127,7 +127,7 @@ export default function BillingRulesEditor({
                             <button
                                 type="button"
                                 onClick={() => removeTier(i)}
-                                className="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 self-end"
+                                className="p-2 rounded-lg text-carbon-400 hover:text-alert-500 hover:bg-alert-50 dark:hover:bg-alert-900/20 self-end"
                                 aria-label="Eliminar tramo"
                             >
                                 <Trash2 className="w-4 h-4" />
@@ -139,7 +139,7 @@ export default function BillingRulesEditor({
                 <button
                     type="button"
                     onClick={addTier}
-                    className="mt-3 flex items-center gap-2 px-4 h-10 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 text-sm font-bold text-slate-500 hover:border-blue-500 hover:text-blue-500 transition-colors"
+                    className="mt-3 flex items-center gap-2 px-4 h-10 rounded-xl border border-dashed border-carbon-300 dark:border-carbon-600 text-sm font-bold text-carbon-500 hover:border-kuro-500 hover:text-kuro-500 transition-colors"
                 >
                     <Plus className="w-4 h-4" />
                     Agregar tramo
@@ -148,7 +148,7 @@ export default function BillingRulesEditor({
                 {warnings.length > 0 && (
                     <ul className="mt-3 space-y-1">
                         {warnings.map((w, i) => (
-                            <li key={i} className="text-xs text-amber-600 dark:text-amber-400">
+                            <li key={i} className="text-xs text-warn-600 dark:text-warn-400">
                                 ⚠ {w}
                             </li>
                         ))}
@@ -187,7 +187,7 @@ export default function BillingRulesEditor({
                 />
             </div>
 
-            <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 cursor-pointer">
+            <label className="flex items-start gap-3 p-3 rounded-xl bg-carbon-50 dark:bg-carbon-800/50 cursor-pointer">
                 <input
                     type="checkbox"
                     checked={value.new_member_exempt}
@@ -196,15 +196,15 @@ export default function BillingRulesEditor({
                 />
                 <span className="text-sm">
                     <span className="font-bold">Alumnos nuevos sin recargo</span>
-                    <span className="block text-xs text-slate-500">
+                    <span className="block text-xs text-carbon-500">
                         Quien todavía no registró ningún pago en esta sede no arrastra mora
                     </span>
                 </span>
             </label>
 
             {/* Vista previa + simulador -------------------------------------- */}
-            <div className="p-4 rounded-2xl bg-slate-900 dark:bg-black text-slate-200">
-                <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-3">
+            <div className="p-4 rounded-2xl bg-carbon-900 dark:bg-black text-carbon-200">
+                <h4 className="text-xs font-black uppercase tracking-widest text-carbon-500 mb-3">
                     Así queda tu política
                 </h4>
                 <ul className="space-y-1 mb-5">
@@ -215,7 +215,7 @@ export default function BillingRulesEditor({
                     ))}
                 </ul>
 
-                <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-3">
+                <h4 className="text-xs font-black uppercase tracking-widest text-carbon-500 mb-3">
                     Simulación — alumno que venció el mes pasado
                 </h4>
                 <Simulator config={value} />
@@ -241,7 +241,7 @@ function Simulator({ config }: { config: BillingConfig }) {
         <div className="overflow-x-auto">
             <table className="w-full text-sm font-mono">
                 <thead>
-                    <tr className="text-slate-500 text-xs">
+                    <tr className="text-carbon-500 text-xs">
                         <th className="text-left pb-2">Hoy es</th>
                         <th className="text-left pb-2">Estado</th>
                         <th className="text-right pb-2">Cuota ${base.toLocaleString('es-AR')}</th>
@@ -257,9 +257,9 @@ function Simulator({ config }: { config: BillingConfig }) {
                             referenceDate: ref,
                         })
                         return (
-                            <tr key={day} className="border-t border-slate-800">
+                            <tr key={day} className="border-t border-carbon-800">
                                 <td className="py-1.5">{day} jul</td>
-                                <td className="py-1.5 text-slate-400">{r.tierLabel ?? r.phase}</td>
+                                <td className="py-1.5 text-carbon-400">{r.tierLabel ?? r.phase}</td>
                                 <td className="py-1.5 text-right">
                                     ${Math.round(base * r.multiplier).toLocaleString('es-AR')}
                                 </td>
@@ -324,7 +324,7 @@ function NumberField({
 }) {
     return (
         <div className={block ? '' : 'min-w-0'}>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</label>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-carbon-400 mb-1">{label}</label>
             <input
                 type="number"
                 min={min}
@@ -336,9 +336,9 @@ function NumberField({
                     if (raw === '') return onChange(nullable ? null : 0)
                     onChange(Number(raw))
                 }}
-                className="w-full h-9 px-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm"
+                className="w-full h-9 px-3 rounded-lg bg-white dark:bg-carbon-900 border border-carbon-200 dark:border-carbon-700 text-sm"
             />
-            {hint && <p className="mt-1 text-[10px] text-slate-500">{hint}</p>}
+            {hint && <p className="mt-1 text-[10px] text-carbon-500">{hint}</p>}
         </div>
     )
 }

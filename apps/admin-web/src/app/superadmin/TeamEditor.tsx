@@ -137,10 +137,10 @@ export default function TeamEditor({ dojoId, dojoName }: { dojoId: string; dojoN
     return (
         <div className="space-y-6">
             {/* Alta ---------------------------------------------------------- */}
-            <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <div className="p-4 rounded-2xl border border-carbon-200 dark:border-carbon-700">
                 <div className="flex flex-col md:flex-row gap-3 md:items-end">
                     <div className="flex-1">
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-carbon-400 mb-1">
                             Email
                         </label>
                         <input
@@ -149,18 +149,18 @@ export default function TeamEditor({ dojoId, dojoName }: { dojoId: string; dojoN
                             placeholder="persona@gmail.com"
                             onChange={(e) => setEmail(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && add()}
-                            className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm"
+                            className="w-full h-10 px-3 rounded-xl bg-carbon-50 dark:bg-carbon-800 border border-carbon-200 dark:border-carbon-700 text-sm"
                         />
                     </div>
 
                     <div className="md:w-52">
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-carbon-400 mb-1">
                             Rol
                         </label>
                         <select
                             value={role}
                             onChange={(e) => setRole(e.target.value as DojoRole)}
-                            className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm"
+                            className="w-full h-10 px-3 rounded-xl bg-carbon-50 dark:bg-carbon-800 border border-carbon-200 dark:border-carbon-700 text-sm"
                         >
                             {(Object.keys(ROLE_LABELS) as DojoRole[]).map((r) => (
                                 <option key={r} value={r}>
@@ -173,18 +173,18 @@ export default function TeamEditor({ dojoId, dojoName }: { dojoId: string; dojoN
                     <button
                         onClick={add}
                         disabled={adding || !email.trim()}
-                        className="flex items-center justify-center gap-2 px-5 h-10 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                        className="flex items-center justify-center gap-2 px-5 h-10 rounded-xl bg-kuro-600 text-white font-bold text-sm hover:bg-kuro-700 disabled:opacity-50 transition-colors"
                     >
                         {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
                         Agregar
                     </button>
                 </div>
 
-                <p className="mt-2 text-xs text-slate-500">{ROLE_HINTS[role]}</p>
+                <p className="mt-2 text-xs text-carbon-500">{ROLE_HINTS[role]}</p>
             </div>
 
             {loading ? (
-                <div className="flex items-center gap-2 text-sm text-slate-400">
+                <div className="flex items-center gap-2 text-sm text-carbon-400">
                     <Loader2 className="w-4 h-4 animate-spin" /> Cargando…
                 </div>
             ) : (
@@ -192,26 +192,26 @@ export default function TeamEditor({ dojoId, dojoName }: { dojoId: string; dojoN
                     {/* Invitaciones pendientes ------------------------------- */}
                     {invitations.length > 0 && (
                         <section>
-                            <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
+                            <h4 className="text-xs font-black uppercase tracking-widest text-carbon-400 mb-2">
                                 Invitaciones pendientes
                             </h4>
                             <div className="space-y-2">
                                 {invitations.map((inv) => (
                                     <div
                                         key={inv.id}
-                                        className="flex items-center gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40"
+                                        className="flex items-center gap-3 p-3 rounded-xl bg-warn-50 dark:bg-warn-900/10 border border-warn-200 dark:border-warn-800/40"
                                     >
-                                        <Clock className="w-4 h-4 text-amber-500 shrink-0" />
+                                        <Clock className="w-4 h-4 text-warn-500 shrink-0" />
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-bold truncate">{inv.email}</p>
-                                            <p className="text-xs text-amber-700 dark:text-amber-500">
+                                            <p className="text-xs text-warn-700 dark:text-warn-500">
                                                 Va a entrar como {ROLE_LABELS[inv.role].toLowerCase()} cuando se
                                                 loguee por primera vez
                                             </p>
                                         </div>
                                         <button
                                             onClick={() => remove(`invitation_id=${inv.id}`, inv.email)}
-                                            className="p-2 rounded-lg text-slate-400 hover:text-red-500"
+                                            className="p-2 rounded-lg text-carbon-400 hover:text-alert-500"
                                             aria-label="Cancelar invitación"
                                         >
                                             <Trash2 className="w-4 h-4" />
@@ -265,14 +265,14 @@ function TeamList({
         <section>
             <button
                 onClick={() => setOpen((v) => !v)}
-                className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 hover:text-slate-600 dark:hover:text-slate-300"
+                className="text-xs font-black uppercase tracking-widest text-carbon-400 mb-2 hover:text-carbon-600 dark:hover:text-carbon-300"
             >
                 {title} {collapsed && (open ? '▾' : '▸')}
             </button>
 
             {open &&
                 (rows.length === 0 ? (
-                    <p className="text-sm text-slate-400">{emptyHint}</p>
+                    <p className="text-sm text-carbon-400">{emptyHint}</p>
                 ) : (
                     <div className="space-y-2">
                         {rows.map((m) => {
@@ -284,15 +284,15 @@ function TeamList({
                             return (
                                 <div
                                     key={m.id}
-                                    className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+                                    className="flex items-center gap-3 p-3 rounded-xl bg-carbon-50 dark:bg-carbon-800/50 border border-carbon-200 dark:border-carbon-700"
                                 >
-                                    <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0 text-xs font-black text-slate-500">
+                                    <div className="w-9 h-9 rounded-full bg-carbon-200 dark:bg-carbon-700 flex items-center justify-center shrink-0 text-xs font-black text-carbon-500">
                                         {name.slice(0, 1).toUpperCase()}
                                     </div>
 
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-bold truncate">{name}</p>
-                                        <p className="text-xs text-slate-400 truncate flex items-center gap-1">
+                                        <p className="text-xs text-carbon-400 truncate flex items-center gap-1">
                                             <Mail className="w-3 h-3" />
                                             {m.profiles?.email}
                                         </p>
@@ -301,7 +301,7 @@ function TeamList({
                                     <select
                                         value={m.role}
                                         onChange={(e) => onChangeRole(m.id, e.target.value as DojoRole)}
-                                        className="h-9 px-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold"
+                                        className="h-9 px-2 rounded-lg bg-white dark:bg-carbon-900 border border-carbon-200 dark:border-carbon-700 text-xs font-bold"
                                     >
                                         {(Object.keys(ROLE_LABELS) as DojoRole[]).map((r) => (
                                             <option key={r} value={r}>
@@ -312,7 +312,7 @@ function TeamList({
 
                                     <button
                                         onClick={() => onRemove(`member_id=${m.id}`, name)}
-                                        className="p-2 rounded-lg text-slate-400 hover:text-red-500"
+                                        className="p-2 rounded-lg text-carbon-400 hover:text-alert-500"
                                         aria-label="Quitar de la sede"
                                     >
                                         <Trash2 className="w-4 h-4" />

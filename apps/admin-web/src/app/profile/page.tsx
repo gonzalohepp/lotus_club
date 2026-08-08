@@ -116,18 +116,18 @@ function BottomSheet({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 rounded-t-[32px] shadow-2xl max-h-[85vh] flex flex-col lg:hidden"
+            className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-carbon-900 rounded-t-[32px] shadow-2xl max-h-[85vh] flex flex-col lg:hidden"
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-2 shrink-0">
-              <div className="w-12 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700" />
+              <div className="w-12 h-1.5 rounded-full bg-carbon-200 dark:bg-carbon-700" />
             </div>
             {/* Header */}
-            <div className="flex items-center justify-between px-6 pb-4 shrink-0 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">{title}</h3>
+            <div className="flex items-center justify-between px-6 pb-4 shrink-0 border-b border-carbon-100 dark:border-carbon-800">
+              <h3 className="text-lg font-black text-carbon-900 dark:text-white uppercase tracking-tight">{title}</h3>
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500"
+                className="w-8 h-8 rounded-full bg-carbon-100 dark:bg-carbon-800 flex items-center justify-center text-carbon-500"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -158,23 +158,23 @@ function SectionButton({
   accent?: 'blue' | 'emerald' | 'purple'
 }) {
   const accents = {
-    blue: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
-    emerald: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400',
-    purple: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
+    blue: 'bg-kuro-50 dark:bg-kuro-900/20 text-kuro-600 dark:text-kuro-400',
+    emerald: 'bg-kuro-50 dark:bg-kuro-900/20 text-kuro-600 dark:text-kuro-400',
+    purple: 'bg-kuro-50 dark:bg-kuro-900/20 text-kuro-600 dark:text-kuro-400',
   }
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700 shadow-sm active:scale-[0.98] transition-all hover:shadow-md"
+      className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-carbon-800/60 border border-carbon-100 dark:border-carbon-700 shadow-sm active:scale-[0.98] transition-all hover:shadow-md"
     >
       <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${accents[accent]}`}>
         {icon}
       </div>
       <div className="flex-1 text-left min-w-0">
-        <p className="font-black text-slate-900 dark:text-white text-sm uppercase tracking-tight">{label}</p>
-        {sublabel && <p className="text-xs text-slate-400 font-medium mt-0.5 truncate">{sublabel}</p>}
+        <p className="font-black text-carbon-900 dark:text-white text-sm uppercase tracking-tight">{label}</p>
+        {sublabel && <p className="text-xs text-carbon-400 font-medium mt-0.5 truncate">{sublabel}</p>}
       </div>
-      <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
+      <ChevronRight className="w-4 h-4 text-carbon-300 shrink-0" />
     </button>
   )
 }
@@ -186,25 +186,25 @@ function ClassItem({ c, idx }: { c: ClassRow; idx: number }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: idx * 0.08 }}
-      className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700"
+      className="p-4 rounded-2xl bg-carbon-50 dark:bg-carbon-800/50 border border-carbon-100 dark:border-carbon-700"
     >
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shadow-sm bg-white dark:bg-slate-700">
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shadow-sm bg-white dark:bg-carbon-700">
           {getClassEmoji(c.name)}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-tight leading-tight truncate text-sm">{c.name}</h3>
+          <h3 className="font-black text-carbon-900 dark:text-white uppercase tracking-tight leading-tight truncate text-sm">{c.name}</h3>
           {c.instructor && (
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">
+            <p className="text-[10px] font-bold text-carbon-400 uppercase tracking-widest truncate">
               {c.instructor}
             </p>
           )}
         </div>
-        <p className="text-sm font-black text-slate-900 dark:text-white shrink-0">
+        <p className="text-sm font-black text-carbon-900 dark:text-white shrink-0">
           {fmtARS(c.is_principal ? (c.price_principal ?? c.price) : (c.price_additional ?? c.price_principal ?? c.price))}
         </p>
       </div>
-      <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-black text-[10px] uppercase tracking-widest">
+      <div className="flex items-center gap-1.5 text-kuro-600 dark:text-kuro-400 font-black text-[10px] uppercase tracking-widest">
         <Calendar className="w-3 h-3" />
         {fmtSchedule(c.days, c.start_time, c.end_time)}
       </div>
@@ -400,8 +400,8 @@ export default function ProfilePage() {
   return (
     <AdminLayout active="/profile">
       <div className="relative min-h-screen overflow-x-hidden">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-kuro-500/5 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-kuro-500/5 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="relative z-10">
           <div>
@@ -410,10 +410,10 @@ export default function ProfilePage() {
             {loading ? (
               <div className="min-h-[70vh] flex items-center justify-center">
                 <div className="text-center">
-                  <div className="w-24 h-24 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-6">
-                    <UserIcon className="w-12 h-12 text-blue-600 animate-pulse" />
+                  <div className="w-24 h-24 rounded-full bg-kuro-500/10 flex items-center justify-center mx-auto mb-6">
+                    <UserIcon className="w-12 h-12 text-kuro-600 animate-pulse" />
                   </div>
-                  <p className="text-slate-500 font-bold text-xl uppercase tracking-widest animate-pulse">Cargando Perfil...</p>
+                  <p className="text-carbon-500 font-bold text-xl uppercase tracking-widest animate-pulse">Cargando Perfil...</p>
                 </div>
               </div>
 
@@ -431,11 +431,11 @@ export default function ProfilePage() {
                       tiene ficha que mostrar (lo normal). */}
                   {isPlatformAdmin || orgRole ? (
                     <>
-                      <ShieldCheck className="w-16 h-16 text-blue-500 mx-auto mb-6" />
-                      <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">
+                      <ShieldCheck className="w-16 h-16 text-kuro-500 mx-auto mb-6" />
+                      <h2 className="text-2xl font-black text-carbon-900 dark:text-white mb-2 uppercase tracking-tight">
                         No tenés ficha de alumno
                       </h2>
-                      <p className="text-slate-500 dark:text-slate-400">
+                      <p className="text-carbon-500 dark:text-carbon-400">
                         Tu acceso es {isPlatformAdmin ? 'de plataforma' : 'de marca'}, no de una sede.
                         Esta pantalla muestra la cuota y las clases de un alumno, y vos no estás
                         inscripto en {activeDojo?.name ?? 'ninguna sede'}.
@@ -443,9 +443,9 @@ export default function ProfilePage() {
                     </>
                   ) : (
                     <>
-                      <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
-                      <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">Acceso Restringido</h2>
-                      <p className="text-slate-500 dark:text-slate-400 text-lg">No pudimos encontrar tu perfil. Verificá tu sesión o contactá a recepción.</p>
+                      <AlertCircle className="w-16 h-16 text-alert-500 mx-auto mb-6" />
+                      <h2 className="text-3xl font-black text-carbon-900 dark:text-white mb-2 uppercase tracking-tight">Acceso Restringido</h2>
+                      <p className="text-carbon-500 dark:text-carbon-400 text-lg">No pudimos encontrar tu perfil. Verificá tu sesión o contactá a recepción.</p>
                     </>
                   )}
                 </motion.div>
@@ -463,7 +463,7 @@ export default function ProfilePage() {
                   {/* Avatar + Name */}
                   <div className="flex flex-col items-center text-center pt-2 pb-6">
                     <div className="relative group mb-4">
-                      <div className="w-28 h-28 rounded-[28px] overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-2xl shadow-blue-500/30">
+                      <div className="w-28 h-28 rounded-[28px] overflow-hidden bg-gradient-to-br from-kuro-600 to-kuro-700 flex items-center justify-center shadow-2xl shadow-kuro-500/30">
                         {member.avatar_url ? (
                           <img src={member.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
@@ -475,22 +475,22 @@ export default function ProfilePage() {
                         </label>
                       </div>
                       {/* Status dot */}
-                      <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white dark:border-slate-900 ${isActive ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                      <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white dark:border-carbon-900 ${isActive ? 'bg-kuro-500' : 'bg-alert-500'}`} />
                     </div>
 
-                    <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1">
+                    <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-carbon-900 dark:text-white">
                       {fullName || member.first_name || 'Miembro'}
                     </h1>
-                    <p className="text-sm text-slate-400 font-medium mb-3">{member.email}</p>
+                    <p className="text-sm text-carbon-400 font-medium mb-3">{member.email}</p>
 
                     {/* Role + Status badges */}
                     <div className="flex items-center gap-2 flex-wrap justify-center">
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-xs font-black uppercase tracking-wider">
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-kuro-100 dark:bg-kuro-900/40 text-kuro-600 dark:text-kuro-400 text-xs font-black uppercase tracking-wider">
                         {member.role === 'admin' ? 'Administrador' :
                           member.role === 'instructor' ? 'Instructor' :
                             member.role === 'becado' ? 'Becado' : 'Socio'}
                       </span>
-                      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${isActive ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400'}`}>
+                      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${isActive ? 'bg-kuro-100 dark:bg-kuro-900/40 text-kuro-600 dark:text-kuro-400' : 'bg-alert-100 dark:bg-alert-900/40 text-alert-600 dark:text-alert-400'}`}>
                         {isActive ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                         {isActive ? 'Activo' : 'Vencido'}
                       </span>
@@ -498,24 +498,24 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Membresía card mobile */}
-                  <div className="rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700 shadow-sm p-4 mb-4">
+                  <div className="rounded-2xl bg-white dark:bg-carbon-800/60 border border-carbon-100 dark:border-carbon-700 shadow-sm p-4 mb-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <p className="text-[10px] font-black text-carbon-400 uppercase tracking-widest mb-1 flex items-center gap-1">
                           <Clock className="w-3 h-3" /> Próximo Vencimiento
                         </p>
-                        <p className={`text-base font-black tracking-tight ${!isActive && !isSpecialRole && !isLifetime ? 'text-red-500' : 'text-slate-900 dark:text-white'}`}>
+                        <p className={`text-base font-black tracking-tight ${!isActive && !isSpecialRole && !isLifetime ? 'text-alert-500' : 'text-carbon-900 dark:text-white'}`}>
                           {vencimientoLabel}
                         </p>
                         {daysLeft !== null && daysLeft > 0 && !isSpecialRole && !isLifetime && (
-                          <p className={`text-xs font-bold mt-0.5 ${daysLeft < 7 ? 'text-red-400' : 'text-slate-400'}`}>
+                          <p className={`text-xs font-bold mt-0.5 ${daysLeft < 7 ? 'text-alert-400' : 'text-carbon-400'}`}>
                             Quedan {daysLeft} días
                           </p>
                         )}
                       </div>
                       {daysLeft !== null && !isSpecialRole && !isLifetime && (
-                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${daysLeft < 7 ? 'bg-red-50 dark:bg-red-900/20' : 'bg-blue-50 dark:bg-blue-900/20'}`}>
-                          <p className={`text-2xl font-black tabular-nums ${daysLeft < 7 ? 'text-red-500' : 'text-blue-600 dark:text-blue-400'}`}>
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${daysLeft < 7 ? 'bg-alert-50 dark:bg-alert-900/20' : 'bg-kuro-50 dark:bg-kuro-900/20'}`}>
+                          <p className={`text-2xl font-black tabular-nums ${daysLeft < 7 ? 'text-alert-500' : 'text-kuro-600 dark:text-kuro-400'}`}>
                             {daysLeft > 0 ? daysLeft : 0}
                           </p>
                         </div>
@@ -524,11 +524,11 @@ export default function ProfilePage() {
 
                     {/* Progress bar */}
                     {daysLeft !== null && !isSpecialRole && !isLifetime && (
-                      <div className="mt-3 h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                      <div className="mt-3 h-1.5 w-full bg-carbon-100 dark:bg-carbon-700 rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: daysLeft > 0 ? `${Math.min(100, (daysLeft / 30) * 100)}%` : '100%' }}
-                          className={`h-full rounded-full ${daysLeft < 7 ? 'bg-red-500' : 'bg-blue-600'}`}
+                          className={`h-full rounded-full ${daysLeft < 7 ? 'bg-alert-500' : 'bg-kuro-600'}`}
                         />
                       </div>
                     )}
@@ -568,22 +568,22 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Contact info mobile */}
-                  <div className="mt-4 p-4 rounded-2xl bg-white dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700 shadow-sm">
+                  <div className="mt-4 p-4 rounded-2xl bg-white dark:bg-carbon-800/60 border border-carbon-100 dark:border-carbon-700 shadow-sm">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-                        <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+                      <h3 className="text-xs font-black text-carbon-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                        <AlertCircle className="w-3.5 h-3.5 text-warn-500" />
                         Contacto
                       </h3>
                       {!isEditing ? (
-                        <button onClick={() => setIsEditing(true)} className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-blue-600 hover:text-white transition-all">
+                        <button onClick={() => setIsEditing(true)} className="p-1.5 rounded-lg bg-carbon-100 dark:bg-carbon-700 hover:bg-kuro-600 hover:text-white transition-all">
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                       ) : (
                         <div className="flex gap-2">
-                          <button onClick={() => { setIsEditing(false); setEditForm({ phone: member.phone ?? '', emergency: emergency ?? '' }) }} className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-red-500 hover:text-white transition-all">
+                          <button onClick={() => { setIsEditing(false); setEditForm({ phone: member.phone ?? '', emergency: emergency ?? '' }) }} className="p-1.5 rounded-lg bg-carbon-100 dark:bg-carbon-700 hover:bg-alert-500 hover:text-white transition-all">
                             <X className="w-3.5 h-3.5" />
                           </button>
-                          <button disabled={isSaving} onClick={handleSaveInfo} className="p-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all disabled:opacity-50">
+                          <button disabled={isSaving} onClick={handleSaveInfo} className="p-1.5 rounded-lg bg-kuro-600 text-white hover:bg-kuro-700 transition-all disabled:opacity-50">
                             {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <SaveIcon className="w-3.5 h-3.5" />}
                           </button>
                         </div>
@@ -591,19 +591,19 @@ export default function ProfilePage() {
                     </div>
                     <div className="space-y-3">
                       <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Teléfono</p>
+                        <p className="text-[10px] font-black text-carbon-400 uppercase tracking-widest mb-1">Teléfono</p>
                         {isEditing ? (
-                          <input type="text" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 ring-blue-500/20 outline-none" value={editForm.phone} onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))} placeholder="+54 9 11 ..." />
+                          <input type="text" className="w-full bg-carbon-50 dark:bg-carbon-900 border border-carbon-200 dark:border-carbon-700 rounded-xl px-3 py-2 text-sm font-bold text-carbon-900 dark:text-white focus:ring-2 ring-kuro-500/20 outline-none" value={editForm.phone} onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))} placeholder="+54 9 11 ..." />
                         ) : (
-                          <p className="font-bold text-slate-900 dark:text-white text-sm">{member.phone || 'No registrado'}</p>
+                          <p className="font-bold text-carbon-900 dark:text-white text-sm">{member.phone || 'No registrado'}</p>
                         )}
                       </div>
-                      <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Emergencias</p>
+                      <div className="pt-3 border-t border-carbon-100 dark:border-carbon-700">
+                        <p className="text-[10px] font-black text-carbon-400 uppercase tracking-widest mb-1">Emergencias</p>
                         {isEditing ? (
-                          <input type="text" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-black text-red-600 dark:text-red-400 uppercase focus:ring-2 ring-blue-500/20 outline-none" value={editForm.emergency} onChange={(e) => setEditForm(prev => ({ ...prev, emergency: e.target.value }))} placeholder="Nombre y/o Teléfono" />
+                          <input type="text" className="w-full bg-carbon-50 dark:bg-carbon-900 border border-carbon-200 dark:border-carbon-700 rounded-xl px-3 py-2 text-sm font-black text-alert-600 dark:text-alert-400 uppercase focus:ring-2 ring-kuro-500/20 outline-none" value={editForm.emergency} onChange={(e) => setEditForm(prev => ({ ...prev, emergency: e.target.value }))} placeholder="Nombre y/o Teléfono" />
                         ) : (
-                          <p className="font-black text-red-600 dark:text-red-400 uppercase tracking-tight text-sm">{emergency || 'Sin contacto definido'}</p>
+                          <p className="font-black text-alert-600 dark:text-alert-400 uppercase tracking-tight text-sm">{emergency || 'Sin contacto definido'}</p>
                         )}
                       </div>
                     </div>
@@ -616,7 +616,7 @@ export default function ProfilePage() {
                   <header className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8">
                     <div className="flex items-center gap-6">
                       <div className="relative group shrink-0">
-                        <div className="w-28 h-28 rounded-3xl overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-2xl shadow-blue-500/40 transform group-hover:rotate-2 transition-transform">
+                        <div className="w-28 h-28 rounded-3xl overflow-hidden bg-gradient-to-br from-kuro-600 to-kuro-700 flex items-center justify-center shadow-2xl shadow-kuro-500/40 transform group-hover:rotate-2 transition-transform">
                           {member.avatar_url ? (
                             <img src={member.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                           ) : (
@@ -629,13 +629,13 @@ export default function ProfilePage() {
                         </div>
                       </div>
                       <div>
-                        <h1 className="text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-2">
-                          Hola, <span className="text-blue-600 dark:text-blue-400">{member.first_name || 'Miembro'}</span>
+                        <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-carbon-900 dark:text-white">
+                          Hola, <span className="text-kuro-600 dark:text-kuro-400">{member.first_name || 'Miembro'}</span>
                         </h1>
-                        <p className="text-slate-500 dark:text-slate-400 text-lg font-medium flex items-center gap-2">
+                        <p className="text-carbon-500 dark:text-carbon-400 text-lg font-medium flex items-center gap-2">
                           <span>{member.email}</span>
                           <span>•</span>
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-xs font-black uppercase tracking-wider">
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-kuro-100 dark:bg-kuro-900/40 text-kuro-600 dark:text-kuro-400 text-xs font-black uppercase tracking-wider">
                             {member.role === 'admin' ? 'Administrador' : member.role === 'instructor' ? 'Instructor' : member.role === 'becado' ? 'Becado' : 'Socio Activo'}
                           </span>
                         </p>
@@ -648,34 +648,34 @@ export default function ProfilePage() {
                     <div className="lg:col-span-2 space-y-8">
                       {/* Status cards */}
                       <div className="grid md:grid-cols-2 gap-6">
-                        <motion.div whileHover={{ y: -4 }} className="p-6 rounded-3xl border border-white/10 bg-white dark:bg-slate-800/50 dark:backdrop-blur-xl dark:border-slate-700 shadow-xl">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <motion.div whileHover={{ y: -4 }} className="p-6 rounded-3xl border border-white/10 bg-white dark:bg-carbon-800/50 dark:backdrop-blur-xl dark:border-carbon-700 shadow-xl">
+                          <p className="text-[10px] font-black text-carbon-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                             <Activity className="w-3 h-3" /> ESTADO DE MEMBRESÍA
                           </p>
-                          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest mb-4 ${isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest mb-4 ${isActive ? 'bg-kuro-100 text-kuro-700 dark:bg-kuro-900/30 dark:text-kuro-400' : 'bg-alert-100 text-alert-700 dark:bg-alert-900/30 dark:text-alert-400'}`}>
                             {isActive ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                             {isActive ? 'Activo' : 'Vencido'}
                           </div>
-                          <p className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">
+                          <p className="text-3xl font-black text-carbon-900 dark:text-white tracking-tighter">
                             {isActive ? (member?.next_payment_due && new Date(member.next_payment_due + 'T12:00:00') < new Date() ? 'Pago pendiente' : 'Membresía al día') : 'Pago pendiente'}
                           </p>
                         </motion.div>
 
-                        <motion.div whileHover={{ y: -4 }} className="p-6 rounded-3xl border border-white/10 bg-white dark:bg-slate-800/50 dark:backdrop-blur-xl dark:border-slate-700 shadow-xl">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <motion.div whileHover={{ y: -4 }} className="p-6 rounded-3xl border border-white/10 bg-white dark:bg-carbon-800/50 dark:backdrop-blur-xl dark:border-carbon-700 shadow-xl">
+                          <p className="text-[10px] font-black text-carbon-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                             <Clock className="w-3 h-3" /> PRÓXIMO VENCIMIENTO
                           </p>
-                          <p className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter mb-4">{vencimientoLabel}</p>
+                          <p className="text-3xl font-black text-carbon-900 dark:text-white tracking-tighter mb-4">{vencimientoLabel}</p>
                           {daysLeft !== null && !isSpecialRole && !isLifetime && (
-                            <div className="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div className="h-2 w-full bg-carbon-100 dark:bg-carbon-700 rounded-full overflow-hidden">
                               <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: daysLeft > 0 ? `${Math.min(100, (daysLeft / 30) * 100)}%` : '100%' }}
-                                className={`h-full rounded-full ${daysLeft < 7 ? 'bg-red-500' : 'bg-blue-600'}`}
+                                className={`h-full rounded-full ${daysLeft < 7 ? 'bg-alert-500' : 'bg-kuro-600'}`}
                               />
                             </div>
                           )}
-                          <p className="text-xs font-bold text-slate-400 mt-2">
+                          <p className="text-xs font-bold text-carbon-400 mt-2">
                             {paymentStatusMessage}
                           </p>
                           {mercadoPago && !isSpecialRole && !isLifetime && (
@@ -690,18 +690,18 @@ export default function ProfilePage() {
 
                       {/* Classes */}
                       <div className="space-y-6">
-                        <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-                          <GraduationCap className="w-5 h-5 text-blue-600" /> Mis Clases Inscritas
+                        <h2 className="text-xl font-black text-carbon-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                          <GraduationCap className="w-5 h-5 text-kuro-600" /> Mis Clases Inscritas
                         </h2>
                         {classes.length === 0 ? (
-                          <div className="p-12 text-center rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-700">
-                            <p className="text-slate-400 font-bold italic uppercase tracking-widest">No estás en clases todavía</p>
+                          <div className="p-12 text-center rounded-3xl border-2 border-dashed border-carbon-200 dark:border-carbon-700">
+                            <p className="text-carbon-400 font-bold italic uppercase tracking-widest">No estás en clases todavía</p>
                           </div>
                         ) : (
                           <div className="space-y-8">
                             {classes.some(c => c.is_principal) && (
                               <div className="space-y-4">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-blue-500 ml-1 flex items-center gap-2">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-kuro-500 ml-1 flex items-center gap-2">
                                   <Shield className="w-3 h-3" /> Clase Principal
                                 </p>
                                 <div className="grid gap-4">
@@ -711,7 +711,7 @@ export default function ProfilePage() {
                             )}
                             {classes.some(c => !c.is_principal) && (
                               <div className="space-y-4">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 ml-1 flex items-center gap-2">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-kuro-500 ml-1 flex items-center gap-2">
                                   <Plus className="w-3 h-3" /> Clases Adicionales
                                 </p>
                                 <div className="grid md:grid-cols-2 gap-4">
@@ -725,7 +725,7 @@ export default function ProfilePage() {
 
                       {/* Grades */}
                       {can('graduations') && (
-                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                        <div className="pt-8 border-t border-carbon-100 dark:border-carbon-800">
                           <MemberGrades userId={member.user_id} readOnly={true} />
                         </div>
                       )}
@@ -735,28 +735,28 @@ export default function ProfilePage() {
                     <div className="space-y-8">
                       {/* Attendance */}
                       <div className="space-y-6">
-                        <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
-                          <Activity className="w-5 h-5 text-blue-600" /> Mi Asistencia
+                        <h2 className="text-xl font-black text-carbon-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                          <Activity className="w-5 h-5 text-kuro-600" /> Mi Asistencia
                         </h2>
-                        <div className="p-1 rounded-3xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700">
+                        <div className="p-1 rounded-3xl bg-carbon-50 dark:bg-carbon-900/50 border border-carbon-100 dark:border-carbon-700">
                           <div className="max-h-[600px] overflow-y-auto pr-1">
                             {attendance.length === 0 ? (
-                              <div className="p-8 text-center text-slate-400 text-xs font-bold uppercase tracking-widest italic">Sin registros aún</div>
+                              <div className="p-8 text-center text-carbon-400 text-xs font-bold uppercase tracking-widest italic">Sin registros aún</div>
                             ) : (
                               <div className="space-y-2 p-2">
                                 {attendance.map((att, i) => {
                                   const ok = att.result?.toLowerCase().includes('autorizado') || att.result?.toLowerCase().includes('success')
                                   return (
-                                    <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-4">
-                                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${ok ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
+                                    <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 rounded-2xl bg-white dark:bg-carbon-800/80 border border-carbon-100 dark:border-carbon-700 shadow-sm flex items-center gap-4">
+                                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${ok ? 'bg-kuro-100 text-kuro-600 dark:bg-kuro-900/30 dark:text-kuro-400' : 'bg-alert-100 text-alert-600 dark:bg-alert-900/30 dark:text-alert-400'}`}>
                                         {ok ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                                       </div>
                                       <div className="flex-1">
                                         <div className="flex items-center justify-between">
-                                          <p className="text-xs font-black text-slate-900 dark:text-white">{new Date(att.scanned_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}</p>
-                                          <p className="text-[10px] font-bold text-slate-400">{new Date(att.scanned_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                          <p className="text-xs font-black text-carbon-900 dark:text-white">{new Date(att.scanned_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}</p>
+                                          <p className="text-[10px] font-bold text-carbon-400">{new Date(att.scanned_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                         </div>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                                        <p className="text-[10px] font-bold text-carbon-400 uppercase tracking-widest mt-0.5">
                                           {ok ? (att.classes && att.classes.length > 0 ? `Acceso a: ${att.classes.map(c => c.name).join(', ')}` : 'Acceso correcto') : 'DENEGADO'}
                                         </p>
                                       </div>
@@ -770,21 +770,21 @@ export default function ProfilePage() {
                       </div>
 
                       {/* Contact */}
-                      <div className="p-8 rounded-3xl border border-white/10 bg-white dark:bg-slate-800/50 dark:backdrop-blur-xl dark:border-slate-700 shadow-xl space-y-6">
+                      <div className="p-8 rounded-3xl border border-white/10 bg-white dark:bg-carbon-800/50 dark:backdrop-blur-xl dark:border-carbon-700 shadow-xl space-y-6">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-                            <AlertCircle className="w-4 h-4 text-amber-500" /> Info de Contacto
+                          <h3 className="text-sm font-black text-carbon-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4 text-warn-500" /> Info de Contacto
                           </h3>
                           {!isEditing ? (
-                            <button onClick={() => setIsEditing(true)} className="p-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-blue-600 hover:text-white transition-all">
+                            <button onClick={() => setIsEditing(true)} className="p-2 rounded-xl bg-carbon-100 dark:bg-carbon-700 hover:bg-kuro-600 hover:text-white transition-all">
                               <Edit2 className="w-4 h-4" />
                             </button>
                           ) : (
                             <div className="flex gap-2">
-                              <button onClick={() => { setIsEditing(false); setEditForm({ phone: member.phone ?? '', emergency: emergency ?? '' }) }} className="p-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-red-500 hover:text-white transition-all">
+                              <button onClick={() => { setIsEditing(false); setEditForm({ phone: member.phone ?? '', emergency: emergency ?? '' }) }} className="p-2 rounded-xl bg-carbon-100 dark:bg-carbon-700 hover:bg-alert-500 hover:text-white transition-all">
                                 <X className="w-4 h-4" />
                               </button>
-                              <button disabled={isSaving} onClick={handleSaveInfo} className="p-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all disabled:opacity-50">
+                              <button disabled={isSaving} onClick={handleSaveInfo} className="p-2 rounded-xl bg-kuro-600 text-white hover:bg-kuro-700 transition-all disabled:opacity-50">
                                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <SaveIcon className="w-4 h-4" />}
                               </button>
                             </div>
@@ -792,19 +792,19 @@ export default function ProfilePage() {
                         </div>
                         <div className="space-y-4">
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Teléfono</p>
+                            <p className="text-[10px] font-black text-carbon-400 uppercase tracking-widest mb-1">Teléfono</p>
                             {isEditing ? (
-                              <input type="text" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-900 dark:text-white focus:ring-2 ring-blue-500/20 outline-none" value={editForm.phone} onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))} placeholder="+54 9 11 ..." />
+                              <input type="text" className="w-full bg-carbon-50 dark:bg-carbon-900 border border-carbon-200 dark:border-carbon-700 rounded-xl px-4 py-2 text-sm font-bold text-carbon-900 dark:text-white focus:ring-2 ring-kuro-500/20 outline-none" value={editForm.phone} onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))} placeholder="+54 9 11 ..." />
                             ) : (
-                              <p className="font-bold text-slate-900 dark:text-white">{member.phone || 'No registrado'}</p>
+                              <p className="font-bold text-carbon-900 dark:text-white">{member.phone || 'No registrado'}</p>
                             )}
                           </div>
-                          <div className="pt-6 border-t border-slate-100 dark:border-slate-700">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Emergencias</p>
+                          <div className="pt-6 border-t border-carbon-100 dark:border-carbon-700">
+                            <p className="text-[10px] font-black text-carbon-400 uppercase tracking-widest mb-1">Emergencias</p>
                             {isEditing ? (
-                              <input type="text" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-black text-red-600 dark:text-red-400 uppercase focus:ring-2 ring-blue-500/20 outline-none" value={editForm.emergency} onChange={(e) => setEditForm(prev => ({ ...prev, emergency: e.target.value }))} placeholder="Nombre y/o Teléfono" />
+                              <input type="text" className="w-full bg-carbon-50 dark:bg-carbon-900 border border-carbon-200 dark:border-carbon-700 rounded-xl px-4 py-2 text-sm font-black text-alert-600 dark:text-alert-400 uppercase focus:ring-2 ring-kuro-500/20 outline-none" value={editForm.emergency} onChange={(e) => setEditForm(prev => ({ ...prev, emergency: e.target.value }))} placeholder="Nombre y/o Teléfono" />
                             ) : (
-                              <p className="font-black text-red-600 dark:text-red-400 uppercase tracking-tight">{emergency || 'Sin contacto definido'}</p>
+                              <p className="font-black text-alert-600 dark:text-alert-400 uppercase tracking-tight">{emergency || 'Sin contacto definido'}</p>
                             )}
                           </div>
                         </div>
@@ -825,13 +825,13 @@ export default function ProfilePage() {
       <BottomSheet open={sheetClases} onClose={() => setSheetClases(false)} title="Mis Clases">
         {classes.length === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-slate-400 font-bold italic uppercase tracking-widest text-sm">No estás en clases todavía</p>
+            <p className="text-carbon-400 font-bold italic uppercase tracking-widest text-sm">No estás en clases todavía</p>
           </div>
         ) : (
           <div className="space-y-6 pb-4">
             {classes.some(c => c.is_principal) && (
               <div className="space-y-3">
-                <p className="text-[10px] font-black uppercase tracking-widest text-blue-500 flex items-center gap-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-kuro-500 flex items-center gap-2">
                   <Shield className="w-3 h-3" /> Clase Principal
                 </p>
                 {classes.filter(c => c.is_principal).map((c, idx) => <ClassItem key={c.id} c={c} idx={idx} />)}
@@ -839,7 +839,7 @@ export default function ProfilePage() {
             )}
             {classes.some(c => !c.is_principal) && (
               <div className="space-y-3">
-                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 flex items-center gap-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-kuro-500 flex items-center gap-2">
                   <Plus className="w-3 h-3" /> Clases Adicionales
                 </p>
                 {classes.filter(c => !c.is_principal).map((c, idx) => <ClassItem key={c.id} c={c} idx={idx} />)}
@@ -853,23 +853,23 @@ export default function ProfilePage() {
       <BottomSheet open={sheetAsistencia} onClose={() => setSheetAsistencia(false)} title="Mi Asistencia">
         {attendance.length === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-slate-400 font-bold italic uppercase tracking-widest text-sm">Sin registros aún</p>
+            <p className="text-carbon-400 font-bold italic uppercase tracking-widest text-sm">Sin registros aún</p>
           </div>
         ) : (
           <div className="space-y-2 pb-4">
             {attendance.map((att, i) => {
               const ok = att.result?.toLowerCase().includes('autorizado') || att.result?.toLowerCase().includes('success')
               return (
-                <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }} className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700 flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${ok ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
+                <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }} className="p-4 rounded-2xl bg-carbon-50 dark:bg-carbon-800/60 border border-carbon-100 dark:border-carbon-700 flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${ok ? 'bg-kuro-100 text-kuro-600 dark:bg-kuro-900/30 dark:text-kuro-400' : 'bg-alert-100 text-alert-600 dark:bg-alert-900/30 dark:text-alert-400'}`}>
                     {ok ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-black text-slate-900 dark:text-white">{new Date(att.scanned_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                      <p className="text-xs font-bold text-slate-400">{new Date(att.scanned_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className="text-sm font-black text-carbon-900 dark:text-white">{new Date(att.scanned_at).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                      <p className="text-xs font-bold text-carbon-400">{new Date(att.scanned_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 truncate">
+                    <p className="text-[10px] font-bold text-carbon-400 uppercase tracking-widest mt-0.5 truncate">
                       {ok ? (att.classes && att.classes.length > 0 ? att.classes.map(c => c.name).join(', ') : 'Acceso correcto') : 'Denegado'}
                     </p>
                   </div>
@@ -899,12 +899,12 @@ export default function ProfilePage() {
 
       {/* Success Modal */}
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
-        <DialogContent className="sm:max-w-md bg-slate-900 border-white/10 text-white rounded-3xl p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-md bg-carbon-900 border-white/10 text-white rounded-3xl p-0 overflow-hidden">
           <div className="p-8 text-center bg-gradient-to-b from-transparent to-black/40">
             <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="space-y-4">
-              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30 relative">
-                <div className="absolute inset-0 bg-blue-500 blur-2xl opacity-20 animate-pulse" />
-                <CheckCircle2 className="w-14 h-14 text-blue-500 relative z-10" />
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-kuro-500/20 flex items-center justify-center border border-kuro-500/30 relative">
+                <div className="absolute inset-0 bg-kuro-500 blur-2xl opacity-20 animate-pulse" />
+                <CheckCircle2 className="w-14 h-14 text-kuro-500 relative z-10" />
               </div>
               <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight uppercase italic leading-none">¡Foto Actualizada!</h2>
               <div className="pt-6">

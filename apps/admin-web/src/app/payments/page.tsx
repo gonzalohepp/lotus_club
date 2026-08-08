@@ -201,8 +201,8 @@ export default function PaymentsPage() {
     <AdminLayout active="/payments">
       {/* Background Decor */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -left-[10%] -top-[10%] h-[40%] w-[40%] rounded-full bg-emerald-500/5 blur-[120px]" />
-        <div className="absolute -right-[5%] bottom-[5%] h-[30%] w-[30%] rounded-full bg-blue-500/5 blur-[100px]" />
+        <div className="absolute -left-[10%] -top-[10%] h-[40%] w-[40%] rounded-full bg-kuro-500/5 blur-[120px]" />
+        <div className="absolute -right-[5%] bottom-[5%] h-[30%] w-[30%] rounded-full bg-kuro-500/5 blur-[100px]" />
       </div>
 
       <div className="relative">
@@ -214,14 +214,14 @@ export default function PaymentsPage() {
             className="space-y-1"
           >
             <div className="flex items-center gap-2 mb-1">
-              <span className="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-0.5 text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 ring-1 ring-inset ring-emerald-600/20 dark:ring-emerald-400/20">
+              <span className="inline-flex items-center rounded-full bg-kuro-50 dark:bg-kuro-900/20 px-2.5 py-0.5 text-xs font-black uppercase tracking-widest text-kuro-600 dark:text-kuro-400 ring-1 ring-inset ring-kuro-600/20 dark:ring-kuro-400/20">
                 Finanzas
               </span>
             </div>
-            <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white md:text-5xl">
-              Registro de <span className="text-emerald-600 dark:text-emerald-400">Pagos</span>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-carbon-900 dark:text-white">
+              Registro de <span className="text-kuro-600 dark:text-kuro-400">Pagos</span>
             </h1>
-            <p className="max-w-md text-slate-500 dark:text-slate-400 font-medium italic">
+            <p className="max-w-md text-carbon-500 dark:text-carbon-400 font-medium italic">
               &quot;El orden financiero es el cimiento de la disciplina.&quot;
             </p>
           </motion.div>
@@ -231,9 +231,9 @@ export default function PaymentsPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={onExport}
-              className="group flex items-center gap-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-6 py-4 text-sm font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+              className="group flex items-center gap-2 rounded-2xl border border-carbon-200 dark:border-carbon-700 bg-white dark:bg-carbon-800 px-6 py-4 text-sm font-black uppercase tracking-widest text-carbon-600 dark:text-carbon-300 shadow-sm transition-all hover:bg-carbon-50 dark:hover:bg-carbon-700 hover:border-carbon-300 dark:hover:border-carbon-600"
             >
-              <Download className="h-5 w-5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors" />
+              <Download className="h-5 w-5 text-carbon-400 group-hover:text-carbon-600 dark:group-hover:text-carbon-300 transition-colors" />
               Exportar
             </motion.button>
 
@@ -241,7 +241,7 @@ export default function PaymentsPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setOpen(true)}
-              className="group relative flex items-center gap-3 overflow-hidden rounded-2xl bg-emerald-600 px-8 py-4 text-white shadow-xl shadow-emerald-500/25 transition-all hover:bg-emerald-700 font-black uppercase tracking-widest text-sm"
+              className="group relative flex items-center gap-3 overflow-hidden rounded-xl bg-kuro-600 px-6 py-3 text-white shadow-xl shadow-kuro-500/25 transition-all hover:bg-kuro-700 font-black uppercase tracking-widest text-sm"
             >
               <Plus className="h-6 w-6" />
               Registrar Pago
@@ -270,26 +270,26 @@ export default function PaymentsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="overflow-hidden rounded-[32px] border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl shadow-2xl relative"
+          className="overflow-hidden rounded-2xl border border-carbon-200 dark:border-carbon-700 bg-white/80 dark:bg-carbon-800/80 backdrop-blur-xl shadow-2xl relative"
         >
           <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="bg-slate-900 dark:bg-slate-950">
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Fecha</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Miembro</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Monto</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Método de Pago</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Período de Cobertura</th>
+                <tr className="bg-carbon-900 dark:bg-carbon-950">
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-carbon-400">Fecha</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-carbon-400">Miembro</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-carbon-400">Monto</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-carbon-400">Método de Pago</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-carbon-400">Período de Cobertura</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+              <tbody className="divide-y divide-carbon-100 dark:divide-carbon-700">
                 {loading ? (
                   <tr>
                     <td colSpan={5} className="px-8 py-20 text-center">
                       <div className="flex flex-col items-center gap-4">
-                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500/20 border-t-emerald-500" />
-                        <p className="text-sm font-black uppercase tracking-widest text-slate-400">Actualizando Libros...</p>
+                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-kuro-500/20 border-t-kuro-500" />
+                        <p className="text-sm font-black uppercase tracking-widest text-carbon-400">Actualizando Libros...</p>
                       </div>
                     </td>
                   </tr>
@@ -297,10 +297,10 @@ export default function PaymentsPage() {
                   <tr>
                     <td colSpan={5} className="px-8 py-20 text-center">
                       <div className="flex flex-col items-center gap-4">
-                        <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-600">
+                        <div className="w-16 h-16 rounded-2xl bg-carbon-50 dark:bg-carbon-800 flex items-center justify-center text-carbon-300 dark:text-carbon-600">
                           <Receipt className="w-8 h-8" />
                         </div>
-                        <p className="text-sm font-black uppercase tracking-widest text-slate-400">Sin movimientos registrados</p>
+                        <p className="text-sm font-black uppercase tracking-widest text-carbon-400">Sin movimientos registrados</p>
                       </div>
                     </td>
                   </tr>
@@ -311,36 +311,36 @@ export default function PaymentsPage() {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.03 }}
-                      className="group transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-700/50"
+                      className="group transition-colors hover:bg-carbon-50/50 dark:hover:bg-carbon-700/50"
                     >
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 group-hover:bg-white dark:group-hover:bg-slate-600 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors">
+                          <div className="w-8 h-8 rounded-lg bg-carbon-100 dark:bg-carbon-700 flex items-center justify-center text-carbon-400 group-hover:bg-white dark:group-hover:bg-carbon-600 group-hover:text-kuro-500 dark:group-hover:text-kuro-400 transition-colors">
                             <Receipt className="w-4 h-4" />
                           </div>
-                          <span className="text-sm font-bold text-slate-900 dark:text-white">{fmtDate(row.paid_at)}</span>
+                          <span className="text-sm font-bold text-carbon-900 dark:text-white">{fmtDate(row.paid_at)}</span>
                         </div>
                       </td>
                       <td className="px-8 py-6">
-                        <span className="text-sm font-bold text-slate-600 dark:text-dojo-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{row.member_name}</span>
+                        <span className="text-sm font-bold text-carbon-600 dark:text-dojo-300 group-hover:text-carbon-900 dark:group-hover:text-white transition-colors">{row.member_name}</span>
                       </td>
                       <td className="px-8 py-6">
-                        <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">{fmtARS(row.amount)}</span>
+                        <span className="text-lg font-black text-kuro-600 dark:text-kuro-400">{fmtARS(row.amount)}</span>
                       </td>
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-2">
                           {row.method === 'mercadopago' ? (
-                            <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                            <div className="w-2.5 h-2.5 rounded-full bg-kuro-500" />
                           ) : row.method === 'transferencia' ? (
-                            <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                            <div className="w-2.5 h-2.5 rounded-full bg-kuro-500" />
                           ) : (
-                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                            <div className="w-2.5 h-2.5 rounded-full bg-kuro-500" />
                           )}
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{row.method}</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-carbon-500 dark:text-carbon-400">{row.method}</span>
                         </div>
                       </td>
                       <td className="px-8 py-6">
-                        <div className="flex items-center gap-2 text-slate-400 font-medium text-xs">
+                        <div className="flex items-center gap-2 text-carbon-400 font-medium text-xs">
                           <span>{fmtDate(row.period_from)}</span>
                           <ChevronRight className="w-3 h-3" />
                           <span>{fmtDate(row.period_to)}</span>
@@ -355,11 +355,11 @@ export default function PaymentsPage() {
 
           {/* Pagination Controls */}
           {totalItems > 0 && (
-            <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 px-8 py-5">
+            <div className="flex items-center justify-between border-t border-carbon-100 dark:border-carbon-700 bg-carbon-50 dark:bg-carbon-900/50 px-8 py-5">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  Resultados: <span className="text-slate-900 dark:text-white">{(currentPage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)}</span> de <span className="text-slate-900 dark:text-white">{totalItems}</span>
+                <div className="w-2 h-2 rounded-full bg-kuro-500 animate-pulse" />
+                <p className="text-xs font-bold text-carbon-400 uppercase tracking-widest">
+                  Resultados: <span className="text-carbon-900 dark:text-white">{(currentPage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)}</span> de <span className="text-carbon-900 dark:text-white">{totalItems}</span>
                 </p>
               </div>
 
@@ -368,7 +368,7 @@ export default function PaymentsPage() {
                   <button
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600 disabled:opacity-40 disabled:pointer-events-none transition-all shadow-sm"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-carbon-800 border border-carbon-200 dark:border-carbon-700 text-carbon-600 dark:text-carbon-400 hover:bg-carbon-50 dark:hover:bg-carbon-700 hover:border-carbon-300 dark:hover:border-carbon-600 disabled:opacity-40 disabled:pointer-events-none transition-all shadow-sm"
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
@@ -378,7 +378,7 @@ export default function PaymentsPage() {
                       // Logic to show limited page numbers if there are too many
                       if (totalPages > 7) {
                         if (i + 1 !== 1 && i + 1 !== totalPages && Math.abs(i + 1 - currentPage) > 1) {
-                          if (i + 1 === currentPage - 2 || i + 1 === currentPage + 2) return <span key={i} className="px-1 text-slate-400">...</span>;
+                          if (i + 1 === currentPage - 2 || i + 1 === currentPage + 2) return <span key={i} className="px-1 text-carbon-400">...</span>;
                           return null;
                         }
                       }
@@ -388,8 +388,8 @@ export default function PaymentsPage() {
                           key={i}
                           onClick={() => setCurrentPage(i + 1)}
                           className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${currentPage === i + 1
-                            ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg'
-                            : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500'
+                            ? 'bg-carbon-900 dark:bg-white text-white dark:text-carbon-900 shadow-lg'
+                            : 'bg-white dark:bg-carbon-800 border border-carbon-200 dark:border-carbon-700 text-carbon-500 dark:text-carbon-400 hover:border-carbon-400 dark:hover:border-carbon-500'
                             }`}
                         >
                           {i + 1}
@@ -401,7 +401,7 @@ export default function PaymentsPage() {
                   <button
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600 disabled:opacity-40 disabled:pointer-events-none transition-all shadow-sm"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-carbon-800 border border-carbon-200 dark:border-carbon-700 text-carbon-600 dark:text-carbon-400 hover:bg-carbon-50 dark:hover:bg-carbon-700 hover:border-carbon-300 dark:hover:border-carbon-600 disabled:opacity-40 disabled:pointer-events-none transition-all shadow-sm"
                   >
                     <ChevronRight className="h-5 w-5" />
                   </button>
@@ -432,8 +432,8 @@ export default function PaymentsPage() {
             exit={{ opacity: 0, y: 100 }}
             className="fixed bottom-10 left-1/2 z-[200] -translate-x-1/2"
           >
-            <div className="flex items-center gap-3 rounded-2xl bg-slate-900 px-8 py-4 text-white shadow-2xl">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500">
+            <div className="flex items-center gap-3 rounded-xl bg-carbon-900 px-6 py-3 text-white shadow-2xl">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-kuro-500">
                 <Check className="h-4 w-4 text-white" />
               </div>
               <p className="text-sm font-black uppercase tracking-widest text-white">Pago Registrado</p>

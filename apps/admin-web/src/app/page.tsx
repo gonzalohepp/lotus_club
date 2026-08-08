@@ -172,7 +172,7 @@ export default function HomeLandingPage() {
       </section>
 
       {/* QUÉ ES EL JIU-JITSU */}
-      <section id="about-bjj" className="py-32 bg-zinc-950">
+      <section id="about-bjj" className="py-32 bg-carbon-950">
         <div className="max-w-4xl mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -238,7 +238,7 @@ export default function HomeLandingPage() {
       </section>
 
       {/* HISTORIA DE LÓTUS */}
-      <section id="history-lotus" className="py-32 bg-zinc-950">
+      <section id="history-lotus" className="py-32 bg-carbon-950">
         <div className="max-w-5xl mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}

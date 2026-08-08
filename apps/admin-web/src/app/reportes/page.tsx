@@ -29,9 +29,9 @@ import { exportToExcel } from '@/lib/excelExport'
 // así que los StyledSelect acá se estilizan explícitamente para matchear ese
 // fondo siempre-oscuro en vez de usar los tokens toggle-aware por default.
 const darkSelectProps = {
-    triggerClassName: 'bg-slate-950 border-slate-800 text-white font-bold appearance-none hover:bg-slate-950 focus-visible:ring-blue-500/50',
-    contentClassName: 'bg-slate-900 border-slate-800',
-    itemClassName: 'text-white focus:bg-slate-800',
+    triggerClassName: 'bg-background border-carbon-200 dark:border-white/10 text-carbon-900 dark:text-white font-bold appearance-none hover:bg-carbon-950 focus-visible:ring-kuro-500/50',
+    contentClassName: 'bg-white dark:bg-white/5 border-carbon-200 dark:border-white/10',
+    itemClassName: 'text-carbon-900 dark:text-white focus:bg-carbon-800',
 }
 
 /* ================= Tipos ================= */
@@ -75,24 +75,24 @@ export default function ReportesPage() {
                 {/* Header */}
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-blue-400 font-bold text-xs uppercase tracking-widest">
+                        <div className="flex items-center gap-2 text-kuro-400 font-bold text-xs uppercase tracking-widest">
                             <TrendingDown className="w-4 h-4" />
                             Reportes
                         </div>
-                        <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white">
-                            Panel de <span className="text-blue-400">Reportes</span>
+                        <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-carbon-900 dark:text-white">
+                            Panel de <span className="text-kuro-600 dark:text-kuro-400">Reportes</span>
                         </h1>
-                        <p className="text-slate-500 font-medium text-sm">
+                        <p className="text-carbon-500 dark:text-carbon-400 font-medium text-sm">
                             {activeTab === 'asistencia' ? 'Historial de asistencia con filtros avanzados.' : 'Miembros activos sin asistencia reciente.'}
                         </p>
                     </div>
 
-                    <div className="flex bg-slate-900/50 p-1 rounded-xl border border-white/10 self-start md:self-center">
+                    <div className="flex bg-white dark:bg-white/5/50 p-1 rounded-xl border border-carbon-200 dark:border-white/10 self-start md:self-center">
                         <button
                             onClick={() => setActiveTab('asistencia')}
                             className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'asistencia'
-                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                                : 'text-slate-500 hover:text-slate-300'
+                                ? 'bg-kuro-600 text-carbon-900 dark:text-white shadow-lg shadow-kuro-500/20'
+                                : 'text-carbon-500 dark:text-carbon-400 hover:text-carbon-300'
                                 }`}
                         >
                             Asistencia
@@ -100,8 +100,8 @@ export default function ReportesPage() {
                         <button
                             onClick={() => setActiveTab('ausencia')}
                             className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ausencia'
-                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                                : 'text-slate-500 hover:text-slate-300'
+                                ? 'bg-kuro-600 text-carbon-900 dark:text-white shadow-lg shadow-kuro-500/20'
+                                : 'text-carbon-500 dark:text-carbon-400 hover:text-carbon-300'
                                 }`}
                         >
                             Ausencias
@@ -279,8 +279,8 @@ function AsistenciaReport() {
                         key={p}
                         onClick={() => { setPeriod(p); setVisibleCount(50) }}
                         className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${period === p
-                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                            : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-600'
+                            ? 'bg-kuro-600 text-carbon-900 dark:text-white shadow-lg shadow-kuro-500/20'
+                            : 'bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 text-carbon-500 dark:text-carbon-400 hover:text-white hover:border-carbon-600'
                             }`}
                     >
                         {p === 'today' ? 'Hoy' : p === 'week' ? 'Semana' : p === 'month' ? 'Mes' : 'Rango'}
@@ -289,17 +289,17 @@ function AsistenciaReport() {
                 {period === 'custom' && (
                     <div className="flex items-center gap-2 w-full sm:w-auto mt-1 sm:mt-0">
                         <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
-                            className="flex-1 sm:flex-none px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
-                        <span className="text-slate-600 text-xs font-bold">→</span>
+                            className="flex-1 sm:flex-none px-3 py-2 bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 rounded-xl text-carbon-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-kuro-500/50" />
+                        <span className="text-carbon-600 dark:text-carbon-300 text-xs font-bold">→</span>
                         <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
-                            className="flex-1 sm:flex-none px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
+                            className="flex-1 sm:flex-none px-3 py-2 bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 rounded-xl text-carbon-900 dark:text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-kuro-500/50" />
                     </div>
                 )}
                 <div className="ml-auto">
                     <Button
                         onClick={handleExport}
                         disabled={filteredRecords.length === 0}
-                        className="bg-blue-600 hover:bg-blue-500 text-white rounded-xl px-3 sm:px-4 py-5 font-bold text-xs uppercase tracking-widest transition-all gap-1.5 shadow-lg shadow-blue-500/20 disabled:opacity-50"
+                        className="bg-kuro-600 hover:bg-kuro-500 text-carbon-900 dark:text-white rounded-xl px-3 sm:px-4 py-5 font-bold text-xs uppercase tracking-widest transition-all gap-1.5 shadow-lg shadow-kuro-500/20 disabled:opacity-50"
                     >
                         <FileDown className="w-4 h-4" />
                         <span className="hidden sm:inline">Excel</span>
@@ -308,7 +308,7 @@ function AsistenciaReport() {
             </div>
 
             {/* Filters row */}
-            <div className="rounded-xl bg-slate-900 border border-slate-800 p-3 md:p-4">
+            <div className="rounded-xl bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 p-3 md:p-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
                     <StyledSelect
                         icon={Layers}
@@ -331,48 +331,48 @@ function AsistenciaReport() {
                         ]}
                     />
                     <div className="relative sm:col-span-2 md:col-span-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 z-10" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-carbon-600 dark:text-carbon-300 z-10" />
                         <input
                             type="text"
                             placeholder="Buscar alumno, email o clase..."
                             value={filterSearch}
                             onChange={(e) => { setFilterSearch(e.target.value); setVisibleCount(50) }}
-                            className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm"
+                            className="w-full pl-10 pr-4 py-2.5 bg-background border border-carbon-200 dark:border-white/10 rounded-xl text-carbon-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-kuro-500/50 transition-all font-medium text-sm"
                         />
                     </div>
                 </div>
             </div>
 
             {/* Results count */}
-            <p className="text-xs text-slate-600 font-bold uppercase tracking-widest">
+            <p className="text-xs text-carbon-600 dark:text-carbon-300 font-bold uppercase tracking-widest">
                 {filteredRecords.length} registro{filteredRecords.length !== 1 ? 's' : ''} encontrado{filteredRecords.length !== 1 ? 's' : ''}
             </p>
 
             {/* Table */}
-            <div className="rounded-xl bg-slate-900 border border-slate-800 overflow-hidden">
+            <div className="rounded-xl bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 overflow-hidden">
                 {loading ? (
                     <div className="p-16 text-center space-y-3">
-                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-10 h-10 border-3 border-blue-500/20 border-t-blue-500 rounded-full mx-auto" />
-                        <p className="text-slate-600 font-bold uppercase tracking-widest text-xs">Cargando...</p>
+                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-10 h-10 border-3 border-kuro-500/20 border-t-kuro-500 rounded-full mx-auto" />
+                        <p className="text-carbon-600 dark:text-carbon-300 font-bold uppercase tracking-widest text-xs">Cargando...</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead className="hidden sm:table-header-group">
-                                <tr className="border-b border-slate-800 bg-slate-800/50">
-                                    <th className="px-3 md:px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Fecha / Hora</th>
-                                    <th className="px-3 md:px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Alumno</th>
-                                    <th className="px-3 md:px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Clase</th>
+                                <tr className="border-b border-carbon-200 dark:border-white/10 bg-carbon-100 dark:bg-white/10/50">
+                                    <th className="px-3 md:px-4 py-3 text-[10px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest">Fecha / Hora</th>
+                                    <th className="px-3 md:px-4 py-3 text-[10px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest">Alumno</th>
+                                    <th className="px-3 md:px-4 py-3 text-[10px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest">Clase</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-800/50">
+                            <tbody className="divide-y divide-carbon-800/50">
                                 {visibleRecords.map((r) => (
-                                    <tr key={r.id} className="hover:bg-slate-800/30 transition-colors block sm:table-row border-b border-slate-800/50 sm:border-0 py-2 sm:py-0">
+                                    <tr key={r.id} className="hover:bg-carbon-800/30 transition-colors block sm:table-row border-b border-carbon-200 dark:border-white/10/50 sm:border-0 py-2 sm:py-0">
                                         <td className="px-3 md:px-4 py-2 sm:py-3 block sm:table-cell">
-                                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest sm:hidden">Fecha</span>
+                                            <span className="text-[9px] font-black text-carbon-600 dark:text-carbon-300 uppercase tracking-widest sm:hidden">Fecha</span>
                                             <div className="flex flex-col">
-                                                <span className="text-white font-bold text-sm">{new Date(r.date + 'T12:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                                                <span className="text-[10px] text-slate-600 flex items-center gap-1 font-bold">
+                                                <span className="text-carbon-900 dark:text-white font-bold text-sm">{new Date(r.date + 'T12:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                                <span className="text-[10px] text-carbon-600 dark:text-carbon-300 flex items-center gap-1 font-bold">
                                                     <Clock className="w-3 h-3" />
                                                     {new Date(r.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </span>
@@ -380,34 +380,34 @@ function AsistenciaReport() {
                                         </td>
                                         <td className="px-3 md:px-4 py-2 sm:py-3 block sm:table-cell">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-7 h-7 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center font-bold text-blue-400 text-[10px] uppercase">{r.member_name?.[0]}</div>
+                                                <div className="w-7 h-7 rounded-full bg-kuro-500/10 border border-kuro-500/20 flex items-center justify-center font-bold text-kuro-400 text-[10px] uppercase">{r.member_name?.[0]}</div>
                                                 <div className="flex flex-col min-w-0">
-                                                    <span className="font-bold text-white text-sm truncate">{r.member_name}</span>
-                                                    <span className="text-[10px] text-slate-600 font-medium truncate">{r.member_email}</span>
+                                                    <span className="font-bold text-carbon-900 dark:text-white text-sm truncate">{r.member_name}</span>
+                                                    <span className="text-[10px] text-carbon-600 dark:text-carbon-300 font-medium truncate">{r.member_email}</span>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-3 md:px-4 py-2 sm:py-3 block sm:table-cell">
-                                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-[10px] font-black uppercase tracking-widest border border-slate-700">{r.class_name}</span>
+                                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-carbon-100 dark:bg-white/10 text-carbon-300 text-[10px] font-black uppercase tracking-widest border border-carbon-200 dark:border-white/15">{r.class_name}</span>
                                         </td>
                                     </tr>
                                 ))}
                                 {filteredRecords.length === 0 && (
                                     <tr>
                                         <td colSpan={3} className="p-16 text-center">
-                                            <Filter className="w-12 h-12 text-slate-800 mx-auto mb-3" />
-                                            <h3 className="text-lg font-bold text-white mb-1">Sin resultados</h3>
-                                            <p className="text-slate-600 text-sm">No hay registros que coincidan con los filtros.</p>
+                                            <Filter className="w-12 h-12 text-carbon-800 mx-auto mb-3" />
+                                            <h3 className="text-lg font-bold text-carbon-900 dark:text-white mb-1">Sin resultados</h3>
+                                            <p className="text-carbon-600 dark:text-carbon-300 text-sm">No hay registros que coincidan con los filtros.</p>
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
                         {filteredRecords.length > visibleCount && (
-                            <div className="p-4 text-center border-t border-slate-800">
+                            <div className="p-4 text-center border-t border-carbon-200 dark:border-white/10">
                                 <button
                                     onClick={() => setVisibleCount(prev => prev + 50)}
-                                    className="px-6 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-700 transition-all"
+                                    className="px-6 py-2.5 rounded-xl bg-carbon-100 dark:bg-white/10 border border-carbon-200 dark:border-white/15 text-carbon-900 dark:text-white text-xs font-black uppercase tracking-widest hover:bg-carbon-700 transition-all"
                                 >
                                     Cargar más ({filteredRecords.length - visibleCount} restantes)
                                 </button>
@@ -499,91 +499,91 @@ function AusenciaReport() {
             <div className="flex flex-wrap items-center gap-2">
                 <Button
                     onClick={() => exportToExcel(absentMembers, `Ausencias_${new Date().toISOString().slice(0, 10)}`)}
-                    className="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl px-3 py-5 font-bold text-xs uppercase tracking-widest transition-all gap-1.5"
+                    className="bg-carbon-100 dark:bg-white/10 hover:bg-carbon-700 text-carbon-900 dark:text-white border border-carbon-200 dark:border-white/15 rounded-xl px-3 py-5 font-bold text-xs uppercase tracking-widest transition-all gap-1.5"
                 >
-                    <FileDown className="w-4 h-4 text-blue-400" />
+                    <FileDown className="w-4 h-4 text-kuro-400" />
                     <span className="hidden sm:inline">Excel</span>
                 </Button>
 
                 <div className="relative flex-1 min-w-[180px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-carbon-600 dark:text-carbon-300" />
                     <input
                         type="text"
                         placeholder="Buscar..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium text-sm"
+                        className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 rounded-xl text-carbon-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-kuro-500/50 transition-all font-medium text-sm"
                     />
                 </div>
             </div>
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 relative overflow-hidden">
-                    <div className="absolute top-2 right-3 opacity-10"><UserX className="w-12 h-12 text-red-500" /></div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">Total Ausentes (+7d)</p>
-                    <p className="text-3xl font-black text-white">{absentMembers.length}</p>
-                    <p className="text-[10px] text-red-500 font-bold mt-1">Requieren seguimiento</p>
+                <div className="p-4 rounded-xl bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 relative overflow-hidden">
+                    <div className="absolute top-2 right-3 opacity-10"><UserX className="w-12 h-12 text-alert-500" /></div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-carbon-600 dark:text-carbon-300 mb-1">Total Ausentes (+7d)</p>
+                    <p className="text-3xl font-black text-carbon-900 dark:text-white">{absentMembers.length}</p>
+                    <p className="text-[10px] text-alert-500 font-bold mt-1">Requieren seguimiento</p>
                 </div>
-                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 relative overflow-hidden">
-                    <div className="absolute top-2 right-3 opacity-10"><Users className="w-12 h-12 text-blue-500" /></div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">Ratio de Ausencia</p>
-                    <p className="text-3xl font-black text-white">
+                <div className="p-4 rounded-xl bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 relative overflow-hidden">
+                    <div className="absolute top-2 right-3 opacity-10"><Users className="w-12 h-12 text-kuro-500" /></div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-carbon-600 dark:text-carbon-300 mb-1">Ratio de Ausencia</p>
+                    <p className="text-3xl font-black text-carbon-900 dark:text-white">
                         {members.length > 0 ? Math.round((absentMembers.length / members.length) * 100) : 0}%
                     </p>
-                    <p className="text-[10px] text-blue-400 font-bold mt-1">Sobre miembros activos</p>
+                    <p className="text-[10px] text-kuro-400 font-bold mt-1">Sobre miembros activos</p>
                 </div>
-                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 relative overflow-hidden">
-                    <div className="absolute top-2 right-3 opacity-10"><Calendar className="w-12 h-12 text-emerald-500" /></div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">Período de Análisis</p>
-                    <p className="text-3xl font-black text-white">7+</p>
-                    <p className="text-[10px] text-emerald-400 font-bold mt-1">Días sin registros</p>
+                <div className="p-4 rounded-xl bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 relative overflow-hidden">
+                    <div className="absolute top-2 right-3 opacity-10"><Calendar className="w-12 h-12 text-kuro-500" /></div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-carbon-600 dark:text-carbon-300 mb-1">Período de Análisis</p>
+                    <p className="text-3xl font-black text-carbon-900 dark:text-white">7+</p>
+                    <p className="text-[10px] text-kuro-400 font-bold mt-1">Días sin registros</p>
                 </div>
             </div>
 
             {/* Table */}
-            <div className="rounded-xl bg-slate-900 border border-slate-800 overflow-hidden">
+            <div className="rounded-xl bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 overflow-hidden">
                 {loading ? (
                     <div className="p-12 text-center space-y-3">
-                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-10 h-10 border-3 border-blue-500/20 border-t-blue-500 rounded-full mx-auto" />
-                        <p className="text-slate-600 font-bold uppercase tracking-widest text-xs">Analizando...</p>
+                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-10 h-10 border-3 border-kuro-500/20 border-t-kuro-500 rounded-full mx-auto" />
+                        <p className="text-carbon-600 dark:text-carbon-300 font-bold uppercase tracking-widest text-xs">Analizando...</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead className="hidden sm:table-header-group">
-                                <tr className="border-b border-slate-800 bg-slate-800/50">
-                                    <th className="px-3 md:px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Alumno</th>
-                                    <th className="px-3 md:px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Última Asistencia</th>
-                                    <th className="px-3 md:px-4 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Acciones</th>
+                                <tr className="border-b border-carbon-200 dark:border-white/10 bg-carbon-100 dark:bg-white/10/50">
+                                    <th className="px-3 md:px-4 py-3 text-[10px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest">Alumno</th>
+                                    <th className="px-3 md:px-4 py-3 text-[10px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest">Última Asistencia</th>
+                                    <th className="px-3 md:px-4 py-3 text-[10px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest text-right">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-800/50">
+                            <tbody className="divide-y divide-carbon-800/50">
                                 {absentMembers.map((m) => (
-                                    <tr key={m.user_id} className="hover:bg-slate-800/30 transition-colors group block sm:table-row border-b border-slate-800/50 sm:border-0 py-2 sm:py-0">
+                                    <tr key={m.user_id} className="hover:bg-carbon-800/30 transition-colors group block sm:table-row border-b border-carbon-200 dark:border-white/10/50 sm:border-0 py-2 sm:py-0">
                                         <td className="px-3 md:px-4 py-2 sm:py-4 block sm:table-cell">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-blue-400 text-xs flex-shrink-0">{m.first_name?.[0]}{m.last_name?.[0]}</div>
+                                                <div className="w-8 h-8 rounded-full bg-carbon-100 dark:bg-white/10 border border-carbon-200 dark:border-white/15 flex items-center justify-center font-bold text-kuro-400 text-xs flex-shrink-0">{m.first_name?.[0]}{m.last_name?.[0]}</div>
                                                 <div className="min-w-0">
-                                                    <div className="font-bold text-white leading-tight uppercase tracking-tight text-sm truncate">{m.first_name} {m.last_name}</div>
-                                                    <div className="text-slate-600 text-[10px] font-medium truncate">{m.email}</div>
+                                                    <div className="font-bold text-carbon-900 dark:text-white leading-tight uppercase tracking-tight text-sm truncate">{m.first_name} {m.last_name}</div>
+                                                    <div className="text-carbon-600 dark:text-carbon-300 text-[10px] font-medium truncate">{m.email}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-4 py-4">
                                             {m.last_access ? (
                                                 <div className="space-y-0.5">
-                                                    <div className="text-white font-bold text-sm">{new Date(m.last_access).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
-                                                    <div className="text-[10px] text-red-500 font-black uppercase tracking-widest">Hace {Math.floor((now - new Date(m.last_access).getTime()) / (1000 * 60 * 60 * 24))} días</div>
+                                                    <div className="text-carbon-900 dark:text-white font-bold text-sm">{new Date(m.last_access).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                                                    <div className="text-[10px] text-alert-500 font-black uppercase tracking-widest">Hace {Math.floor((now - new Date(m.last_access).getTime()) / (1000 * 60 * 60 * 24))} días</div>
                                                 </div>
                                             ) : (
-                                                <div className="text-red-500 font-black text-xs uppercase tracking-widest">Sin registros</div>
+                                                <div className="text-alert-500 font-black text-xs uppercase tracking-widest">Sin registros</div>
                                             )}
                                         </td>
                                         <td className="px-3 md:px-4 py-2 sm:py-4 block sm:table-cell text-right sm:text-right">
                                             <Button
                                                 variant="ghost"
-                                                className="bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white border border-blue-500/20 rounded-xl px-3 sm:px-4 py-3 sm:py-4 font-bold text-xs uppercase tracking-widest transition-all gap-1.5"
+                                                className="bg-kuro-500/10 hover:bg-kuro-500 text-kuro-400 hover:text-white border border-kuro-500/20 rounded-xl px-3 sm:px-4 py-3 sm:py-4 font-bold text-xs uppercase tracking-widest transition-all gap-1.5"
                                                 onClick={() => {
                                                     const msg = encodeURIComponent(`Hola ${m.first_name}, te extrañamos en ${marca}! 🥋 Notamos que hace unos días no venís a entrenar. ¿Todo bien?`)
                                                     const phone = m.phone?.replace(/\D/g, '') || ''
@@ -599,9 +599,9 @@ function AusenciaReport() {
                                 {absentMembers.length === 0 && (
                                     <tr>
                                         <td colSpan={3} className="p-12 text-center">
-                                            <Users className="w-12 h-12 text-slate-800 mx-auto mb-3" />
-                                            <h3 className="text-lg font-bold text-white mb-1">¡Sin ausencias críticas!</h3>
-                                            <p className="text-slate-600 text-sm">Todos asistieron en la última semana.</p>
+                                            <Users className="w-12 h-12 text-carbon-800 mx-auto mb-3" />
+                                            <h3 className="text-lg font-bold text-carbon-900 dark:text-white mb-1">¡Sin ausencias críticas!</h3>
+                                            <p className="text-carbon-600 dark:text-carbon-300 text-sm">Todos asistieron en la última semana.</p>
                                         </td>
                                     </tr>
                                 )}
@@ -621,18 +621,18 @@ function StatCard({ icon, label, value, sub, color }: {
     color: 'blue' | 'indigo' | 'emerald' | 'amber'
 }) {
     const colorMap = {
-        blue: 'bg-blue-900/20 text-blue-400',
-        indigo: 'bg-indigo-900/20 text-indigo-400',
-        emerald: 'bg-emerald-900/20 text-emerald-400',
-        amber: 'bg-amber-900/20 text-amber-400',
+        blue: 'bg-kuro-900/20 text-kuro-400',
+        indigo: 'bg-kuro-900/20 text-kuro-400',
+        emerald: 'bg-kuro-900/20 text-kuro-400',
+        amber: 'bg-warn-900/20 text-warn-400',
     }
     return (
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3">
+        <div className="p-4 rounded-xl bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 flex items-center gap-3">
             <div className={`p-2 rounded-lg ${colorMap[color]}`}>{icon}</div>
             <div className="min-w-0">
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 truncate">{label}</p>
-                <p className="text-lg font-black text-white truncate">{value}</p>
-                {sub && <p className="text-[9px] text-slate-600 font-bold">{sub}</p>}
+                <p className="text-[9px] font-black uppercase tracking-widest text-carbon-600 dark:text-carbon-300 truncate">{label}</p>
+                <p className="text-lg font-black text-carbon-900 dark:text-white truncate">{value}</p>
+                {sub && <p className="text-[9px] text-carbon-600 dark:text-carbon-300 font-bold">{sub}</p>}
             </div>
         </div>
     )

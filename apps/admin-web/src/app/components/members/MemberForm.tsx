@@ -207,22 +207,22 @@ export default function MemberForm({
     }
   }
 
-  const inputClass = "w-full h-12 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 pl-11 text-slate-900 dark:text-white font-medium placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all font-sans"
+  const inputClass = "w-full h-12 bg-carbon-50 dark:bg-carbon-800 border border-carbon-200 dark:border-carbon-700 rounded-xl px-4 pl-11 text-carbon-900 dark:text-white font-medium placeholder:text-carbon-400 dark:placeholder:text-carbon-500 focus:outline-none focus:ring-4 focus:ring-kuro-500/10 focus:border-kuro-500/50 transition-all font-sans"
 
   return (
     <form onSubmit={submit} className="space-y-10">
       {/* --- Personal Section --- */}
       <section>
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+          <div className="w-8 h-8 rounded-lg bg-kuro-50 dark:bg-kuro-900/30 flex items-center justify-center text-kuro-600 dark:text-kuro-400">
             <User className="w-4 h-4" />
           </div>
-          <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Información Personal</h4>
+          <h4 className="text-sm font-black text-carbon-900 dark:text-white uppercase tracking-widest">Información Personal</h4>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="relative group">
-            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-kuro-500 transition-colors" />
             <input
               className={inputClass}
               placeholder="Nombre completo *"
@@ -233,7 +233,7 @@ export default function MemberForm({
           </div>
 
           <div className="relative group">
-            <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+            <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-kuro-500 transition-colors" />
             <input
               className={inputClass}
               placeholder="Código de acceso personalizado"
@@ -246,7 +246,7 @@ export default function MemberForm({
           </div>
 
           <div className="relative group md:col-span-2">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-kuro-500 transition-colors" />
             <input
               className={inputClass}
               type="email"
@@ -258,7 +258,7 @@ export default function MemberForm({
           </div>
 
           <div className="relative group">
-            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-kuro-500 transition-colors" />
             <input
               className={inputClass}
               placeholder="Teléfono móvil"
@@ -268,7 +268,7 @@ export default function MemberForm({
           </div>
 
           <div className="relative group">
-            <AlertCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+            <AlertCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-kuro-500 transition-colors" />
             <input
               className={inputClass}
               placeholder="Contacto de emergencia"
@@ -278,7 +278,7 @@ export default function MemberForm({
           </div>
 
           <div className="relative group md:col-span-2">
-            <div className="absolute -top-6 left-0 text-[10px] font-black text-slate-400 uppercase tracking-widest">Rol de Usuario</div>
+            <div className="absolute -top-6 left-0 text-[10px] font-black text-carbon-400 uppercase tracking-widest">Rol de Usuario</div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {[
                 { id: 'member', label: 'Socio', icon: User },
@@ -291,11 +291,11 @@ export default function MemberForm({
                   type="button"
                   onClick={() => setForm({ ...form, role: r.id as 'admin' | 'member' | 'instructor' | 'becado' })}
                   className={`flex items-center gap-3 p-3 rounded-2xl border transition-all ${form.role === r.id
-                    ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20'
-                    : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-500'
+                    ? 'bg-kuro-600 border-kuro-600 text-white shadow-lg shadow-kuro-500/20'
+                    : 'bg-white dark:bg-carbon-800 border-carbon-100 dark:border-carbon-700 text-carbon-600 dark:text-carbon-300 hover:border-carbon-300 dark:hover:border-carbon-500'
                     }`}
                 >
-                  <r.icon className={`w-4 h-4 ${form.role === r.id ? 'text-white' : 'text-blue-500'}`} />
+                  <r.icon className={`w-4 h-4 ${form.role === r.id ? 'text-white' : 'text-kuro-500'}`} />
                   <span className="text-xs font-black uppercase tracking-widest">{r.label}</span>
                 </button>
               ))}
@@ -307,17 +307,17 @@ export default function MemberForm({
       {/* --- Membership Section --- */}
       <section>
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+          <div className="w-8 h-8 rounded-lg bg-kuro-50 dark:bg-kuro-900/30 flex items-center justify-center text-kuro-600 dark:text-kuro-400">
             <Shield className="w-4 h-4" />
           </div>
-          <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Membresía y Pagos</h4>
+          <h4 className="text-sm font-black text-carbon-900 dark:text-white uppercase tracking-widest">Membresía y Pagos</h4>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="relative group col-span-1 md:col-span-1">
-            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-kuro-500 transition-colors" />
             <input
-              className={`${inputClass} focus:ring-emerald-500/10 focus:border-emerald-500/50`}
+              className={`${inputClass} focus:ring-kuro-500/10 focus:border-kuro-500/50`}
               type="date"
               lang="es"
               value={form.last_payment_date}
@@ -332,33 +332,33 @@ export default function MemberForm({
                 }))
               }}
             />
-            <div className="absolute -top-6 left-0 text-[10px] font-black text-slate-400 uppercase tracking-widest">Último Pago / Renovación</div>
+            <div className="absolute -top-6 left-0 text-[10px] font-black text-carbon-400 uppercase tracking-widest">Último Pago / Renovación</div>
           </div>
 
           <div className="relative group col-span-1 md:col-span-1">
-            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-kuro-500 transition-colors" />
             <input
-              className={`${inputClass} bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 cursor-not-allowed`}
+              className={`${inputClass} bg-carbon-100 dark:bg-carbon-900 text-carbon-500 dark:text-carbon-400 cursor-not-allowed`}
               type="date"
               lang="es"
               value={form.start_date}
               readOnly
             />
-            <div className="absolute -top-6 left-0 text-[10px] font-black text-slate-400 uppercase tracking-widest">Fecha de Alta (Antigüedad)</div>
+            <div className="absolute -top-6 left-0 text-[10px] font-black text-carbon-400 uppercase tracking-widest">Fecha de Alta (Antigüedad)</div>
           </div>
 
           <div className="relative group col-span-1 md:col-span-1 opacity-60">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400">
               <Calendar className="w-5 h-5" />
             </div>
-            <div className={`${inputClass} flex items-center bg-slate-100 dark:bg-slate-900 cursor-not-allowed`}>
+            <div className={`${inputClass} flex items-center bg-carbon-100 dark:bg-carbon-900 cursor-not-allowed`}>
               {form.next_payment_due === '2099-12-31'
                 ? 'VITALICIA'
                 : form.next_payment_due
                   ? new Date(form.next_payment_due + 'T12:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
                   : '—'}
             </div>
-            <div className="absolute -top-6 left-0 text-[10px] font-black text-slate-400 uppercase tracking-widest">Vence Automáticamente</div>
+            <div className="absolute -top-6 left-0 text-[10px] font-black text-carbon-400 uppercase tracking-widest">Vence Automáticamente</div>
           </div>
         </div>
       </section>
@@ -366,31 +366,31 @@ export default function MemberForm({
       {/* --- Classes Section --- */}
       <section>
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+          <div className="w-8 h-8 rounded-lg bg-kuro-50 dark:bg-kuro-900/30 flex items-center justify-center text-kuro-600 dark:text-kuro-400">
             <BookOpen className="w-4 h-4" />
           </div>
-          <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Inscripción a Clases</h4>
+          <h4 className="text-sm font-black text-carbon-900 dark:text-white uppercase tracking-widest">Inscripción a Clases</h4>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Clase Principal */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-2">
-              <Shield className="w-3 h-3 text-blue-500" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Clase Principal (Obligatoria)</p>
+              <Shield className="w-3 h-3 text-kuro-500" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-carbon-400">Clase Principal (Obligatoria)</p>
             </div>
             <div className="space-y-2">
               {classes.map(c => (
                 <label
                   key={`p-${c.id}`}
                   className={`flex items-center gap-4 p-4 rounded-2xl border transition-all cursor-pointer ${form.principal_class === c.id
-                    ? 'bg-blue-600 border-blue-600 shadow-xl shadow-blue-500/20'
-                    : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-500'
+                    ? 'bg-kuro-600 border-kuro-600 shadow-xl shadow-kuro-500/20'
+                    : 'bg-white dark:bg-carbon-800 border-carbon-100 dark:border-carbon-700 hover:border-carbon-300 dark:hover:border-carbon-500'
                     }`}
                 >
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${form.principal_class === c.id ? 'bg-white border-white text-blue-600' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600'
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${form.principal_class === c.id ? 'bg-white border-white text-kuro-600' : 'bg-white dark:bg-carbon-900 border-carbon-300 dark:border-carbon-600'
                     }`}>
-                    {form.principal_class === c.id && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
+                    {form.principal_class === c.id && <div className="w-2.5 h-2.5 rounded-full bg-kuro-600" />}
                   </div>
                   <input
                     type="radio"
@@ -400,8 +400,8 @@ export default function MemberForm({
                     onChange={() => setPrincipalClass(c.id)}
                   />
                   <div className="flex-1">
-                    <p className={`text-sm font-bold leading-none ${form.principal_class === c.id ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{c.name}</p>
-                    <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${form.principal_class === c.id ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                    <p className={`text-sm font-bold leading-none ${form.principal_class === c.id ? 'text-white' : 'text-carbon-900 dark:text-white'}`}>{c.name}</p>
+                    <p className={`text-[10px] font-black uppercase tracking-widest mt-1 ${form.principal_class === c.id ? 'text-kuro-100' : 'text-carbon-500 dark:text-carbon-400'}`}>
                       ${Number(c.price_principal).toLocaleString()}
                     </p>
                   </div>
@@ -413,8 +413,8 @@ export default function MemberForm({
           {/* Clases Adicionales */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-2">
-              <Plus className="w-3 h-3 text-emerald-500" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Clases Adicionales (Opcional)</p>
+              <Plus className="w-3 h-3 text-kuro-500" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-carbon-400">Clases Adicionales (Opcional)</p>
             </div>
             <div className="space-y-2">
               {classes.map(c => {
@@ -424,11 +424,11 @@ export default function MemberForm({
                   <label
                     key={`a-${c.id}`}
                     className={`flex items-center gap-4 p-4 rounded-2xl border transition-all cursor-pointer ${isSelected
-                      ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/40'
-                      : isPrincipal ? 'opacity-40 cursor-not-allowed bg-slate-50 dark:bg-slate-800/50' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-500'
+                      ? 'bg-kuro-50 dark:bg-kuro-500/10 border-kuro-200 dark:border-kuro-500/40'
+                      : isPrincipal ? 'opacity-40 cursor-not-allowed bg-carbon-50 dark:bg-carbon-800/50' : 'bg-white dark:bg-carbon-800 border-carbon-100 dark:border-carbon-700 hover:border-carbon-300 dark:hover:border-carbon-500'
                       }`}
                   >
-                    <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${isSelected ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600'
+                    <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${isSelected ? 'bg-kuro-500 border-kuro-500 text-white' : 'bg-white dark:bg-carbon-900 border-carbon-300 dark:border-carbon-600'
                       }`}>
                       {isSelected && <CheckIcon className="w-3 h-3" strokeWidth={4} />}
                     </div>
@@ -440,8 +440,8 @@ export default function MemberForm({
                       onChange={() => toggleAdditionalClass(c.id)}
                     />
                     <div className="flex-1">
-                      <p className="text-sm font-bold text-slate-900 dark:text-white leading-none">{c.name}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-black uppercase tracking-widest mt-1">
+                      <p className="text-sm font-bold text-carbon-900 dark:text-white leading-none">{c.name}</p>
+                      <p className="text-[10px] text-carbon-500 dark:text-carbon-400 font-black uppercase tracking-widest mt-1">
                         + ${Number(c.price_additional || c.price_principal).toLocaleString()}
                       </p>
                     </div>
@@ -453,19 +453,19 @@ export default function MemberForm({
         </div>
 
         {/* Total Fee Indicator */}
-        <div className="mt-8 p-6 rounded-3xl bg-slate-950 text-white flex items-center justify-between shadow-2xl border border-white/5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all" />
+        <div className="mt-8 p-6 rounded-3xl bg-carbon-950 text-white flex items-center justify-between shadow-2xl border border-white/5 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-kuro-500/10 rounded-full blur-3xl group-hover:bg-kuro-500/20 transition-all" />
           <div className="relative">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Cuota Mensual Estimada</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-carbon-400 mb-1">Total Cuota Mensual Estimada</p>
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-black text-white">${totalFee.toLocaleString()}</span>
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">ARS / Mes</span>
+              <span className="text-xs font-bold text-carbon-500 uppercase tracking-widest">ARS / Mes</span>
             </div>
           </div>
           <div className="relative flex flex-col items-end">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Cálculo Automático</span>
+              <div className="w-2 h-2 rounded-full bg-kuro-500 animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-kuro-500">Cálculo Automático</span>
             </div>
           </div>
         </div>
@@ -474,7 +474,7 @@ export default function MemberForm({
       {/* --- Notes --- */}
       <section>
         <textarea
-          className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-5 py-4 text-slate-900 dark:text-white font-medium placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/50 transition-all min-h-[120px]"
+          className="w-full bg-carbon-50 dark:bg-carbon-800 border border-carbon-200 dark:border-carbon-700 rounded-2xl px-5 py-4 text-carbon-900 dark:text-white font-medium placeholder:text-carbon-400 dark:placeholder:text-carbon-500 focus:outline-none focus:ring-4 focus:ring-kuro-500/10 focus:border-kuro-500/50 transition-all min-h-[120px]"
           placeholder="Observaciones o notas adicionales..."
           value={form.notes}
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
@@ -487,7 +487,7 @@ export default function MemberForm({
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
           disabled={isSubmitting}
-          className="flex-1 h-14 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+          className="flex-1 h-14 bg-kuro-600 text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-kuro-500/30 hover:bg-kuro-700 transition-all flex items-center justify-center gap-2"
           type="submit"
         >
           {isSubmitting ? (
@@ -498,7 +498,7 @@ export default function MemberForm({
           {member ? 'Guardar Cambios' : 'Confirmar Registro'}
         </motion.button>
         <button
-          className="h-14 px-8 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+          className="h-14 px-8 rounded-2xl border border-carbon-200 dark:border-carbon-700 text-carbon-500 dark:text-carbon-400 font-bold uppercase tracking-widest text-xs hover:bg-carbon-50 dark:hover:bg-carbon-800 transition-all"
           type="button"
           onClick={onCancel}
         >

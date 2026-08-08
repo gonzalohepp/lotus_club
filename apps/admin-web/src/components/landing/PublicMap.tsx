@@ -81,8 +81,8 @@ const createUserIcon = () => {
         className: 'user-marker',
         html: `
             <div class="relative flex items-center justify-center w-6 h-6">
-                <div class="absolute w-full h-full bg-blue-500/50 rounded-full animate-ping"></div>
-                <div class="relative w-4 h-4 bg-blue-600 border-2 border-white rounded-full shadow-lg"></div>
+                <div class="absolute w-full h-full bg-kuro-500/50 rounded-full animate-ping"></div>
+                <div class="relative w-4 h-4 bg-kuro-600 border-2 border-white rounded-full shadow-lg"></div>
             </div>
         `,
         iconSize: [24, 24],
@@ -252,19 +252,19 @@ export default function PublicMap({
     }
 
     return (
-        <div className="flex flex-col lg:flex-row h-[600px] md:h-[700px] w-full rounded-[2rem] md:rounded-[32px] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl relative bg-white dark:bg-slate-950">
+        <div className="flex flex-col lg:flex-row h-[600px] md:h-[700px] w-full rounded-[2rem] md:rounded-[32px] overflow-hidden border border-carbon-200 dark:border-carbon-800 shadow-2xl relative bg-white dark:bg-carbon-950">
             {/* Mobile View Toggle */}
             {!hideSidebar && (
-                <div className="lg:hidden flex p-2 gap-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                <div className="lg:hidden flex p-2 gap-2 bg-carbon-50 dark:bg-carbon-900 border-b border-carbon-200 dark:border-carbon-800">
                     <button
                         onClick={() => setViewMode('list')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'list' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'list' ? 'bg-kuro-600 text-white shadow-lg' : 'text-carbon-500'}`}
                     >
                         <Info className="w-4 h-4" /> Lista
                     </button>
                     <button
                         onClick={() => setViewMode('map')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'map' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'map' ? 'bg-kuro-600 text-white shadow-lg' : 'text-carbon-500'}`}
                     >
                         <MapPin className="w-4 h-4" /> Mapa
                     </button>
@@ -273,19 +273,19 @@ export default function PublicMap({
 
             {/* Left Sidebar: Search & List */}
             {!hideSidebar && (
-                <div className={`w-full lg:w-80 bg-white dark:bg-slate-900 flex flex-col border-r border-slate-200 dark:border-slate-800 z-20 ${viewMode === 'map' ? 'hidden lg:flex' : 'flex'}`}>
+                <div className={`w-full lg:w-80 bg-white dark:bg-carbon-900 flex flex-col border-r border-carbon-200 dark:border-carbon-800 z-20 ${viewMode === 'map' ? 'hidden lg:flex' : 'flex'}`}>
                     <div className="p-6 space-y-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="font-black text-lg text-slate-800 dark:text-white tracking-tight">Academias</h3>
-                            <span className="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-wider">
+                            <h3 className="font-black text-lg text-carbon-800 dark:text-white tracking-tight">Academias</h3>
+                            <span className="bg-kuro-100 dark:bg-kuro-900/40 text-kuro-600 dark:text-kuro-400 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-wider">
                                 Argentina
                             </span>
                         </div>
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-carbon-400" />
                             <input
                                 placeholder="Buscar por ciudad..."
-                                className="w-full h-10 pl-10 pr-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-sm font-medium focus:ring-2 ring-blue-500/20 outline-none transition-all"
+                                className="w-full h-10 pl-10 pr-4 rounded-xl bg-carbon-50 dark:bg-carbon-800 border border-carbon-100 dark:border-carbon-700 text-sm font-medium focus:ring-2 ring-kuro-500/20 outline-none transition-all"
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
                             />
@@ -295,10 +295,10 @@ export default function PublicMap({
                         <button
                             onClick={handleLocateMe}
                             disabled={isLocating}
-                            className="w-full h-10 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 border border-blue-100 dark:border-blue-800/30 transition-all active:scale-95"
+                            className="w-full h-10 bg-kuro-50 dark:bg-kuro-900/20 hover:bg-kuro-100 dark:hover:bg-kuro-900/40 text-kuro-600 dark:text-kuro-400 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 border border-kuro-100 dark:border-kuro-800/30 transition-all active:scale-95"
                         >
                             {isLocating ? (
-                                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                                <div className="w-4 h-4 border-2 border-kuro-500 border-t-transparent rounded-full animate-spin" />
                             ) : (
                                 <LocateFixed className="w-4 h-4" />
                             )}
@@ -315,19 +315,19 @@ export default function PublicMap({
                                 className={`
                                 p-4 rounded-xl cursor-pointer border transition-all duration-300 group
                                 ${selected?.id === academy.id
-                                        ? 'bg-blue-600 border-blue-500 shadow-lg shadow-blue-900/20'
-                                        : 'bg-slate-50 dark:bg-slate-800/30 border-transparent hover:border-slate-200 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-800'}
+                                        ? 'bg-kuro-600 border-kuro-500 shadow-lg shadow-kuro-900/20'
+                                        : 'bg-carbon-50 dark:bg-carbon-800/30 border-transparent hover:border-carbon-200 dark:hover:border-carbon-700 hover:bg-white dark:hover:bg-carbon-800'}
                             `}
                             >
-                                <h4 className={`font-bold text-sm mb-1 ${selected?.id === academy.id ? 'text-white' : 'text-slate-800 dark:text-slate-200 group-hover:text-blue-500'}`}>
+                                <h4 className={`font-bold text-sm mb-1 ${selected?.id === academy.id ? 'text-white' : 'text-carbon-800 dark:text-carbon-200 group-hover:text-kuro-500'}`}>
                                     {academy.name}
                                 </h4>
                                 {academy.team && academy.team !== academy.name && (
-                                    <p className={`text-[10px] font-black uppercase tracking-wider mb-1 ${selected?.id === academy.id ? 'text-blue-100' : 'text-slate-400'}`}>
+                                    <p className={`text-[10px] font-black uppercase tracking-wider mb-1 ${selected?.id === academy.id ? 'text-kuro-100' : 'text-carbon-400'}`}>
                                         {academy.team}
                                     </p>
                                 )}
-                                <div className={`flex items-start gap-1.5 text-[10px] font-medium leading-tight ${selected?.id === academy.id ? 'text-blue-100' : 'text-slate-500'}`}>
+                                <div className={`flex items-start gap-1.5 text-[10px] font-medium leading-tight ${selected?.id === academy.id ? 'text-kuro-100' : 'text-carbon-500'}`}>
                                     <MapPin className="w-3 h-3 shrink-0" />
                                     <span>{[academy.city, academy.address].filter(Boolean).join(' • ') || 'Dirección a confirmar'}</span>
                                 </div>
@@ -335,8 +335,8 @@ export default function PublicMap({
                         ))}
                         {filtered.length === 0 && (
                             <div className="text-center py-10">
-                                <Info className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                                <p className="text-slate-400 text-xs font-medium">No se encontraron resultados</p>
+                                <Info className="w-8 h-8 text-carbon-300 mx-auto mb-2" />
+                                <p className="text-carbon-400 text-xs font-medium">No se encontraron resultados</p>
                             </div>
                         )}
                     </div>
@@ -344,7 +344,7 @@ export default function PublicMap({
             )}
 
             {/* Main Content Area: Map + Detailed Sidebar */}
-            <div className={`flex-1 relative bg-slate-100 dark:bg-slate-900 overflow-hidden flex ${viewMode === 'list' ? 'hidden lg:flex' : 'flex'}`}>
+            <div className={`flex-1 relative bg-carbon-100 dark:bg-carbon-900 overflow-hidden flex ${viewMode === 'list' ? 'hidden lg:flex' : 'flex'}`}>
 
                 <div className="flex-1 relative">
                     <MapContainer
@@ -400,30 +400,30 @@ export default function PublicMap({
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="absolute right-0 top-0 bottom-0 w-full md:w-96 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 z-[1001] shadow-[-10px_0_30px_rgba(0,0,0,0.1)] flex flex-col"
+                            className="absolute right-0 top-0 bottom-0 w-full md:w-96 bg-white dark:bg-carbon-900 border-l border-carbon-200 dark:border-carbon-800 z-[1001] shadow-[-10px_0_30px_rgba(0,0,0,0.1)] flex flex-col"
                         >
                             {/* Drawer Close Button */}
                             <button
                                 onClick={() => setSelected(null)}
-                                className="absolute top-6 right-6 z-50 p-2.5 bg-slate-950/80 backdrop-blur-xl rounded-full shadow-2xl border border-white/20 hover:bg-slate-900 transition-all hover:scale-110 active:scale-95 group"
+                                className="absolute top-6 right-6 z-50 p-2.5 bg-carbon-950/80 backdrop-blur-xl rounded-full shadow-2xl border border-white/20 hover:bg-carbon-900 transition-all hover:scale-110 active:scale-95 group"
                             >
-                                <X className="w-5 h-5 text-white group-hover:text-blue-400" />
+                                <X className="w-5 h-5 text-white group-hover:text-kuro-400" />
                             </button>
 
                             {/* Drawer Content */}
                             <div className="flex-1 overflow-y-auto">
                                 {/* Header Image */}
-                                <div className="h-48 relative bg-slate-100 dark:bg-slate-800">
+                                <div className="h-48 relative bg-carbon-100 dark:bg-carbon-800">
                                     {selected.image_url ? (
                                         <Image src={selected.image_url} alt={selected.name} fill className="object-cover" />
                                     ) : (
-                                        <div className="absolute inset-0 flex items-center justify-center text-slate-300">
+                                        <div className="absolute inset-0 flex items-center justify-center text-carbon-300">
                                             <MapPin className="w-12 h-12 opacity-10" />
                                         </div>
                                     )}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-carbon-900/80 via-transparent to-transparent" />
                                     <div className="absolute bottom-6 left-6 right-6">
-                                        <p className="text-blue-400 text-[10px] font-black uppercase tracking-[0.3em] mb-1">
+                                        <p className="text-kuro-400 text-[10px] font-black uppercase tracking-[0.3em] mb-1">
                                             {selected.team || 'Sede oficial'}
                                         </p>
                                         <h3 className="text-white font-black text-2xl tracking-tight leading-none">{selected.name}</h3>
@@ -434,11 +434,11 @@ export default function PublicMap({
                                     {/* Description */}
                                     {selected.description && (
                                         <div className="space-y-3">
-                                            <div className="flex items-center gap-2 text-slate-400">
-                                                <Info className="w-4 h-4 text-blue-500" />
-                                                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Acerca de</h4>
+                                            <div className="flex items-center gap-2 text-carbon-400">
+                                                <Info className="w-4 h-4 text-kuro-500" />
+                                                <h4 className="text-[10px] font-black uppercase tracking-widest text-carbon-500">Acerca de</h4>
                                             </div>
-                                            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed italic">
+                                            <p className="text-sm text-carbon-600 dark:text-carbon-400 leading-relaxed italic">
                                                 &ldquo;{selected.description}&rdquo;
                                             </p>
                                         </div>
@@ -447,15 +447,15 @@ export default function PublicMap({
                                     {/* Info Grid */}
                                     <div className="space-y-6">
                                         <div className="flex gap-4">
-                                            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-800/30">
-                                                <MapPin className="w-5 h-5 text-blue-500" />
+                                            <div className="w-10 h-10 rounded-xl bg-kuro-50 dark:bg-kuro-900/20 flex items-center justify-center shrink-0 border border-kuro-100 dark:border-kuro-800/30">
+                                                <MapPin className="w-5 h-5 text-kuro-500" />
                                             </div>
                                             <div>
-                                                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Dirección</h4>
-                                                <p className="text-sm text-slate-700 dark:text-slate-300 font-bold leading-tight">
+                                                <h4 className="text-[10px] font-black uppercase tracking-widest text-carbon-500 mb-1">Dirección</h4>
+                                                <p className="text-sm text-carbon-700 dark:text-carbon-300 font-bold leading-tight">
                                                     {selected.address || 'A confirmar'}
                                                 </p>
-                                                <p className="text-xs text-slate-500">
+                                                <p className="text-xs text-carbon-500">
                                                     {[selected.city, 'Argentina'].filter(Boolean).join(', ')}
                                                 </p>
                                             </div>
@@ -463,38 +463,38 @@ export default function PublicMap({
 
                                         {selected.schedules_text && (
                                             <div className="flex gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 flex items-center justify-center shrink-0 border border-cyan-100 dark:border-cyan-800/30">
-                                                    <Clock className="w-5 h-5 text-cyan-500" />
+                                                <div className="w-10 h-10 rounded-xl bg-kuro-50 dark:bg-kuro-900/20 flex items-center justify-center shrink-0 border border-kuro-100 dark:border-kuro-800/30">
+                                                    <Clock className="w-5 h-5 text-kuro-500" />
                                                 </div>
                                                 <div className="flex-1">
-                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Horarios</h4>
-                                                    <p className="text-sm text-slate-700 dark:text-slate-300 font-medium leading-relaxed">{selected.schedules_text}</p>
+                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-carbon-500 mb-1">Horarios</h4>
+                                                    <p className="text-sm text-carbon-700 dark:text-carbon-300 font-medium leading-relaxed">{selected.schedules_text}</p>
                                                 </div>
                                             </div>
                                         )}
 
                                         {selected.team && (
                                             <div className="flex gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center shrink-0 border border-purple-100 dark:border-purple-800/30">
-                                                    <Dumbbell className="w-5 h-5 text-purple-500" />
+                                                <div className="w-10 h-10 rounded-xl bg-kuro-50 dark:bg-kuro-900/20 flex items-center justify-center shrink-0 border border-kuro-100 dark:border-kuro-800/30">
+                                                    <Dumbbell className="w-5 h-5 text-kuro-500" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Equipo</h4>
-                                                    <p className="text-sm text-slate-700 dark:text-slate-300 font-bold">{selected.team}</p>
+                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-carbon-500 mb-1">Equipo</h4>
+                                                    <p className="text-sm text-carbon-700 dark:text-carbon-300 font-bold">{selected.team}</p>
                                                 </div>
                                             </div>
                                         )}
 
                                         {selected.instructor && (
                                             <div className="flex gap-4">
-                                                <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center shrink-0 border border-orange-100 dark:border-orange-800/30">
-                                                    <GraduationCap className="w-5 h-5 text-orange-500" />
+                                                <div className="w-10 h-10 rounded-xl bg-warn-50 dark:bg-warn-900/20 flex items-center justify-center shrink-0 border border-warn-100 dark:border-warn-800/30">
+                                                    <GraduationCap className="w-5 h-5 text-warn-500" />
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Instructor a cargo</h4>
-                                                    <p className="text-sm text-slate-700 dark:text-slate-300 font-bold">{selected.instructor}</p>
+                                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-carbon-500 mb-1">Instructor a cargo</h4>
+                                                    <p className="text-sm text-carbon-700 dark:text-carbon-300 font-bold">{selected.instructor}</p>
                                                     {selected.instructor_rank && (
-                                                        <p className="text-xs text-slate-500 mt-0.5">{selected.instructor_rank}</p>
+                                                        <p className="text-xs text-carbon-500 mt-0.5">{selected.instructor_rank}</p>
                                                     )}
                                                 </div>
                                             </div>
@@ -504,12 +504,12 @@ export default function PublicMap({
                             </div>
 
                             {/* Footer Actions */}
-                            <div className="p-6 border-t border-slate-100 dark:border-slate-800 space-y-3 bg-slate-50/50 dark:bg-slate-900/50">
+                            <div className="p-6 border-t border-carbon-100 dark:border-carbon-800 space-y-3 bg-carbon-50/50 dark:bg-carbon-900/50">
                                 <a
                                     href={selected.maps_url || `https://www.google.com/maps/dir/?api=1&destination=${selected.lat},${selected.lng}`}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="flex items-center justify-center gap-3 w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs uppercase tracking-[0.2em] shadow-xl shadow-blue-500/20 transition-all hover:-translate-y-0.5"
+                                    className="flex items-center justify-center gap-3 w-full h-12 bg-kuro-600 hover:bg-kuro-700 text-white font-black rounded-xl text-xs uppercase tracking-[0.2em] shadow-xl shadow-kuro-500/20 transition-all hover:-translate-y-0.5"
                                 >
                                     <Navigation className="w-4 h-4" /> Cómo llegar
                                 </a>
@@ -518,7 +518,7 @@ export default function PublicMap({
                                         href={selected.website_url}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="flex items-center justify-center gap-3 w-full h-12 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-black rounded-xl text-xs uppercase tracking-[0.2em] transition-all hover:bg-slate-50 dark:hover:bg-slate-700"
+                                        className="flex items-center justify-center gap-3 w-full h-12 bg-white dark:bg-carbon-800 border border-carbon-200 dark:border-carbon-700 text-carbon-700 dark:text-carbon-200 font-black rounded-xl text-xs uppercase tracking-[0.2em] transition-all hover:bg-carbon-50 dark:hover:bg-carbon-700"
                                     >
                                         <ExternalLink className="w-4 h-4" /> Ver Sitio Web
                                     </a>
