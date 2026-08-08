@@ -19,6 +19,7 @@ import BillingRulesEditor from './BillingRulesEditor'
 import TeamEditor from './TeamEditor'
 import DojoLocationPicker from './DojoLocationPicker'
 import OrgAdminsEditor from './OrgAdminsEditor'
+import RoleCapabilitiesEditor from './RoleCapabilitiesEditor'
 
 /**
  * Console — Panel de plataforma.
@@ -103,17 +104,17 @@ export default function Console({
     return (
         <div className="min-h-screen flex flex-col md:flex-row">
             {/* ---- Árbol ------------------------------------------------- */}
-            <aside className="w-full md:w-80 shrink-0 border-r border-slate-200 dark:border-slate-800 p-4 md:h-screen md:overflow-y-auto">
+            <aside className="w-full md:w-80 shrink-0 border-r border-carbon-200 dark:border-carbon-800 p-4 md:h-screen md:overflow-y-auto">
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h1 className="text-lg font-black">Plataforma</h1>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-carbon-400">
                             {orgs.length} organización{orgs.length === 1 ? '' : 'es'} · {dojos.length} sedes
                         </p>
                     </div>
                     <button
                         onClick={createOrg}
-                        className="p-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                        className="p-2 rounded-xl bg-kuro-600 text-white hover:bg-kuro-700 transition-colors"
                         title="Nueva organización"
                     >
                         <Plus className="w-4 h-4" />
@@ -127,8 +128,8 @@ export default function Console({
                                 onClick={() => setSelected({ type: 'org', id: org.id })}
                                 className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-left transition-colors ${
                                     selected?.type === 'org' && selected.id === org.id
-                                        ? 'bg-blue-600 text-white'
-                                        : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                                        ? 'bg-kuro-600 text-white'
+                                        : 'hover:bg-carbon-100 dark:hover:bg-carbon-800'
                                 }`}
                             >
                                 <Building2 className="w-4 h-4 shrink-0" />
@@ -136,28 +137,28 @@ export default function Console({
                                 <span
                                     className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded ${
                                         org.plan === 'pro'
-                                            ? 'bg-amber-400 text-amber-950'
-                                            : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
+                                            ? 'bg-warn-400 text-warn-950'
+                                            : 'bg-carbon-200 dark:bg-carbon-700 text-carbon-500'
                                     }`}
                                 >
                                     {org.plan}
                                 </span>
                             </button>
 
-                            <div className="ml-4 mt-1 space-y-0.5 border-l border-slate-200 dark:border-slate-700 pl-3">
+                            <div className="ml-4 mt-1 space-y-0.5 border-l border-carbon-200 dark:border-carbon-700 pl-3">
                                 {(dojosByOrg[org.id] ?? []).map((dojo) => (
                                     <button
                                         key={dojo.id}
                                         onClick={() => setSelected({ type: 'dojo', id: dojo.id })}
                                         className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-left transition-colors ${
                                             selected?.type === 'dojo' && selected.id === dojo.id
-                                                ? 'bg-slate-200 dark:bg-slate-700'
-                                                : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                                                ? 'bg-carbon-200 dark:bg-carbon-700'
+                                                : 'hover:bg-carbon-100 dark:hover:bg-carbon-800'
                                         }`}
                                     >
-                                        <Store className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                        <Store className="w-3.5 h-3.5 text-carbon-400 shrink-0" />
                                         <span className="flex-1 text-sm truncate">{dojo.name}</span>
-                                        <span className="text-[10px] text-slate-400">
+                                        <span className="text-[10px] text-carbon-400">
                                             {memberCounts[dojo.id] ?? 0}
                                         </span>
                                     </button>
@@ -165,7 +166,7 @@ export default function Console({
 
                                 <button
                                     onClick={() => createDojo(org.id)}
-                                    className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-left text-xs text-slate-400 hover:text-blue-500 transition-colors"
+                                    className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-left text-xs text-carbon-400 hover:text-kuro-500 transition-colors"
                                 >
                                     <Plus className="w-3.5 h-3.5" />
                                     Agregar sede
@@ -192,11 +193,12 @@ export default function Console({
                         key={selectedDojo.id}
                         dojo={selectedDojo}
                         onSaved={(next) => setDojos((prev) => prev.map((d) => (d.id === next.id ? next : d)))}
+                        onDeleted={(id) => { setDojos((prev) => prev.filter((d) => d.id !== id)); setSelected(null) }}
                     />
                 )}
 
                 {!selectedOrg && !selectedDojo && (
-                    <p className="text-slate-400">Elegí una organización o una sede.</p>
+                    <p className="text-carbon-400">Elegí una organización o una sede.</p>
                 )}
             </main>
         </div>
@@ -284,6 +286,13 @@ function OrgEditor({
                 <OrgAdminsEditor orgId={draft.id} orgName={draft.name} />
             </Section>
 
+            <Section
+                title="Permisos por rol"
+                hint="Qué puede hacer cada rol en esta marca. Sin tocar nada rigen los valores por defecto."
+            >
+                <RoleCapabilitiesEditor orgId={draft.id} />
+            </Section>
+
             <Section title="Marca" hint="Aplica a todas las sedes que no definan la suya">
                 <BrandingFields
                     value={draft.branding}
@@ -299,12 +308,12 @@ function OrgEditor({
                             onClick={() => setDraft({ ...draft, plan: p })}
                             className={`flex-1 p-4 rounded-2xl border-2 text-left transition-colors ${
                                 draft.plan === p
-                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                    : 'border-slate-200 dark:border-slate-700'
+                                    ? 'border-kuro-500 bg-kuro-50 dark:bg-kuro-900/20'
+                                    : 'border-carbon-200 dark:border-carbon-700'
                             }`}
                         >
                             <p className="font-black uppercase text-sm">{p}</p>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-carbon-500">
                                 {getDojoLimit(p) === null ? 'Sedes ilimitadas' : `${getDojoLimit(p)} sede`}
                             </p>
                         </button>
@@ -312,7 +321,7 @@ function OrgEditor({
                 </div>
 
                 {limit !== null && dojoCount > limit && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mb-4">
+                    <p className="text-xs text-warn-600 dark:text-warn-400 mb-4">
                         ⚠ Esta organización tiene {dojoCount} sedes y el plan {draft.plan} permite {limit}. Las
                         existentes siguen funcionando, pero no vas a poder crear más.
                     </p>
@@ -328,13 +337,13 @@ function OrgEditor({
                                 onClick={() => toggleFeature(key)}
                                 className={`flex items-center gap-2 p-2.5 rounded-xl text-left text-sm transition-colors ${
                                     on
-                                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
-                                        : 'bg-slate-50 dark:bg-slate-800/50 text-slate-400'
+                                        ? 'bg-kuro-50 dark:bg-kuro-900/20 text-kuro-700 dark:text-kuro-400'
+                                        : 'bg-carbon-50 dark:bg-carbon-800/50 text-carbon-400'
                                 }`}
                             >
                                 <span
                                     className={`w-4 h-4 rounded flex items-center justify-center shrink-0 ${
-                                        on ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                                        on ? 'bg-kuro-500' : 'bg-carbon-300 dark:bg-carbon-600'
                                     }`}
                                 >
                                     {on && <Check className="w-3 h-3 text-white" />}
@@ -342,7 +351,7 @@ function OrgEditor({
                                 <span className="flex-1 truncate">{FEATURE_LABELS[key]}</span>
                                 {overridden && (
                                     <span
-                                        className="text-[9px] font-black uppercase text-amber-500"
+                                        className="text-[9px] font-black uppercase text-warn-500"
                                         title="Difiere del default del plan"
                                     >
                                         custom
@@ -361,13 +370,14 @@ function OrgEditor({
 // Editor de sede: datos, marca propia y política de cobro
 // ---------------------------------------------------------------------------
 
-function DojoEditor({ dojo, onSaved }: { dojo: Dojo; onSaved: (next: Dojo) => void }) {
+function DojoEditor({ dojo, onSaved, onDeleted }: { dojo: Dojo; onSaved: (next: Dojo) => void; onDeleted: (id: string) => void }) {
     const [draft, setDraft] = useState<Dojo>({
         ...dojo,
         billing: { ...DEFAULT_BILLING, ...(dojo.billing ?? {}) },
     })
     const [saving, setSaving] = useState(false)
     const [tab, setTab] = useState<'datos' | 'equipo' | 'cobro' | 'marca'>('datos')
+    const [deleting, setDeleting] = useState(false)
 
     const save = async () => {
         setSaving(true)
@@ -385,17 +395,53 @@ function DojoEditor({ dojo, onSaved }: { dojo: Dojo; onSaved: (next: Dojo) => vo
         toast.success('Guardado. Aplica al instante en esta sede.')
     }
 
+    /**
+     * Baja de la sede. El primer intento va sin `force`: si tiene datos, la API
+     * responde 409 con el recuento y recién ahí se confirma. Borrar arrastra en
+     * cascada alumnos, pagos, clases y accesos, así que la confirmación dice
+     * exactamente qué se pierde en vez de un "¿estás seguro?" genérico.
+     */
+    const remove = async (force = false) => {
+        setDeleting(true)
+        const res = await fetch('/api/superadmin/dojos', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: draft.id, force }),
+        })
+        const json = await res.json()
+        setDeleting(false)
+
+        if (res.status === 409) {
+            const detalle = (json.counts as { label: string; count: number }[])
+                .map(c => `${c.count} ${c.label}`)
+                .join(', ')
+            const ok = window.confirm(
+                `"${json.dojo}" tiene ${detalle}.\n\n` +
+                'Borrarla elimina TODO eso de forma permanente y no se puede deshacer.\n\n' +
+                'Si sólo querés sacarla de circulación, cancelá y desactivala.\n\n' +
+                '¿Borrar igual?'
+            )
+            if (ok) await remove(true)
+            return
+        }
+
+        if (!res.ok) return toast.error(json.error ?? 'No se pudo borrar')
+
+        toast.success(`Sede "${json.deleted}" eliminada`)
+        onDeleted(draft.id)
+    }
+
     return (
         <div className="max-w-3xl space-y-6">
             <Header title={draft.name} subtitle="Sede" onSave={save} saving={saving} />
 
-            <div className="flex gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 w-fit">
+            <div className="flex gap-1 p-1 rounded-xl bg-carbon-100 dark:bg-carbon-800 w-fit">
                 {(['datos', 'equipo', 'cobro', 'marca'] as const).map((t) => (
                     <button
                         key={t}
                         onClick={() => setTab(t)}
                         className={`px-4 py-2 rounded-lg text-sm font-bold capitalize transition-colors ${
-                            tab === t ? 'bg-white dark:bg-slate-900 shadow-sm' : 'text-slate-500'
+                            tab === t ? 'bg-white dark:bg-carbon-900 shadow-sm' : 'text-carbon-500'
                         }`}
                     >
                         {t === 'cobro' ? 'Lógica de cobro' : t}
@@ -434,10 +480,10 @@ function DojoEditor({ dojo, onSaved }: { dojo: Dojo; onSaved: (next: Dojo) => vo
                     {/* La ubicación es lo que hace que la sede aparezca en el
                         mapa de la landing: sin lat/lng no hay pin que dibujar. */}
                     <div className="mt-6">
-                        <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">
+                        <h4 className="text-xs font-black uppercase tracking-widest text-carbon-400 mb-1">
                             Ubicación en el mapa
                         </h4>
-                        <p className="text-xs text-slate-500 mb-3">
+                        <p className="text-xs text-carbon-500 mb-3">
                             Define dónde se marca esta sede en la web pública.
                         </p>
                         <DojoLocationPicker
@@ -450,6 +496,33 @@ function DojoEditor({ dojo, onSaved }: { dojo: Dojo; onSaved: (next: Dojo) => vo
                                 setDraft((prev) => ({ ...prev, address, city }))
                             }
                         />
+                    </div>
+
+                    {/* Zona de peligro: separada del resto y con su propio
+                        encuadre, para que borrar no quede a un click de guardar. */}
+                    <div className="mt-8 rounded-2xl border border-alert-300 dark:border-alert-500/40 bg-alert-50 dark:bg-alert-500/10 p-5">
+                        <h4 className="text-xs font-black uppercase tracking-widest text-alert-700 dark:text-alert-300">
+                            Dar de baja la sede
+                        </h4>
+                        <p className="mt-1 text-xs text-alert-700/80 dark:text-alert-300/80">
+                            Borrarla elimina también sus alumnos, pagos, clases y accesos. Si sólo
+                            querés sacarla de circulación, desactivala en vez de borrarla.
+                        </p>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            <button
+                                onClick={() => setDraft({ ...draft, is_active: !draft.is_active })}
+                                className="rounded-xl border border-carbon-300 dark:border-white/15 px-4 py-2 text-xs font-bold hover:bg-white/50 dark:hover:bg-white/5"
+                            >
+                                {draft.is_active ? 'Marcar como inactiva' : 'Marcar como activa'}
+                            </button>
+                            <button
+                                onClick={() => remove()}
+                                disabled={deleting}
+                                className="rounded-xl bg-alert-600 px-4 py-2 text-xs font-bold text-white hover:bg-alert-700 disabled:opacity-50"
+                            >
+                                {deleting ? 'Borrando…' : 'Borrar sede'}
+                            </button>
+                        </div>
                     </div>
                 </Section>
             )}
@@ -539,13 +612,13 @@ function Header({
     return (
         <div className="flex items-start justify-between gap-4">
             <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{subtitle}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-carbon-400">{subtitle}</p>
                 <h2 className="text-2xl font-black">{title}</h2>
             </div>
             <button
                 onClick={onSave}
                 disabled={saving}
-                className="flex items-center gap-2 px-5 h-11 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 px-5 h-11 rounded-xl bg-kuro-600 text-white font-bold text-sm hover:bg-kuro-700 disabled:opacity-50 transition-colors"
             >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                 Guardar
@@ -557,8 +630,8 @@ function Header({
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
     return (
         <section>
-            <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">{title}</h3>
-            {hint && <p className="text-xs text-slate-500 mb-3">{hint}</p>}
+            <h3 className="text-sm font-black uppercase tracking-widest text-carbon-400">{title}</h3>
+            {hint && <p className="text-xs text-carbon-500 mb-3">{hint}</p>}
             <div className={hint ? '' : 'mt-3'}>{children}</div>
         </section>
     )
@@ -577,14 +650,14 @@ function Field({
 }) {
     return (
         <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</label>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-carbon-400 mb-1">{label}</label>
             <input
                 type="text"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm"
+                className="w-full h-10 px-3 rounded-xl bg-carbon-50 dark:bg-carbon-800 border border-carbon-200 dark:border-carbon-700 text-sm"
             />
-            {hint && <p className="mt-1 text-[10px] text-slate-500">{hint}</p>}
+            {hint && <p className="mt-1 text-[10px] text-carbon-500">{hint}</p>}
         </div>
     )
 }
@@ -602,33 +675,33 @@ function ColorField({
 }) {
     return (
         <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</label>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-carbon-400 mb-1">{label}</label>
             <div className="flex gap-2">
                 <input
                     type="color"
                     value={value || '#1E40AF'}
                     onChange={(e) => onChange(e.target.value)}
-                    className="w-12 h-10 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer bg-transparent"
+                    className="w-12 h-10 rounded-xl border border-carbon-200 dark:border-carbon-700 cursor-pointer bg-transparent"
                 />
                 <input
                     type="text"
                     value={value}
                     placeholder="#1E40AF"
                     onChange={(e) => onChange(e.target.value)}
-                    className="flex-1 h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-mono"
+                    className="flex-1 h-10 px-3 rounded-xl bg-carbon-50 dark:bg-carbon-800 border border-carbon-200 dark:border-carbon-700 text-sm font-mono"
                 />
                 {value && (
                     <button
                         type="button"
                         onClick={() => onChange('')}
-                        className="px-3 h-10 rounded-xl text-xs font-bold text-slate-400 hover:text-red-500 transition-colors"
+                        className="px-3 h-10 rounded-xl text-xs font-bold text-carbon-400 hover:text-alert-500 transition-colors"
                         title="Quitar color y volver al default"
                     >
                         Limpiar
                     </button>
                 )}
             </div>
-            {hint && <p className="mt-1 text-[10px] text-slate-500">{hint}</p>}
+            {hint && <p className="mt-1 text-[10px] text-carbon-500">{hint}</p>}
         </div>
     )
 }

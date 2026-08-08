@@ -185,3 +185,77 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ dojo: data })
 }
+
+/**
+ * DELETE — baja de una sede.
+ *
+ * Borrar un dojo NO borra sólo la fila: alumnos, pagos, clases, inscripciones,
+ * asistencias, accesos, notificaciones y tokens de QR cuelgan de `dojo_id` con
+ * `on delete cascade`. Una sede con historial se lleva puesto todo su pasado, y
+ * eso no se recupera.
+ *
+ * Por eso la baja es en dos tiempos:
+ *   1. sin `force`, devuelve 409 con el recuento de lo que se perdería
+ *   2. con `force: true`, borra
+ *
+ * Para sacar una sede de circulación sin perder nada está `is_active = false`
+ * (PATCH), que es lo que conviene en la mayoría de los casos.
+ */
+export async function DELETE(req: Request) {
+    const guard = await requirePlatformAdmin()
+    if (guard.error) return guard.error
+
+    const body = (await req.json().catch(() => null)) as { id?: string; force?: boolean } | null
+    if (!body?.id) {
+        return NextResponse.json({ error: 'Falta el id de la sede' }, { status: 400 })
+    }
+
+    const supabase = await getServerSupabase()
+
+    const { data: dojo } = await supabase
+        .from('dojos')
+        .select('id, name')
+        .eq('id', body.id)
+        .maybeSingle()
+
+    if (!dojo) {
+        return NextResponse.json({ error: 'La sede no existe' }, { status: 404 })
+    }
+
+    // Recuento de lo que se iría en cascada.
+    const tables = [
+        ['dojo_members', 'personas vinculadas'],
+        ['classes', 'clases'],
+        ['payments', 'pagos'],
+        ['memberships', 'membresías'],
+        ['access_logs', 'registros de acceso'],
+    ] as const
+
+    const counts: { table: string; label: string; count: number }[] = []
+    for (const [table, label] of tables) {
+        const { count } = await supabase
+            .from(table)
+            .select('*', { count: 'exact', head: true })
+            .eq('dojo_id', body.id)
+        if (count) counts.push({ table, label, count })
+    }
+
+    if (counts.length && !body.force) {
+        return NextResponse.json(
+            {
+                error: 'La sede tiene datos asociados',
+                dojo: dojo.name,
+                counts,
+                hint: 'Volvé a enviar con force: true para borrarla igual, o desactivala en vez de borrarla.',
+            },
+            { status: 409 }
+        )
+    }
+
+    const { error } = await supabase.from('dojos').delete().eq('id', body.id)
+    if (error) {
+        return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    return NextResponse.json({ ok: true, deleted: dojo.name, removed: counts })
+}
