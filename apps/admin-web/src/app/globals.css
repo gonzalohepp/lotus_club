@@ -9,6 +9,68 @@
   --color-brand: var(--brand);
   --color-brand-dark: var(--brand-dark);
   --color-brand-light: var(--brand-light);
+
+  /* Escala Palm Leaf, anclada en el #899878 del manual (queda en el paso 500).
+     Reemplaza a la escala `blue-*` de Tailwind, que era el celeste de Lotus:
+     misma cantidad de pasos, así la jerarquía de tonos que ya usaba la UI se
+     mantiene y la migración es un cambio de familia, no un rediseño. */
+  --color-kuro-50: oklch(0.975 0.012 128);
+  --color-kuro-100: oklch(0.945 0.020 128);
+  --color-kuro-200: oklch(0.885 0.032 128);
+  --color-kuro-300: oklch(0.805 0.040 128);
+  --color-kuro-400: oklch(0.715 0.044 128);
+  --color-kuro-500: oklch(0.635 0.045 128);
+  --color-kuro-600: oklch(0.555 0.044 128);
+  --color-kuro-700: oklch(0.470 0.040 128);
+  --color-kuro-800: oklch(0.385 0.034 128);
+  --color-kuro-900: oklch(0.300 0.028 128);
+  --color-kuro-950: oklch(0.230 0.022 128);
+
+  /* Neutro cálido: reemplaza a `slate-*`, que tiene subtono azul y es lo que
+     hacía que la app siguiera leyéndose celeste. Los extremos coinciden con el
+     manual: carbon-900 ≈ Carbon Black #222725, carbon-950 ≈ Onyx #121113. */
+  --color-carbon-50: oklch(0.984 0.002 130);
+  --color-carbon-100: oklch(0.968 0.003 130);
+  --color-carbon-200: oklch(0.929 0.004 130);
+  --color-carbon-300: oklch(0.869 0.005 130);
+  --color-carbon-400: oklch(0.711 0.005 130);
+  --color-carbon-500: oklch(0.554 0.005 130);
+  --color-carbon-600: oklch(0.446 0.005 130);
+  --color-carbon-700: oklch(0.372 0.005 130);
+  --color-carbon-800: oklch(0.279 0.004 130);
+  --color-carbon-900: oklch(0.208 0.004 130);
+  --color-carbon-950: oklch(0.14 0.003 130);
+
+  /* Alerta. alert-600 (#b73227) es prácticamente el Alert Red #C0392B del
+     manual; la escala existe para tener pasos usables en fondo claro y oscuro. */
+  --color-alert-50: oklch(0.965 0.021 29);
+  --color-alert-100: oklch(0.925 0.044 29);
+  --color-alert-200: oklch(0.865 0.079 29);
+  --color-alert-300: oklch(0.790 0.114 29);
+  --color-alert-400: oklch(0.700 0.149 29);
+  --color-alert-500: oklch(0.600 0.175 29);
+  --color-alert-600: oklch(0.520 0.172 29);
+  --color-alert-700: oklch(0.440 0.154 29);
+  --color-alert-800: oklch(0.365 0.126 29);
+  --color-alert-900: oklch(0.300 0.102 29);
+  --color-alert-950: oklch(0.230 0.079 29);
+
+  /* Atención. DESVÍO DELIBERADO DEL MANUAL: el naranja #C4622D queda a ΔE 6.0
+     del Alert Red en deuteranopía, o sea que "Atención" y "Alerta" son el mismo
+     color para un daltónico — y en la maqueta del manual van uno al lado del
+     otro. Corrido al dorado (hue 85) la separación sube a ΔE 16.6, medida con
+     simulación de daltonismo. */
+  --color-warn-50: oklch(0.985 0.016 85);
+  --color-warn-100: oklch(0.960 0.036 85);
+  --color-warn-200: oklch(0.925 0.065 85);
+  --color-warn-300: oklch(0.875 0.098 85);
+  --color-warn-400: oklch(0.825 0.125 85);
+  --color-warn-500: oklch(0.780 0.140 85);
+  --color-warn-600: oklch(0.670 0.132 85);
+  --color-warn-700: oklch(0.560 0.114 85);
+  --color-warn-800: oklch(0.460 0.093 85);
+  --color-warn-900: oklch(0.385 0.076 85);
+  --color-warn-950: oklch(0.285 0.058 85);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -49,29 +111,44 @@
 :root {
   --radius: 0.625rem;
 
-  /* Brand — el celeste real del logo (#00A1EC), no el blue-600 genérico de Tailwind */
-  --brand: oklch(0.676 0.155 240);
-  --brand-dark: oklch(0.601 0.137 240);
-  --brand-light: oklch(0.94 0.035 240);
+  /* ======================================================================
+   * PALETA KURO — valores del manual de marca
+   * Porcelain #F7F7F2 · Beige #E4E6C3 · Palm Leaf #899878
+   * Carbon Black #222725 · Onyx #121113 · Alert Red #C0392B · Naranja #C4622D
+   *
+   * Dos correcciones de contraste, medidas contra las superficies reales,
+   * porque la paleta del manual no se puede aplicar tal cual en todos los roles:
+   *
+   *  1. Palm Leaf sobre Porcelain da 2.86:1 — no llega ni a 3:1. Sirve de
+   *     relleno, borde o tag, NO de texto sobre fondo claro (el manual ya lo
+   *     marca "no ideal"). Para texto e íconos sobre claro va --brand-dark
+   *     #5F6E50, que da 5.10:1 y es la misma familia.
+   *  2. Alert Red sobre Carbon Black da 2.79:1 — ver .dark más abajo.
+   * ====================================================================== */
 
-  /* base light */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: var(--brand);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  /* Brand — Palm Leaf. `brand` para rellenos y acentos, `brand-dark` para texto. */
+  --brand: #899878;
+  --brand-dark: #5F6E50;
+  --brand-light: #D8DDD5;
+
+  /* base light — Porcelain de fondo, Onyx de tinta */
+  --background: #F7F7F2;
+  --foreground: #121113;
+  --card: #FFFFFF;
+  --card-foreground: #121113;
+  --popover: #FFFFFF;
+  --popover-foreground: #121113;
+  --primary: var(--brand-dark);
+  --primary-foreground: #F7F7F2;
+  --secondary: #E4E6C3;
+  --secondary-foreground: #222725;
+  --muted: #ECECE4;
+  --muted-foreground: #5B5F58;
+  --accent: #D8DDD5;
+  --accent-foreground: #222725;
+  --destructive: #C0392B;
+  --border: #DEDED4;
+  --input: #DEDED4;
   --ring: var(--brand);
 
   /* charts */
@@ -93,29 +170,31 @@
 }
 
 .dark {
-  /* Mismo brand que en claro — antes acá quedaba un blue-500 genérico distinto del de light */
-  --brand: oklch(0.706 0.155 240);
-  --brand-dark: oklch(0.601 0.137 240);
-  --brand-light: oklch(0.28 0.06 240);
+  /* Sobre oscuro Palm Leaf rinde bien (6.12:1 contra Onyx), así que acá el
+     brand es el color del manual sin corregir. */
+  --brand: #899878;
+  --brand-dark: #A8B599;
+  --brand-light: #2E3529;
 
-  --background: oklch(0.129 0.042 264.695);
-  /* slate-950 deep */
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.18 0.03 264.695);
-  /* slate-900ish */
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.18 0.03 264.695);
-  --popover-foreground: oklch(0.985 0 0);
+  /* Onyx de fondo, Carbon Black de tarjeta, Porcelain de tinta */
+  --background: #121113;
+  --foreground: #F7F7F2;
+  --card: #222725;
+  --card-foreground: #F7F7F2;
+  --popover: #222725;
+  --popover-foreground: #F7F7F2;
   --primary: var(--brand);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.25 0.03 264.695);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.25 0.03 264.695);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.25 0.03 264.695);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+  --primary-foreground: #121113;
+  --secondary: #2C322E;
+  --secondary-foreground: #F7F7F2;
+  --muted: #2C322E;
+  --muted-foreground: #A7ACA2;
+  --accent: #2E3529;
+  --accent-foreground: #E4E6C3;
+  /* Alert Red #C0392B da 2.79:1 sobre Carbon Black: ilegible en tarjeta oscura.
+     Se aclara manteniendo el tono; el rojo del manual queda para fondo claro. */
+  --destructive: #E4685A;
+  --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
   --ring: var(--brand);
 

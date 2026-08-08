@@ -1,10 +1,16 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Montserrat, Geist_Mono } from "next/font/google"
 import "./globals.css"
 
-const geistSans = Geist({
+/**
+ * Montserrat es la tipografía del manual de Kuro. Se sigue exponiendo como
+ * `--font-geist-sans` para no tocar el mapeo de Tailwind ni los 58 archivos
+ * que ya heredan la fuente por `font-sans`.
+ */
+const geistSans = Montserrat({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 })
 
 const geistMono = Geist_Mono({
@@ -23,43 +29,17 @@ const geistMono = Geist_Mono({
  * haya una sola.
  */
 export async function generateMetadata(): Promise<Metadata> {
-  const fallback = {
-    name: "Dojo Access",
-    description: "Gestión y control de acceso para academias de artes marciales.",
-    logo: "/logo.png",
-  }
-
-  let name = fallback.name
-  let description = fallback.description
-  let logo = fallback.logo
-
-  try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-
-    let query = supabase.from("public_organizations").select("name, branding").limit(1)
-    const slug = process.env.NEXT_PUBLIC_LANDING_ORG
-    if (slug) query = query.eq("slug", slug)
-
-    const { data } = await query.maybeSingle()
-
-    if (data) {
-      const branding = (data.branding ?? {}) as {
-        display_name?: string
-        logo_url?: string
-        favicon_url?: string
-        description?: string
-      }
-      name = branding.display_name || data.name || fallback.name
-      description = branding.description || fallback.description
-      logo = branding.favicon_url || branding.logo_url || fallback.logo
-    }
-  } catch (e) {
-    // Un fallo acá no debe tumbar el render de la página: se cae al default.
-    console.error("[metadata] no se pudo resolver la marca:", e)
-  }
+  /*
+   * Pestaña y favicon de la PLATAFORMA: Kuro.
+   *
+   * Antes esto resolvía la marca de la organización desde `public_organizations`
+   * (por eso la pestaña decía "Lotus Club" y el favicon era el loto). Se dejó
+   * fijo en Kuro por pedido. Para volver a la marca por organización hay que
+   * releer esa vista acá y usar `branding.display_name` / `favicon_url`.
+   */
+  const name = "Kuro"
+  const description = "Plataforma de gestión para academias y redes de jiu-jitsu."
+  const logo = "/kuro-icon.png"
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001"
 
@@ -76,7 +56,6 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-import { createClient } from "@supabase/supabase-js"
 
 import { Providers } from "./providers"
 import { getTenantContext } from "@/lib/tenant/server"
@@ -97,9 +76,11 @@ export default async function RootLayout({
             __html: `
                (function() {
                  try {
-                   var theme = localStorage.getItem('theme');
-                   var supportDark = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
-                   if (theme === 'dark' || (!theme && supportDark)) {
+                   /* El tema principal de Kuro es el CLARO. Antes heredaba el
+                      modo oscuro del sistema operativo, así que a cualquiera con
+                      el SO en oscuro la app le abría en oscuro. Ahora sólo pasa a
+                      oscuro si el usuario lo eligió expresamente con el toggle. */
+                   if (localStorage.getItem('theme') === 'dark') {
                      document.documentElement.classList.add('dark');
                    }
                  } catch (e) {}
@@ -109,7 +90,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-blue-500/30`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-kuro-500/30`}
         suppressHydrationWarning
       >
         <Providers tenant={tenant}>

@@ -4,10 +4,12 @@ import { useState, useLayoutEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sun, Moon } from 'lucide-react'
 
+/** El claro es el tema principal: sólo se va a oscuro por elección explícita,
+ *  no por la preferencia del sistema operativo. Tiene que coincidir con el
+ *  script anti-parpadeo de `layout.tsx`. */
 function getInitialTheme(): boolean {
     if (typeof window === 'undefined') return false
-    const theme = localStorage.getItem('theme')
-    return theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    return localStorage.getItem('theme') === 'dark'
 }
 
 export default function ThemeToggle() {
@@ -33,7 +35,7 @@ export default function ThemeToggle() {
     return (
         <button
             onClick={toggleTheme}
-            className="relative h-10 w-10 overflow-hidden rounded-xl flex items-center justify-center transition-colors hover:bg-white dark:hover:bg-slate-800"
+            className="relative h-10 w-10 overflow-hidden rounded-xl flex items-center justify-center transition-colors hover:bg-white dark:hover:bg-carbon-800"
             aria-label="Cambiar tema"
         >
             <AnimatePresence mode="wait">
@@ -45,7 +47,7 @@ export default function ThemeToggle() {
                         exit={{ y: -20, opacity: 0, rotate: 45 }}
                         transition={{ duration: 0.2 }}
                     >
-                        <Moon className="w-5 h-5 text-blue-400 fill-blue-400 italic" />
+                        <Moon className="w-5 h-5 text-kuro-400 fill-kuro-400 italic" />
                     </motion.div>
                 ) : (
                     <motion.div
@@ -55,7 +57,7 @@ export default function ThemeToggle() {
                         exit={{ y: -20, opacity: 0, rotate: 45 }}
                         transition={{ duration: 0.2 }}
                     >
-                        <Sun className="w-5 h-5 text-amber-500 fill-amber-500" />
+                        <Sun className="w-5 h-5 text-warn-500 fill-warn-500" />
                     </motion.div>
                 )}
             </AnimatePresence>

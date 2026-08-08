@@ -1,14 +1,14 @@
 {
-    "name": "Beleza Dojo",
-    "short_name": "Beleza Dojo",
-    "description": "Control de acceso para Beleza Dojo",
+    "name": "Kuro",
+    "short_name": "Kuro",
+    "description": "Plataforma de gestión para academias y redes de jiu-jitsu",
     "start_url": "/login",
     "display": "standalone",
-    "background_color": "#0f172a",
-    "theme_color": "#0f172a",
+    "background_color": "#121113",
+    "theme_color": "#121113",
     "icons": [
         {
-            "src": "/logo.png",
+            "src": "/kuro-icon.png",
             "sizes": "192x192 512x512",
             "type": "image/png"
         }
@@ -20,7 +20,7 @@
             "url": "/profile",
             "icons": [
                 {
-                    "src": "/logo.png",
+                    "src": "/kuro-icon.png",
                     "sizes": "192x192"
                 }
             ]
@@ -30,7 +30,7 @@
             "url": "/validate",
             "icons": [
                 {
-                    "src": "/logo.png",
+                    "src": "/kuro-icon.png",
                     "sizes": "192x192"
                 }
             ]

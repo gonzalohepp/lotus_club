@@ -64,6 +64,9 @@ type Profile = {
   avatar_url: string | null
 }
 
+/** Interruptor del badge "Sos Plan Pro" del sidebar. Ver uso más abajo. */
+const SHOW_PRO_BADGE = false
+
 const NAV_ITEMS: {
   href: string
   label: string
@@ -84,9 +87,14 @@ const NAV_ITEMS: {
   { href: '/members', label: 'Miembros', icon: Users, roles: ['admin'], feature: 'members' },
   { href: '/admin/academies', label: 'Academias', icon: Building2, roles: ['admin'], feature: 'dojos', capability: 'viewDojos' },
   { href: '/classes', label: 'Clases', icon: GraduationCap, roles: ['admin'], feature: 'classes' },
-  { href: '/payments', label: 'Pagos', icon: DollarSign, roles: ['admin'], feature: 'payments' },
-  { href: '/metricas', label: 'Metricas', icon: ChartLine, roles: ['admin'], feature: 'metrics' },
+  // Pagos y Métricas muestran plata: van con `viewFinance`, que deja afuera
+  // al head coach (ve todas las sedes y alumnos, pero no finanzas).
+  { href: '/payments', label: 'Pagos', icon: DollarSign, roles: ['admin'], feature: 'payments', capability: 'viewFinance' },
+  { href: '/metricas', label: 'Metricas', icon: ChartLine, roles: ['admin'], feature: 'metrics', capability: 'viewFinance' },
   { href: '/reportes', label: 'Reportes', icon: ClipboardList, roles: ['admin'], feature: 'reports' },
+  // El instructor veía quién entrenaba EN ESE MOMENTO, pero no el historial de
+  // sus propias clases: eso vivía en /reportes, que es sólo de admin.
+  { href: '/mis-clases', label: 'Mis Clases', icon: GraduationCap, roles: ['admin', 'instructor'] },
   { href: '/asistencia-vivo', label: 'Asistencia en Vivo', icon: Activity, roles: ['admin', 'instructor'], feature: 'asistenciaVivo' },
   { href: '/access-log', label: 'Historial de Accesos', icon: ClipboardList, roles: ['admin'], feature: 'accessLog' },
   { href: '/notificaciones', label: 'Notificaciones', icon: Bell, roles: ['admin'], feature: 'notifications' },
@@ -131,11 +139,11 @@ export default function AdminLayout({ children, active }: { children: React.Reac
 
   // Etiqueta de nivel de acceso para el bloque de usuario del sidebar.
   const accessLevel = isPlatformAdmin
-    ? { label: 'Desarrollador', className: 'bg-violet-400/20 text-violet-600 dark:text-violet-400' }
+    ? { label: 'Desarrollador', className: 'bg-kuro-400/20 text-kuro-600 dark:text-kuro-400' }
     : orgRole === 'superadmin'
-      ? { label: 'Superadmin', className: 'bg-amber-400/20 text-amber-600 dark:text-amber-400' }
+      ? { label: 'Superadmin', className: 'bg-warn-400/20 text-warn-600 dark:text-warn-400' }
       : orgRole === 'manager'
-        ? { label: 'Staff de marca', className: 'bg-amber-400/15 text-amber-600 dark:text-amber-400' }
+        ? { label: 'Staff de marca', className: 'bg-warn-400/15 text-warn-600 dark:text-warn-400' }
         : null
   const plan = org?.plan ?? 'basic'
 
@@ -302,7 +310,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
             toast.error(`¡Alerta de Acceso!`, {
               description: `${name}: ${newLog.reason}`,
               duration: 8000,
-              icon: <ShieldAlert className="w-5 h-5 text-red-500" />
+              icon: <ShieldAlert className="w-5 h-5 text-alert-500" />
             })
 
             // Detección de fraude (múltiples intentos)
@@ -329,7 +337,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
                 toast.warning('Posible Intento de Fraude', {
                   description: `${name} ha fallado ${count} intentos en 5 minutos.`,
                   duration: 12000,
-                  icon: <AlertTriangle className="w-5 h-5 text-amber-500" />
+                  icon: <AlertTriangle className="w-5 h-5 text-warn-500" />
                 })
               }
             }
@@ -381,7 +389,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
         router.replace(defaultPath)
       }
     }
-  }, [pathname, loading, profile, router])
+  }, [pathname, loading, profile, router, role, can, allows])
 
   const logout = async () => {
     await supabase.auth.signOut()
@@ -393,11 +401,13 @@ export default function AdminLayout({ children, active }: { children: React.Reac
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="w-20 h-20 mx-auto mb-4">
+            {/* Marca de la plataforma, no de la organización: la carga es de
+                Kuro y todavía no hay tenant resuelto. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={branding.logo_url || '/logo.png'}
-              alt={brandName}
-              className="w-20 h-20 object-contain animate-pulse"
+              src="/kuro-icon.png"
+              alt="Kuro"
+              className="w-20 h-20 rounded-2xl object-contain animate-pulse"
             />
           </div>
           <p className="text-muted-foreground animate-pulse font-medium tracking-widest uppercase text-[10px]">Cargando…</p>
@@ -423,34 +433,30 @@ export default function AdminLayout({ children, active }: { children: React.Reac
       )}
 
       {/* Sidebar */}
+      {/* El sidebar es SIEMPRE oscuro, en tema claro y en oscuro, como la
+          maqueta del manual: panel negro con los ítems enmarcados. Por eso acá
+          los colores van explícitos y no por tokens de tema. */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 border-r border-border flex flex-col transition-transform duration-300 md:translate-x-0 md:sticky md:top-0 md:h-screen
+          fixed inset-y-0 left-0 z-50 w-72 bg-[#121113] border-r border-white/10 flex flex-col transition-transform duration-300 md:translate-x-0 md:sticky md:top-0 md:h-screen
           ${sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
         `}
       >
-        {/* Header */}
-        <div className="border-b border-border p-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        {/* Header — marca de la plataforma (Kuro), no de la organización: el
+            nombre de la sede ya está en el selector de la barra superior. */}
+        <div className="border-b border-white/10 p-6 flex items-center justify-between">
+          <div>
+            {/* Sólo el wordmark: el ícono al lado repetía la misma marca. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={branding.logo_url || '/logo.png'}
-              alt={brandName}
-              className="w-10 h-10 object-contain"
-            />
-            <div>
-              <h2 className="font-bold text-lg text-foreground tracking-tight leading-tight">
-                {brandWords.head}{brandWords.tail && <span className="text-brand"> {brandWords.tail}</span>}
-              </h2>
-              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
-                {role === 'admin' ? 'Admin Panel' : role === 'instructor' ? 'Instructor Panel' : 'Portal de Alumno'}
-              </p>
-            </div>
+            <img src="/kuro-wordmark.png" alt="Kuro" className="h-9 w-auto" />
+            <p className="mt-2 text-[10px] text-[#A7ACA2] font-bold uppercase tracking-widest">
+              {role === 'admin' ? 'Admin Panel' : role === 'instructor' ? 'Instructor Panel' : 'Portal de Alumno'}
+            </p>
           </div>
           {/* Mobile Close Button */}
           <button
             onClick={() => setSidebarOpen(false)}
-            className="md:hidden p-2 rounded-lg text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="md:hidden p-2 rounded-lg text-[#A7ACA2] hover:bg-white/5"
           >
             <LogOut className="w-5 h-5 rotate-180" />
           </button>
@@ -458,10 +464,10 @@ export default function AdminLayout({ children, active }: { children: React.Reac
 
         {/* Menu */}
         <div className="p-3 flex-1 overflow-y-auto">
-          <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] px-3 py-4">
+          <div className="text-[10px] font-black text-[#A7ACA2] uppercase tracking-[0.2em] px-3 py-4">
             {isAdmin ? 'Principal' : 'Menú'}
           </div>
-          <nav className="space-y-1">
+          <nav className="space-y-2">
             {nav.map((item) => {
               const isActive = active === item.href || pathname === item.href
               const Icon = item.icon
@@ -471,13 +477,13 @@ export default function AdminLayout({ children, active }: { children: React.Reac
                   href={item.href}
                   onClick={() => setSidebarOpen(false)} // Close on navigate
                   className={[
-                    'flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200 group',
+                    'flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors duration-200 group',
                     isActive
-                      ? 'bg-brand text-white font-semibold'
-                      : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-white/5 hover:text-foreground',
+                      ? 'bg-[#899878] border-[#899878] text-[#121113] font-bold'
+                      : 'border-white/12 text-[#D8DDD5] hover:border-[#899878]/60 hover:bg-white/5',
                   ].join(' ')}
                 >
-                  <Icon className={`w-5 h-5 transition-transform duration-200 group-hover:scale-110 ${isActive ? 'text-white' : 'text-slate-400 dark:text-slate-500 group-hover:text-brand'}`} />
+                  <Icon className={`w-5 h-5 transition-transform duration-200 group-hover:scale-110 ${isActive ? 'text-[#121113]' : 'text-[#A7ACA2] group-hover:text-[#899878]'}`} />
                   <span className="text-sm">{item.label}</span>
                 </Link>
               )
@@ -492,7 +498,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
           <div className="px-4 pb-3">
             <Link
               href="/superadmin"
-              className="w-full h-11 flex items-center justify-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-400/10 text-amber-600 dark:text-amber-400 font-black uppercase tracking-widest text-[11px] transition-colors hover:bg-amber-400/20"
+              className="w-full h-11 flex items-center justify-center gap-2 rounded-2xl border border-warn-500/40 bg-warn-500/10 text-warn-400 font-black uppercase tracking-widest text-[11px] transition-colors hover:bg-warn-500/20"
             >
               <ShieldAlert className="w-4 h-4" />
               Consola de plataforma
@@ -505,7 +511,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
           <div className="px-4 pb-4">
             <button
               onClick={() => setShowUpgrade(true)}
-              className="group relative w-full h-14 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-blue-500/30 overflow-hidden transition-transform active:scale-95 hover:scale-[1.02]"
+              className="group relative w-full h-12 flex items-center justify-center gap-2 rounded-2xl bg-[#899878] text-[#121113] font-black uppercase tracking-widest text-[11px] overflow-hidden transition-transform active:scale-95 hover:brightness-110"
             >
               <span className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/50 to-transparent shine-sweep" />
               <Sparkles className="w-4 h-4 relative z-10" />
@@ -514,14 +520,18 @@ export default function AdminLayout({ children, active }: { children: React.Reac
           </div>
         )}
 
-        {/* Badge de plan Pro (solo organizaciones Pro) */}
-        {plan === 'pro' && role === 'admin' && (
+        {/* Badge de plan Pro (solo organizaciones Pro).
+            Oculto por pedido. Poner SHOW_PRO_BADGE en true lo revive: el
+            ProBenefitsModal sigue cableado, no hace falta tocar nada más. */}
+        {SHOW_PRO_BADGE && plan === 'pro' && role === 'admin' && (
           <div className="px-4 pb-4">
             <button
               onClick={() => setShowProBenefits(true)}
-              className="group relative w-full h-14 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-400 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-amber-500/30 overflow-hidden transition-transform active:scale-95 hover:scale-[1.02]"
+              /* Era un degradado dorado con brillo animado: el dorado no existe
+                 en la paleta de Kuro y era lo más ruidoso de la pantalla. Pasa a
+                 un badge sobrio con el acento de marca. */
+              className="group relative w-full h-12 flex items-center justify-center gap-2 rounded-2xl border border-[#899878]/50 bg-[#899878]/12 text-[#D8DDD5] font-black uppercase tracking-widest text-[11px] transition-colors hover:bg-[#899878]/22"
             >
-              <span className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/50 to-transparent shine-sweep" />
               <Crown className="w-4 h-4 relative z-10" />
               <span className="relative z-10">Sos Plan Pro</span>
             </button>
@@ -529,18 +539,18 @@ export default function AdminLayout({ children, active }: { children: React.Reac
         )}
 
         {/* Footer profile section */}
-        <div className="p-4 border-t border-border">
-          <div className="px-3 py-3 bg-slate-50 dark:bg-white/5 rounded-2xl flex items-center gap-3 mb-3 border border-border shadow-sm">
+        <div className="p-4 border-t border-white/10">
+          <div className="px-3 py-3 bg-white/5 rounded-2xl flex items-center gap-3 mb-3 border border-white/10">
             {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="Profile" className="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-sm" />
+              <img src={profile.avatar_url} alt="Profile" className="w-10 h-10 rounded-full object-cover border border-white/15" />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-brand-light dark:bg-brand/20 flex items-center justify-center text-brand-dark dark:text-brand">
+              <div className="w-10 h-10 rounded-full bg-[#899878]/20 flex items-center justify-center text-[#899878]">
                 <UserIcon className="w-5 h-5" />
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-foreground truncate">{displayName}</p>
-              <p className="text-[10px] text-muted-foreground truncate leading-none">{profile?.email}</p>
+              <p className="text-xs font-bold text-[#F7F7F2] truncate">{displayName}</p>
+              <p className="text-[10px] text-[#A7ACA2] truncate leading-none">{profile?.email}</p>
               {/* Nivel de acceso. Sin esto no hay forma de saber, mirando la
                   pantalla, si estás viendo una sede porque sos su admin o
                   porque tu rol te da acceso a todas. */}
@@ -555,7 +565,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
 
           <button
             onClick={logout}
-            className="group w-full h-11 flex items-center justify-center gap-2 rounded-xl border border-border text-xs font-black uppercase tracking-widest text-muted-foreground hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 dark:hover:bg-rose-500/10 transition-all duration-200"
+            className="group w-full h-11 flex items-center justify-center gap-2 rounded-xl border border-white/12 text-xs font-black uppercase tracking-widest text-[#A7ACA2] hover:bg-alert-500/15 hover:text-alert-400 hover:border-alert-500/40 transition-all duration-200"
           >
             <LogOut className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
             Cerrar sesión
@@ -568,11 +578,11 @@ export default function AdminLayout({ children, active }: { children: React.Reac
         <div className="pointer-events-none absolute inset-0 -z-10 bg-background transition-colors duration-300" />
 
         {/* Desktop & Mobile Top Bar */}
-        <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-border px-6 py-4 sticky top-0 z-40 flex items-center justify-between">
+        <header className="bg-white/80 dark:bg-carbon-900/80 backdrop-blur-xl border-b border-border px-6 py-4 sticky top-0 z-40 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-2 -ml-2 rounded-xl text-foreground hover:bg-slate-100 dark:hover:bg-white/10 md:hidden"
+              className="p-2 -ml-2 rounded-xl text-foreground hover:bg-carbon-100 dark:hover:bg-white/10 md:hidden"
             >
               {/* Hamburger Icon */}
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -584,7 +594,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
             <DojoSwitcher />
           </div>
 
-          <div className="flex items-center gap-1 rounded-2xl border border-border bg-slate-50/80 dark:bg-white/5 p-1.5">
+          <div className="flex items-center gap-1 rounded-2xl border border-border bg-carbon-50/80 dark:bg-white/5 p-1.5">
             {isAdmin && (
               <div className="relative flex items-center gap-1">
                 <button
@@ -592,11 +602,11 @@ export default function AdminLayout({ children, active }: { children: React.Reac
                     setShowNotifs(!showNotifs)
                     if (!showNotifs) setNotifications(prev => prev.map(n => ({ ...n, read: true })))
                   }}
-                  className="p-2.5 rounded-xl text-muted-foreground hover:bg-white dark:hover:bg-slate-800 transition-colors relative group"
+                  className="p-2.5 rounded-xl text-muted-foreground hover:bg-white dark:hover:bg-carbon-800 transition-colors relative group"
                 >
                   <Bell className="w-5 h-5 group-hover:scale-110 transition-transform" />
                   {notifications.some(n => !n.read) && (
-                    <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
+                    <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-alert-500 rounded-full border-2 border-white dark:border-carbon-900 animate-pulse" />
                   )}
                 </button>
 
@@ -609,40 +619,40 @@ export default function AdminLayout({ children, active }: { children: React.Reac
                         initial={{ opacity: 0, scale: 0.95, y: 10, x: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10, x: 20 }}
-                        className="absolute right-0 top-full mt-3 w-80 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-[2rem] shadow-2xl z-50 overflow-hidden"
+                        className="absolute right-0 top-full mt-3 w-80 bg-white dark:bg-carbon-950 border border-carbon-200 dark:border-carbon-800 rounded-[2rem] shadow-2xl z-50 overflow-hidden"
                       >
-                        <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                          <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">Notificaciones</h3>
-                          <span className="text-[10px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded-full">
+                        <div className="p-5 border-b border-carbon-100 dark:border-carbon-800 flex items-center justify-between">
+                          <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-carbon-500">Notificaciones</h3>
+                          <span className="text-[10px] font-bold text-kuro-500 bg-kuro-50 dark:bg-kuro-500/10 px-2 py-0.5 rounded-full">
                             {notifications.length}
                           </span>
                         </div>
                         <div className="max-h-[32rem] overflow-y-auto custom-scrollbar">
                           {notifications.length === 0 ? (
                             <div className="p-10 text-center">
-                              <div className="w-12 h-12 bg-slate-50 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <Bell className="w-6 h-6 text-slate-200 dark:text-slate-700" />
+                              <div className="w-12 h-12 bg-carbon-50 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <Bell className="w-6 h-6 text-carbon-200 dark:text-carbon-700" />
                               </div>
-                              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Sin noticias</p>
+                              <p className="text-xs text-carbon-400 font-bold uppercase tracking-widest">Sin noticias</p>
                             </div>
                           ) : (
-                            <div className="divide-y divide-slate-50 dark:divide-slate-800/30">
+                            <div className="divide-y divide-carbon-50 dark:divide-carbon-800/30">
                               {notifications.map(n => (
-                                <div key={n.id} className="p-5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group cursor-default">
+                                <div key={n.id} className="p-5 hover:bg-carbon-50 dark:hover:bg-white/5 transition-colors group cursor-default">
                                   <div className="flex gap-4">
-                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110 ${n.type === 'access_denied' ? 'bg-red-50 text-red-600 border-red-100 dark:bg-red-500/10 dark:border-red-500/20' :
-                                      n.type === 'fraud' ? 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/20' :
-                                        'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/20'
+                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110 ${n.type === 'access_denied' ? 'bg-alert-50 text-alert-600 border-alert-100 dark:bg-alert-500/10 dark:border-alert-500/20' :
+                                      n.type === 'fraud' ? 'bg-warn-50 text-warn-600 border-warn-100 dark:bg-warn-500/10 dark:border-warn-500/20' :
+                                        'bg-kuro-50 text-kuro-600 border-kuro-100 dark:bg-kuro-500/10 dark:border-kuro-500/20'
                                       }`}>
                                       {n.type === 'access_denied' ? <ShieldAlert className="w-5 h-5" /> :
                                         n.type === 'fraud' ? <AlertTriangle className="w-5 h-5" /> :
                                           <Bell className="w-5 h-5" />}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-xs font-black text-slate-900 dark:text-white leading-tight mb-1 uppercase tracking-tight">{n.title}</p>
-                                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2 font-medium">{n.description}</p>
+                                      <p className="text-xs font-black text-carbon-900 dark:text-white leading-tight mb-1 uppercase tracking-tight">{n.title}</p>
+                                      <p className="text-[11px] text-carbon-500 dark:text-carbon-400 leading-relaxed line-clamp-2 font-medium">{n.description}</p>
                                       <div className="flex items-center justify-between mt-3">
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                        <p className="text-[10px] text-carbon-400 font-bold uppercase tracking-widest">
                                           {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </p>
                                         {n.link && (
@@ -651,7 +661,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
                                               router.push(n.link!)
                                               setShowNotifs(false)
                                             }}
-                                            className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.15em] flex items-center gap-1.5 hover:gap-2.5 transition-all"
+                                            className="text-[10px] font-black text-kuro-600 dark:text-kuro-400 uppercase tracking-[0.15em] flex items-center gap-1.5 hover:gap-2.5 transition-all"
                                           >
                                             Ver Ficha <ArrowRight className="w-3.5 h-3.5" />
                                           </button>
@@ -665,7 +675,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
                           )}
                         </div>
                         {notifications.length > 0 && (
-                          <div className="p-4 bg-slate-50/50 dark:bg-white/2 border-t border-slate-100 dark:border-slate-800">
+                          <div className="p-4 bg-carbon-50/50 dark:bg-white/2 border-t border-carbon-100 dark:border-carbon-800">
                             <button
                               onClick={() => {
                                 const dismissed = JSON.parse(localStorage.getItem('dismissed_notifs') || '[]')
@@ -673,7 +683,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
                                 localStorage.setItem('dismissed_notifs', JSON.stringify(newDismissed))
                                 setNotifications([])
                               }}
-                              className="w-full py-2.5 text-[10px] font-black text-slate-400 hover:text-rose-500 uppercase tracking-[0.2em] transition-colors flex items-center justify-center gap-2"
+                              className="w-full py-2.5 text-[10px] font-black text-carbon-400 hover:text-alert-500 uppercase tracking-[0.2em] transition-colors flex items-center justify-center gap-2"
                             >
                               Limpiar Panel
                             </button>
@@ -688,8 +698,8 @@ export default function AdminLayout({ children, active }: { children: React.Reac
               <button
                 onClick={handleTogglePush}
                 className={`p-2.5 rounded-xl transition-colors relative group ${subscription
-                  ? 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'
-                  : 'text-muted-foreground hover:bg-white dark:hover:bg-slate-800'
+                  ? 'text-kuro-500 hover:bg-kuro-50 dark:hover:bg-kuro-500/10'
+                  : 'text-muted-foreground hover:bg-white dark:hover:bg-carbon-800'
                   }`}
                 title={subscription ? 'Notificaciones activas' : 'Activar notificaciones push'}
               >
