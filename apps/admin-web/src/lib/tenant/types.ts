@@ -17,7 +17,19 @@
  * clientes de la plataforma) ni da de alta sedes. Ambas cosas son exclusivas de
  * `platform_admins`.
  */
-export type OrgRole = 'superadmin' | 'manager'
+export type OrgRole = 'superadmin' | 'head_coach' | 'manager'
+
+/**
+ * Head coach: ve TODAS las sedes y TODOS los alumnos de la marca, pero nada de
+ * finanzas. Es el único rol con alcance de marca sin acceso a plata, y está
+ * reforzado en la base: `payments` se lee con `can_read_finance()` en vez de
+ * `can_read_dojo()`, así que no alcanza con esconderle el menú.
+ */
+export const ORG_ROLE_LABEL: Record<OrgRole, string> = {
+    superadmin: 'Superadmin',
+    head_coach: 'Head coach',
+    manager: 'Staff de marca',
+}
 
 /** Rol DENTRO de un dojo. Espeja el enum `public.dojo_role`. */
 export type DojoRole = 'admin' | 'instructor' | 'member' | 'becado'
@@ -189,6 +201,8 @@ export type TenantContext = {
     dojos: (Dojo & { role: DojoRole; org: Organization })[]
     /** Dojo actualmente seleccionado. null sólo si la persona no pertenece a ninguno. */
     activeDojo: (Dojo & { role: DojoRole; org: Organization }) | null
+    /** Overrides de permisos de la organización activa. Vacío = defaults. */
+    capabilityOverrides: CapabilityOverrides
 }
 
 /**
@@ -224,13 +238,53 @@ export type Capability =
     | 'manageBilling'
     /** Alta y edición de alumnos, clases y pagos de la sede. */
     | 'manageMembers'
+    /**
+     * Ver plata: pagos, recaudación, métricas económicas.
+     *
+     * Separado de `manageMembers` porque el head coach ve todos los alumnos de
+     * la marca y NO tiene que ver la plata, y el instructor ve la asistencia de
+     * su sede y tampoco. Reforzado en la base por `can_read_finance()`.
+     */
+    | 'viewFinance'
+
+/** Capacidades que la organización PUEDE editar desde la consola. Las que no
+ *  están acá son de la plataforma y no se delegan: `manageBilling` define
+ *  recargos y bloqueos de alumnos, `platformConsole` expone a los otros
+ *  clientes. El CHECK de `role_capabilities` las rechaza también en la base. */
+export const EDITABLE_CAPABILITIES = [
+    'viewDojos',
+    'manageDojoSettings',
+    'manageMembers',
+    'viewFinance',
+] as const satisfies readonly Capability[]
+
+export type EditableCapability = (typeof EDITABLE_CAPABILITIES)[number]
+
+/** Overrides por rol que llegan de `role_capabilities`. */
+export type CapabilityOverrides = Partial<Record<string, Partial<Record<EditableCapability, boolean>>>>
 
 export function capabilities(ctx: {
     isPlatformAdmin: boolean
     orgRole: OrgRole | null
     role: DojoRole | null
+    /** Overrides de la organización. Sin esto rigen los defaults de acá abajo. */
+    overrides?: CapabilityOverrides
 }): Record<Capability, boolean> {
-    const { isPlatformAdmin, orgRole, role } = ctx
+    const { isPlatformAdmin, orgRole, role, overrides } = ctx
+
+    /**
+     * Permiso efectivo de una capacidad editable: gana el override de la
+     * organización si existe para ALGUNO de los roles de la persona (el de
+     * marca o el de sede), si no vale el default calculado abajo.
+     */
+    const withOverride = (key: EditableCapability, fallback: boolean): boolean => {
+        if (!overrides) return fallback
+        for (const r of [orgRole, role]) {
+            const v = r ? overrides[r]?.[key] : undefined
+            if (typeof v === 'boolean') return v
+        }
+        return fallback
+    }
 
     const isOrgAdmin = orgRole === 'superadmin'
     const isOrgStaff = orgRole !== null
@@ -239,7 +293,7 @@ export function capabilities(ctx: {
         platformConsole: isPlatformAdmin,
         // El superadmin ve las sedes de su marca; el admin de una sucursal no
         // ve esta sección. Darlas de alta es del desarrollador.
-        viewDojos: isPlatformAdmin || isOrgAdmin,
+        viewDojos: isPlatformAdmin || withOverride('viewDojos', isOrgAdmin),
         manageDojos: isPlatformAdmin,
         // Quién es superadmin de una marca lo decide el desarrollador: si un
         // superadmin pudiera nombrar a otro, el control de la cuenta se
@@ -247,9 +301,25 @@ export function capabilities(ctx: {
         manageOrgAdmins: isPlatformAdmin,
         // Sin rol de dueño de sucursal, los datos y el equipo de cada sede los
         // define la marca.
-        manageDojoSettings: isPlatformAdmin || isOrgAdmin,
+        manageDojoSettings: isPlatformAdmin || withOverride('manageDojoSettings', isOrgAdmin),
         // La lógica de cobro no: es del desarrollador y de nadie más.
         manageBilling: isPlatformAdmin,
-        manageMembers: isPlatformAdmin || isOrgStaff || role === 'admin',
+        manageMembers: isPlatformAdmin || withOverride('manageMembers', isOrgStaff || role === 'admin'),
+        /*
+         * Plata: superadmin de la marca o admin de la sede.
+         *
+         * El head coach se excluye ANTES de mirar el rol de sede, y esto no es
+         * redundante: un org member sin pertenencia explícita hereda rol de sede
+         * `admin` (ver `server.ts`, "rol efectivo en la sede"). Sin este corte,
+         * el head coach entraba por `role === 'admin'` y le aparecían Pagos y
+         * Métricas en el menú.
+         *
+         * La base ya lo bloquea igual (`can_read_finance`), así que era una
+         * sección vacía, pero no tiene por qué verla.
+         */
+        viewFinance: isPlatformAdmin || withOverride(
+            'viewFinance',
+            orgRole === 'head_coach' ? false : orgRole === 'superadmin' || role === 'admin'
+        ),
     }
 }

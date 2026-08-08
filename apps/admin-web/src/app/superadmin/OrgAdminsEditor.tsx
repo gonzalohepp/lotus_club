@@ -30,11 +30,13 @@ type OrgAdmin = {
 
 const ROLE_LABELS: Record<OrgRole, string> = {
     superadmin: 'Superadmin',
+    head_coach: 'Head coach',
     manager: 'Staff de marca',
 }
 
 const ROLE_HINTS: Record<OrgRole, string> = {
     superadmin: 'Ve y administra todas las sedes de la marca, y da de alta nuevas',
+    head_coach: 'Ve todas las sedes y todos los alumnos de la marca, SIN acceso a finanzas',
     manager: 'Ve todas las sedes de la marca, sin crearlas ni borrarlas',
 }
 
@@ -93,10 +95,10 @@ export default function OrgAdminsEditor({ orgId, orgName }: { orgId: string; org
 
     return (
         <div className="space-y-4">
-            <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <div className="p-4 rounded-2xl border border-carbon-200 dark:border-carbon-700">
                 <div className="flex flex-col md:flex-row gap-3 md:items-end">
                     <div className="flex-1">
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-carbon-400 mb-1">
                             Email
                         </label>
                         <input
@@ -105,18 +107,18 @@ export default function OrgAdminsEditor({ orgId, orgName }: { orgId: string; org
                             placeholder="persona@gmail.com"
                             onChange={(e) => setEmail(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && add()}
-                            className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm"
+                            className="w-full h-10 px-3 rounded-xl bg-carbon-50 dark:bg-carbon-800 border border-carbon-200 dark:border-carbon-700 text-sm"
                         />
                     </div>
 
                     <div className="md:w-52">
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-carbon-400 mb-1">
                             Rol
                         </label>
                         <select
                             value={role}
                             onChange={(e) => setRole(e.target.value as OrgRole)}
-                            className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm"
+                            className="w-full h-10 px-3 rounded-xl bg-carbon-50 dark:bg-carbon-800 border border-carbon-200 dark:border-carbon-700 text-sm"
                         >
                             {(Object.keys(ROLE_LABELS) as OrgRole[]).map((r) => (
                                 <option key={r} value={r}>
@@ -129,25 +131,25 @@ export default function OrgAdminsEditor({ orgId, orgName }: { orgId: string; org
                     <button
                         onClick={add}
                         disabled={adding || !email.trim()}
-                        className="flex items-center justify-center gap-2 px-5 h-10 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                        className="flex items-center justify-center gap-2 px-5 h-10 rounded-xl bg-kuro-600 text-white font-bold text-sm hover:bg-kuro-700 disabled:opacity-50 transition-colors"
                     >
                         {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
                         Agregar
                     </button>
                 </div>
 
-                <p className="mt-2 text-xs text-slate-500">{ROLE_HINTS[role]}</p>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-2 text-xs text-carbon-500">{ROLE_HINTS[role]}</p>
+                <p className="mt-1 text-xs text-carbon-400">
                     La persona tiene que haber entrado al menos una vez con Google. No se pueden crear cuentas ajenas.
                 </p>
             </div>
 
             {loading ? (
-                <div className="flex items-center gap-2 text-sm text-slate-400">
+                <div className="flex items-center gap-2 text-sm text-carbon-400">
                     <Loader2 className="w-4 h-4 animate-spin" /> Cargando…
                 </div>
             ) : admins.length === 0 ? (
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-carbon-400">
                     Esta organización todavía no tiene superadmins. Sin uno, sólo vos podés administrarla.
                 </p>
             ) : (
@@ -161,25 +163,25 @@ export default function OrgAdminsEditor({ orgId, orgName }: { orgId: string; org
                         return (
                             <div
                                 key={a.id}
-                                className="flex items-center gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40"
+                                className="flex items-center gap-3 p-3 rounded-xl bg-warn-50 dark:bg-warn-900/10 border border-warn-200 dark:border-warn-800/40"
                             >
-                                <ShieldCheck className="w-4 h-4 text-amber-500 shrink-0" />
+                                <ShieldCheck className="w-4 h-4 text-warn-500 shrink-0" />
 
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-bold truncate">{name}</p>
-                                    <p className="text-xs text-slate-400 truncate flex items-center gap-1">
+                                    <p className="text-xs text-carbon-400 truncate flex items-center gap-1">
                                         <Mail className="w-3 h-3" />
                                         {a.profiles?.email}
                                     </p>
                                 </div>
 
-                                <span className="shrink-0 px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider">
+                                <span className="shrink-0 px-2 py-0.5 rounded-full bg-warn-400/20 text-warn-700 dark:text-warn-400 text-[10px] font-black uppercase tracking-wider">
                                     {ROLE_LABELS[a.role]}
                                 </span>
 
                                 <button
                                     onClick={() => remove(a)}
-                                    className="p-2 rounded-lg text-slate-400 hover:text-red-500"
+                                    className="p-2 rounded-lg text-carbon-400 hover:text-alert-500"
                                     aria-label="Quitar rol"
                                 >
                                     <Trash2 className="w-4 h-4" />

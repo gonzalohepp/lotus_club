@@ -14,6 +14,8 @@ import {
     type Organization,
     type OrgRole,
     type TenantContext,
+    CapabilityOverrides,
+    EditableCapability,
 } from './types'
 
 /**
@@ -196,6 +198,22 @@ export async function getTenantContext(): Promise<TenantContext | null> {
 
     const activeDojo = dojos.find((d) => d.id === requested) ?? dojos[0] ?? null
 
+    // Overrides de permisos de la organización activa. Sin filas, `capabilities()`
+    // usa sus defaults, así que una org nueva se comporta igual que antes.
+    let capabilityOverrides: CapabilityOverrides = {}
+    if (activeDojo) {
+        const { data: rows } = await supabase
+            .from('role_capabilities')
+            .select('role, capability, enabled')
+            .eq('org_id', activeDojo.org_id)
+
+        capabilityOverrides = (rows ?? []).reduce<CapabilityOverrides>((acc, r) => {
+            const role = r.role as string
+            acc[role] = { ...(acc[role] ?? {}), [r.capability as EditableCapability]: r.enabled }
+            return acc
+        }, {})
+    }
+
     return {
         userId: user.id,
         isPlatformAdmin,
@@ -203,6 +221,7 @@ export async function getTenantContext(): Promise<TenantContext | null> {
         orgIds,
         dojos,
         activeDojo,
+        capabilityOverrides,
     }
 }
 

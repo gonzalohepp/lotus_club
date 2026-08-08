@@ -69,8 +69,13 @@ export function useTenant() {
     // Qué puede HACER esta persona, según su rol. Ortogonal a `features`, que
     // dice qué incluye el PLAN. La UI casi siempre necesita las dos.
     const caps = useMemo(
-        () => capabilities({ isPlatformAdmin: ctx?.isPlatformAdmin ?? false, orgRole, role }),
-        [ctx?.isPlatformAdmin, orgRole, role]
+        () => capabilities({
+            isPlatformAdmin: ctx?.isPlatformAdmin ?? false,
+            orgRole,
+            role,
+            overrides: ctx?.capabilityOverrides,
+        }),
+        [ctx?.isPlatformAdmin, orgRole, role, ctx?.capabilityOverrides]
     )
 
     const allows = useCallback((key: Capability) => caps[key], [caps])
@@ -83,6 +88,7 @@ export function useTenant() {
             orgIds: [],
             dojos: [],
             activeDojo: null,
+            capabilityOverrides: {},
         }),
         activeDojo,
         org,
