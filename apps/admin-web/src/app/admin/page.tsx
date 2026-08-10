@@ -203,14 +203,19 @@ export default function AdminDashboard() {
               </p>
             </div>
 
-            {/* CTA primario negro y secundario Palm Leaf, como define el manual. */}
+            {/* CTA primario negro y secundario Palm Leaf, como define el manual.
+                "Nuevo Miembro" es un atajo a un alta, así que sigue el mismo
+                permiso que la pantalla a la que lleva: sin él, el Mestre veía
+                acá el botón que ya no tiene en /members. */}
             <div className="flex flex-wrap gap-2">
-              <Link href="/members" className="flex-1 md:flex-none">
-                <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#121113] dark:bg-[#F7F7F2] text-[#F7F7F2] dark:text-[#121113] font-bold active:scale-95 transition-all hover:brightness-150 dark:hover:brightness-95">
-                  <Plus className="w-5 h-5" />
-                  Nuevo Miembro
-                </button>
-              </Link>
+              {allows('manageMembers') && (
+                <Link href="/members" className="flex-1 md:flex-none">
+                  <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#121113] dark:bg-[#F7F7F2] text-[#F7F7F2] dark:text-[#121113] font-bold active:scale-95 transition-all hover:brightness-150 dark:hover:brightness-95">
+                    <Plus className="w-5 h-5" />
+                    Nuevo Miembro
+                  </button>
+                </Link>
+              )}
               {showMoney && (
                 <Link href="/payments" className="flex-1 md:flex-none">
                   <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#899878] text-[#121113] font-bold hover:brightness-110 transition-all active:scale-95">

@@ -258,8 +258,13 @@ export default function LoginPage() {
                   </button>
                 </form>
 
+                {/* El texto anterior era una nota para nosotros ("Solo visible
+                    en desarrollo") y quedó a la vista de los clientes que están
+                    probando la app: los dejaba usando un modo que el propio
+                    cartel llamaba de desarrollo. Dice lo mismo, contado desde el
+                    lado de quien prueba. */}
                 <p className="mt-3 text-center text-[10px] text-[#A7ACA2]/70">
-                  Solo visible en desarrollo. Los alumnos entran con Google.
+                  Acceso con las cuentas de la prueba. Los alumnos entran con Google.
                 </p>
               </div>
             )}
