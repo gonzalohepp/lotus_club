@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { useTenant } from '@/lib/tenant/context';
 import { NO_DOJO } from '@/lib/tenant/constants'
 import AdminLayout from '../layouts/AdminLayout';
-import { Plus, Download, Check, Receipt, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Download, Check, Receipt, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 
 import PaymentFilters from '../components/payments/PaymentFilters';
 import PaymentModal from '../components/payments/PaymentModal';
@@ -50,8 +50,13 @@ const ITEMS_PER_PAGE = 5;
 export default function PaymentsPage() {
   // Los pagos son de una sede. RLS habilita todas las que administrás; el
   // filtro decide cuál estás mirando.
-  const { activeDojo } = useTenant();
+  const { activeDojo, allows } = useTenant();
   const dojoId = activeDojo?.id;
+
+  // Cobrar es del administrador de la sede. El Mestre ve toda la recaudación de
+  // la marca pero no registra pagos; al Coordinador regional no le llega ni la
+  // sección. Reforzado en la base por `can_manage_payments()`.
+  const canCharge = allows('managePayments');
 
   const [rows, setRows] = useState<PaymentRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -237,15 +242,22 @@ export default function PaymentsPage() {
               Exportar
             </motion.button>
 
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setOpen(true)}
-              className="group relative flex items-center gap-3 overflow-hidden rounded-xl bg-kuro-600 px-6 py-3 text-white shadow-xl shadow-kuro-500/25 transition-all hover:bg-kuro-700 font-black uppercase tracking-widest text-sm"
-            >
-              <Plus className="h-6 w-6" />
-              Registrar Pago
-            </motion.button>
+            {canCharge ? (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setOpen(true)}
+                className="group relative flex items-center gap-3 overflow-hidden rounded-xl bg-kuro-600 px-6 py-3 text-white shadow-xl shadow-kuro-500/25 transition-all hover:bg-kuro-700 font-black uppercase tracking-widest text-sm"
+              >
+                <Plus className="h-6 w-6" />
+                Registrar Pago
+              </motion.button>
+            ) : (
+              <div className="flex items-center gap-2.5 rounded-xl border border-carbon-200 bg-carbon-50 px-4 py-3 text-carbon-500 dark:border-carbon-700 dark:bg-carbon-800/60 dark:text-carbon-400">
+                <Eye className="h-4 w-4 shrink-0" />
+                <span className="text-xs font-bold">Sólo lectura · los pagos los registra cada sede</span>
+              </div>
+            )}
           </div>
         </header>
 

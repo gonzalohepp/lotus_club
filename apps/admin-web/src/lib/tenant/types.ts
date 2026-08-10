@@ -284,6 +284,15 @@ export type Capability =
      * su sede y tampoco. Reforzado en la base por `can_read_finance()`.
      */
     | 'viewFinance'
+    /**
+     * Registrar, editar y borrar pagos.
+     *
+     * Separado de `viewFinance` porque no son lo mismo: el Mestre VE toda la
+     * recaudación de la marca —la necesita para dirigir— pero no cobra. Cobrar
+     * es del mostrador de la academia. Reforzado en la base por
+     * `can_manage_payments()`.
+     */
+    | 'managePayments'
 
 /** Capacidades que la organización PUEDE editar desde la consola. Las que no
  *  están acá son de la plataforma y no se delegan: `manageBilling` define
@@ -343,6 +352,12 @@ export function capabilities(ctx: {
      */
     const isSedeAdmin = role === 'admin' && !roleInherited
 
+    /** Ver plata. Se calcula acá arriba porque `managePayments` lo necesita. */
+    const canViewFinance = isPlatformAdmin || withOverride(
+        'viewFinance',
+        orgRole === 'head_coach' ? false : orgRole === 'superadmin' || role === 'admin'
+    )
+
     return {
         platformConsole: isPlatformAdmin,
         // Los roles de marca ven el listado de sedes; el admin de una sucursal
@@ -376,7 +391,7 @@ export function capabilities(ctx: {
         manageMembers: isPlatformAdmin || withOverride('manageMembers', isSedeAdmin),
         manageQrMode: isPlatformAdmin || isSedeAdmin,
         /*
-         * Plata: superadmin de la marca o admin de la sede.
+         * VER plata: superadmin de la marca o admin de la sede.
          *
          * El head coach se excluye ANTES de mirar el rol de sede, y esto no es
          * redundante: un org member sin pertenencia explícita hereda rol de sede
@@ -387,9 +402,18 @@ export function capabilities(ctx: {
          * La base ya lo bloquea igual (`can_read_finance`), así que era una
          * sección vacía, pero no tiene por qué verla.
          */
-        viewFinance: isPlatformAdmin || withOverride(
-            'viewFinance',
-            orgRole === 'head_coach' ? false : orgRole === 'superadmin' || role === 'admin'
-        ),
+        viewFinance: canViewFinance,
+        /*
+         * COBRAR: sólo el administrador de la sede, y sólo si además ve plata.
+         *
+         * El Mestre ve toda la recaudación de la marca pero no registra pagos:
+         * cobrar es del mostrador de la academia. Al Coordinador regional lo
+         * frena `canViewFinance`, que ya es false para él.
+         *
+         * No pasa por `withOverride` a propósito: la consola de permisos expone
+         * "ver finanzas", no "cobrar", así que no hay override que consultar y
+         * el predicado de la base (`can_manage_payments`) tampoco lo mira.
+         */
+        managePayments: isPlatformAdmin || (isSedeAdmin && canViewFinance),
     }
 }

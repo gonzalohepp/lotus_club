@@ -216,7 +216,10 @@ export default function AdminDashboard() {
                   </button>
                 </Link>
               )}
-              {showMoney && (
+              {/* Igual que "Nuevo Miembro": es un atajo a cobrar, así que pide
+                  el permiso de cobrar y no el de ver plata. El Mestre ve la
+                  recaudación de toda la marca pero no registra pagos. */}
+              {allows('managePayments') && (
                 <Link href="/payments" className="flex-1 md:flex-none">
                   <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#899878] text-[#121113] font-bold hover:brightness-110 transition-all active:scale-95">
                     <DollarSign className="w-4 h-4" />
