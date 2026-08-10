@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Building2, Check, ChevronDown, ShieldCheck } from 'lucide-react'
 
 import { useTenant } from '@/lib/tenant/context'
+import { ORG_ROLE_LABEL, ORG_ROLE_SCOPE } from '@/lib/tenant/types'
 
 /**
  * DojoSwitcher — Selector de sede activa.
@@ -73,7 +74,13 @@ export default function DojoSwitcher() {
                     {(isPlatformAdmin || orgRole) && (
                         <div className="flex items-center gap-2 px-4 py-2 mb-1 text-[10px] font-black uppercase tracking-widest text-warn-600 dark:text-warn-400">
                             <ShieldCheck className="w-3.5 h-3.5" />
-                            {isPlatformAdmin ? 'Desarrollador — ves todas las marcas' : 'Superadmin — ves todas tus sedes'}
+                            {/* El rol que tiene asignado, con el nombre de la pirámide
+                                de la marca. Decía "Superadmin" para cualquiera con rol
+                                de organización, así que un Coordinador regional leía un
+                                cargo que no es el suyo. */}
+                            {isPlatformAdmin
+                                ? 'Desarrollador — ves todas las marcas'
+                                : `${ORG_ROLE_LABEL[orgRole!]} — ${ORG_ROLE_SCOPE[orgRole!]}`}
                         </div>
                     )}
 
@@ -104,7 +111,12 @@ export default function DojoSwitcher() {
                                             <p className="text-sm font-bold truncate">{d.name}</p>
                                             <p className="text-xs text-carbon-400 truncate">
                                                 {d.city ? `${d.city} · ` : ''}
-                                                {ROLE_LABELS[d.role] ?? d.role}
+                                                {/* Con rol heredado no es "Administrador" de
+                                                    esta sede: la mira como Mestre o
+                                                    Coordinador, y ahí no edita nada. */}
+                                                {d.roleInherited && orgRole
+                                                    ? ORG_ROLE_LABEL[orgRole]
+                                                    : ROLE_LABELS[d.role] ?? d.role}
                                             </p>
                                         </div>
                                         {isActive && <Check className="w-4 h-4 text-kuro-500 shrink-0" />}

@@ -30,7 +30,7 @@ import ThemeToggle from '../components/ThemeToggle'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { type FeatureKey } from '@/lib/features'
-import { type Capability } from '@/lib/tenant/types'
+import { ORG_ROLE_LABEL, type Capability } from '@/lib/tenant/types'
 import { useTenant } from '@/lib/tenant/context'
 import DojoSwitcher from '@/components/tenant/DojoSwitcher'
 import UpgradeModal from '../components/plan/UpgradeModal'
@@ -137,14 +137,20 @@ export default function AdminLayout({ children, active }: { children: React.Reac
       : { head: brandName, tail: '' }
   })()
 
-  // Etiqueta de nivel de acceso para el bloque de usuario del sidebar.
+  /*
+   * Etiqueta de nivel de acceso del bloque de usuario del sidebar.
+   *
+   * Sale de ORG_ROLE_LABEL, que tiene los nombres de la pirámide del manual de
+   * marca. Antes estaba escrita a mano y tenía dos problemas: decía "Superadmin"
+   * —un cargo que no existe para la organización, que se reconoce como Mestre— y
+   * se olvidaba de `head_coach`, así que un Coordinador regional no veía ninguna
+   * etiqueta.
+   */
   const accessLevel = isPlatformAdmin
     ? { label: 'Desarrollador', className: 'bg-kuro-400/20 text-kuro-600 dark:text-kuro-400' }
-    : orgRole === 'superadmin'
-      ? { label: 'Superadmin', className: 'bg-warn-400/20 text-warn-600 dark:text-warn-400' }
-      : orgRole === 'manager'
-        ? { label: 'Staff de marca', className: 'bg-warn-400/15 text-warn-600 dark:text-warn-400' }
-        : null
+    : orgRole
+      ? { label: ORG_ROLE_LABEL[orgRole], className: 'bg-warn-400/20 text-warn-600 dark:text-warn-400' }
+      : null
   const plan = org?.plan ?? 'basic'
 
   const { isSupported, subscription, subscribeUser, unsubscribeUser } = usePushNotifications()
