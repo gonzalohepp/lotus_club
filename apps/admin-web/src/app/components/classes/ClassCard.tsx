@@ -3,14 +3,29 @@ import { motion } from 'framer-motion'
 import type { ClassRow } from './ClassForm'
 import React from 'react'
 
+/**
+ * ClassCard — Una clase en la grilla de /classes.
+ *
+ * Sobre el color: cada clase tiene un color elegido por el administrador. Es un
+ * color de DATO, no de marca, y por eso la paleta sigue siendo la original —si
+ * "blue" pintara verde, la tarjeta no coincidiría con lo guardado en la base.
+ *
+ * Lo que cambió es CUÁNTO pesa ese color. La versión anterior lo usaba como un
+ * halo permanente detrás de la tarjeta (`boxShadow: 0 12px 40px ${color}BB`):
+ * doce tarjetas encendidas en rojo, cian y violeta contra el fondo hueso y el
+ * verde Palm Leaf del resto de la app, que no comparte nada con esos tonos. El
+ * color quedaba mandando en una pantalla donde la información es el texto.
+ *
+ * Ahora el color entra por donde identifica sin gritar: una banda al costado,
+ * un punto junto al título y los chips de los íconos. La sombra pasa a ser
+ * neutra —profundidad, no luz de neón— y el relieve queda para el hover.
+ */
+
 type Props =
-  | { classItem: ClassRow; data?: never; onEdit: () => void; onDelete: () => void }
-  | { data: ClassRow; classItem?: never; onEdit: () => void; onDelete: () => void }
+  | { classItem: ClassRow; data?: never; canManage?: boolean; onEdit: () => void; onDelete: () => void }
+  | { data: ClassRow; classItem?: never; canManage?: boolean; onEdit: () => void; onDelete: () => void }
 
 const colorSchemes: Record<string, { bg: string, text: string, border: string, glow: string, icon: string, color: string }> = {
-  /* Esta paleta es la que el admin elige por clase: son colores de DATO, no de
-     marca. Quedan en la escala original a propósito — si "blue" pintara verde,
-     la tarjeta no coincidiría con el color guardado en la base. */
   blue: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', glow: 'shadow-blue-500/40', icon: 'text-blue-500', color: '#3b82f6' },
   red: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', glow: 'shadow-red-500/40', icon: 'text-red-500', color: '#ef4444' },
   green: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', glow: 'shadow-emerald-500/40', icon: 'text-emerald-500', color: '#10b981' },
@@ -33,122 +48,123 @@ function fmtTime(t?: string | null) {
 export default function ClassCard(props: Props) {
   const item: ClassRow = (('classItem' in props ? props.classItem : props.data) as ClassRow)!
   const scheme = colorSchemes[item?.color ?? 'blue'] ?? colorSchemes.blue
+  const canManage = props.canManage ?? true
 
   const days = item?.days && item.days.length ? item.days.join(' · ') : 'Sin días'
   const timeStr = item?.start_time ? `${fmtTime(item.start_time)}${item.end_time ? ` – ${fmtTime(item.end_time)}` : ''}` : 'Horario a confirmar'
 
   return (
     <motion.div
-      whileHover={{
-        y: -12,
-        boxShadow: `0 25px 60px -12px ${scheme.color}BB`,
-        borderColor: `${scheme.color}AA`
-      }}
-      initial={{ boxShadow: `0 0 0px 0px ${scheme.color}00` }}
-      animate={{
-        boxShadow: `0 12px 40px -5px ${scheme.color}BB`
-      }}
-      style={{ borderColor: `${scheme.color}55` }}
-      className="group relative rounded-[32px] border-2 bg-white p-7 transition-all"
+      whileHover={{ y: -4 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+      className="group relative overflow-hidden rounded-3xl border border-carbon-200 bg-white p-7 pl-8 shadow-sm transition-shadow hover:shadow-lg hover:shadow-carbon-900/[0.07] dark:border-carbon-700 dark:bg-carbon-800 dark:hover:shadow-black/30"
     >
-      {/* Decorative Glow - Moved into a separate absolute container to avoid clipping issue */}
-      <div className="absolute inset-0 rounded-[32px] overflow-hidden pointer-events-none">
-        <div className={`absolute -right-16 -top-16 h-32 w-32 rounded-full transition-opacity opacity-0 group-hover:opacity-15 blur-3xl ${scheme.bg.replace('50', '500')}`} />
-      </div>
+      {/* Identidad de la clase: una banda al filo izquierdo. Ocupa 4px en vez
+          de envolver la tarjeta entera, y se lee igual de rápido. */}
+      <div
+        aria-hidden
+        className="absolute inset-y-0 left-0 w-1"
+        style={{ backgroundColor: scheme.color }}
+      />
 
       {/* Header Area */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="space-y-1">
-          <h3 className="text-2xl font-black text-carbon-900 tracking-tight leading-none">
-            {item?.name}
-          </h3>
-          <p className="text-[10px] font-black uppercase tracking-widest text-carbon-400 mt-2">
+      <div className="mb-6 flex items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          {/* El título envuelve en vez de recortarse: "BJJ Gi — Noche" y
+              "BJJ Gi — Mañana" comparten el arranque, así que cortar por el
+              final las dejaría idénticas en pantalla. */}
+          <div className="flex items-start gap-2">
+            <span
+              aria-hidden
+              className="mt-2.5 h-2 w-2 shrink-0 rounded-full"
+              style={{ backgroundColor: scheme.color }}
+            />
+            <h3 className="text-2xl font-black leading-tight tracking-tight text-carbon-900 dark:text-white">
+              {item?.name}
+            </h3>
+          </div>
+          <p className="mt-2 pl-4 text-[10px] font-black uppercase tracking-widest text-carbon-400">
             {item?.category === 'acondicionamiento-fisico' ? 'Fisico' : 'Artes Marciales'}
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
-          <button
-            onClick={props.onEdit}
-            className="w-10 h-10 rounded-xl bg-carbon-50 border border-carbon-200 flex items-center justify-center text-carbon-500 hover:bg-carbon-900 hover:text-white hover:border-carbon-900 transition-all"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button
-            onClick={props.onDelete}
-            className="w-10 h-10 rounded-xl bg-carbon-50 border border-carbon-200 flex items-center justify-center text-carbon-500 hover:bg-red-600 hover:text-white hover:border-red-600 transition-all"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
+        {canManage && (
+          <div className="flex shrink-0 items-center gap-1.5 opacity-0 transition-all translate-y-2 group-hover:translate-y-0 group-hover:opacity-100">
+            <button
+              onClick={props.onEdit}
+              aria-label="Editar clase"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-carbon-200 bg-carbon-50 text-carbon-500 transition-all hover:border-kuro-600 hover:bg-kuro-600 hover:text-white dark:border-carbon-600 dark:bg-carbon-700 dark:text-carbon-300"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+            <button
+              onClick={props.onDelete}
+              aria-label="Eliminar clase"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-carbon-200 bg-carbon-50 text-carbon-500 transition-all hover:border-alert-600 hover:bg-alert-600 hover:text-white dark:border-carbon-600 dark:bg-carbon-700 dark:text-carbon-300"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Main Info Grid */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="p-4 rounded-2xl bg-carbon-50 border border-carbon-100">
-          <div className="flex items-center gap-2 mb-1 text-carbon-400">
-            <DollarSign className="w-3 h-3" />
+      <div className="mb-6 grid grid-cols-2 gap-4">
+        <div className="rounded-2xl border border-carbon-100 bg-carbon-50 p-4 dark:border-carbon-700 dark:bg-carbon-900/50">
+          <div className="mb-1 flex items-center gap-2 text-carbon-400">
+            <DollarSign className="h-3 w-3" />
             <span className="text-[10px] font-black uppercase tracking-widest">Base (P)</span>
           </div>
-          <p className="text-lg font-black text-carbon-900 leading-none">
-            ${(Number(item?.price_principal) || 0).toLocaleString()}
+          <p className="text-lg font-black leading-none text-carbon-900 dark:text-white">
+            ${(Number(item?.price_principal) || 0).toLocaleString('es-AR')}
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-carbon-50 border border-carbon-100">
-          <div className="flex items-center gap-2 mb-1 text-carbon-400">
-            <DollarSign className="w-3 h-3" />
+        <div className="rounded-2xl border border-carbon-100 bg-carbon-50 p-4 dark:border-carbon-700 dark:bg-carbon-900/50">
+          <div className="mb-1 flex items-center gap-2 text-carbon-400">
+            <DollarSign className="h-3 w-3" />
             <span className="text-[10px] font-black uppercase tracking-widest">Extra (A)</span>
           </div>
-          <p className="text-lg font-black text-carbon-900 leading-none">
-            {item?.price_additional ? `$${Number(item.price_additional).toLocaleString()}` : '—'}
+          <p className="text-lg font-black leading-none text-carbon-900 dark:text-white">
+            {item?.price_additional ? `$${Number(item.price_additional).toLocaleString('es-AR')}` : '—'}
           </p>
         </div>
       </div>
 
       {/* Details List */}
-      <div className="space-y-3 px-1 mb-6">
-        <div className="flex items-center gap-3 text-carbon-600">
-          <div className={`w-8 h-8 rounded-lg ${scheme.bg} flex items-center justify-center ${scheme.icon}`}>
-            <User className="w-4 h-4" />
+      <div className="mb-6 space-y-3 px-1">
+        {([
+          { icon: User, label: 'Instructor', value: item?.instructor || 'Coaches Dojo' },
+          { icon: CalendarDays, label: 'Días', value: days },
+          { icon: Clock, label: 'Horario', value: timeStr },
+        ] as const).map(({ icon: Icon, label, value }) => (
+          <div key={label} className="flex items-center gap-3">
+            {/* El chip lleva el color de la clase en 12% de opacidad: identifica
+                sin competir con el texto, y funciona igual en oscuro. */}
+            <div
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+              style={{ backgroundColor: `${scheme.color}1F`, color: scheme.color }}
+            >
+              <Icon className="h-4 w-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="mb-0.5 text-[10px] font-black uppercase leading-none tracking-widest text-carbon-400">
+                {label}
+              </p>
+              <p className="truncate text-sm font-bold text-carbon-700 dark:text-carbon-200">{value}</p>
+            </div>
           </div>
-          <div className="flex-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-carbon-400 leading-none mb-0.5">Instructor</p>
-            <p className="text-sm font-bold text-carbon-700">{item?.instructor || 'Coaches Dojo'}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 text-carbon-600">
-          <div className={`w-8 h-8 rounded-lg ${scheme.bg} flex items-center justify-center ${scheme.icon}`}>
-            <CalendarDays className="w-4 h-4" />
-          </div>
-          <div className="flex-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-carbon-400 leading-none mb-0.5">Días</p>
-            <p className="text-sm font-bold text-carbon-700">{days}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 text-carbon-600">
-          <div className={`w-8 h-8 rounded-lg ${scheme.bg} flex items-center justify-center ${scheme.icon}`}>
-            <Clock className="w-4 h-4" />
-          </div>
-          <div className="flex-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-carbon-400 leading-none mb-0.5">Horario</p>
-            <p className="text-sm font-bold text-carbon-700">{timeStr}</p>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Description */}
       {item?.description && (
-        <div className="pt-4 border-t border-carbon-100">
-          <p className="text-sm text-carbon-500 font-medium leading-relaxed line-clamp-2 italic">
+        <div className="border-t border-carbon-100 pt-4 dark:border-carbon-700">
+          <p className="line-clamp-2 text-sm font-medium italic leading-relaxed text-carbon-500 dark:text-carbon-400">
             &ldquo;{item.description}&rdquo;
           </p>
         </div>
       )}
-
-      {/* No Footer actions needed per user request */}
     </motion.div>
   )
 }
