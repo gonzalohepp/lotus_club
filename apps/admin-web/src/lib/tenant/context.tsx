@@ -68,14 +68,17 @@ export function useTenant() {
 
     // Qué puede HACER esta persona, según su rol. Ortogonal a `features`, que
     // dice qué incluye el PLAN. La UI casi siempre necesita las dos.
+    const roleInherited = activeDojo?.roleInherited ?? false
+
     const caps = useMemo(
         () => capabilities({
             isPlatformAdmin: ctx?.isPlatformAdmin ?? false,
             orgRole,
             role,
+            roleInherited,
             overrides: ctx?.capabilityOverrides,
         }),
-        [ctx?.isPlatformAdmin, orgRole, role, ctx?.capabilityOverrides]
+        [ctx?.isPlatformAdmin, orgRole, role, roleInherited, ctx?.capabilityOverrides]
     )
 
     const allows = useCallback((key: Capability) => caps[key], [caps])
@@ -93,6 +96,8 @@ export function useTenant() {
         activeDojo,
         org,
         role,
+        /** El rol de sede lo hereda de la marca: da lectura, no escritura. */
+        roleInherited,
         orgRole,
         caps,
         allows,

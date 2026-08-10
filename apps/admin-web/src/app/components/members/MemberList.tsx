@@ -41,8 +41,12 @@ function ActionSheet({
 
   // Nombre con el que se firma hacia el alumno: el display_name configurado en
   // /superadmin, o el de la organización.
-  const { branding, org } = useTenant()
+  const { branding, org, allows } = useTenant()
   const marca = branding.display_name || org?.name || 'tu dojo'
+
+  // Renovar, editar y eliminar son del administrador de la sede. Los roles de
+  // marca ven la ficha completa del alumno pero no la modifican.
+  const canManage = allows('manageMembers')
 
   if (!member) return null
   const fullName = [member.first_name, member.last_name].filter(Boolean).join(' ').trim()
@@ -109,20 +113,24 @@ function ActionSheet({
 
             {/* Acciones */}
             <div className="p-4 space-y-2">
-              <button
-                onClick={() => { onQuickRenew(member); onClose() }}
-                className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl bg-kuro-600 text-white font-bold text-sm active:scale-95 transition-all"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Renovar vencimiento
-              </button>
-              <button
-                onClick={() => { onEdit(member); onClose() }}
-                className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl bg-carbon-900 dark:bg-kuro-600 text-white font-bold text-sm active:scale-95 transition-all"
-              >
-                <Pencil className="w-4 h-4" />
-                Editar miembro
-              </button>
+              {canManage && (
+                <>
+                  <button
+                    onClick={() => { onQuickRenew(member); onClose() }}
+                    className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl bg-kuro-600 text-white font-bold text-sm active:scale-95 transition-all"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Renovar vencimiento
+                  </button>
+                  <button
+                    onClick={() => { onEdit(member); onClose() }}
+                    className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl bg-carbon-900 dark:bg-kuro-600 text-white font-bold text-sm active:scale-95 transition-all"
+                  >
+                    <Pencil className="w-4 h-4" />
+                    Editar miembro
+                  </button>
+                </>
+              )}
               <button
                 onClick={handleWhatsApp}
                 className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl bg-kuro-50 dark:bg-kuro-500/10 text-kuro-600 dark:text-kuro-400 font-bold text-sm border border-kuro-100 dark:border-kuro-500/20 active:scale-95 transition-all"
@@ -130,13 +138,15 @@ function ActionSheet({
                 <MessageCircle className="w-4 h-4" />
                 Enviar WhatsApp
               </button>
-              <button
-                onClick={() => { onDelete(member.user_id); onClose() }}
-                className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl bg-alert-50 dark:bg-alert-500/10 text-alert-600 dark:text-alert-400 font-bold text-sm border border-alert-100 dark:border-alert-500/20 active:scale-95 transition-all"
-              >
-                <Trash2 className="w-4 h-4" />
-                Eliminar miembro
-              </button>
+              {canManage && (
+                <button
+                  onClick={() => { onDelete(member.user_id); onClose() }}
+                  className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl bg-alert-50 dark:bg-alert-500/10 text-alert-600 dark:text-alert-400 font-bold text-sm border border-alert-100 dark:border-alert-500/20 active:scale-95 transition-all"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Eliminar miembro
+                </button>
+              )}
             </div>
 
             {/* Safe area bottom padding */}
@@ -251,8 +261,9 @@ function DesktopCard({
   onQuickRenew: (m: MemberRow) => void
 }) {
   // Firma hacia el alumno: el nombre configurado en /superadmin.
-  const { branding, org } = useTenant()
+  const { branding, org, allows } = useTenant()
   const marca = branding.display_name || org?.name || 'tu dojo'
+  const canManage = allows('manageMembers')
 
   const fullName = [m.first_name, m.last_name].filter(Boolean).join(' ').trim()
   const isActive = m.status === 'activo'
@@ -356,21 +367,25 @@ function DesktopCard({
         </div>
 
         <div className="mt-8 space-y-2">
-          <button
-            onClick={() => onQuickRenew(m)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-kuro-600 text-white font-black uppercase tracking-wider text-xs hover:bg-kuro-700 active:scale-95 transition-all shadow-md shadow-kuro-600/10"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            RENOVAR VENCIMIENTO
-          </button>
-          <div className="flex gap-2">
+          {canManage && (
             <button
-              onClick={() => onEdit(m)}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-carbon-900 text-white font-bold text-xs hover:bg-kuro-600 transition-colors shadow-lg shadow-carbon-900/10"
+              onClick={() => onQuickRenew(m)}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-kuro-600 text-white font-black uppercase tracking-wider text-xs hover:bg-kuro-700 active:scale-95 transition-all shadow-md shadow-kuro-600/10"
             >
-              <Pencil className="w-3 h-3" />
-              EDITAR
+              <RefreshCw className="w-3.5 h-3.5" />
+              RENOVAR VENCIMIENTO
             </button>
+          )}
+          <div className="flex gap-2">
+            {canManage && (
+              <button
+                onClick={() => onEdit(m)}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-carbon-900 text-white font-bold text-xs hover:bg-kuro-600 transition-colors shadow-lg shadow-carbon-900/10"
+              >
+                <Pencil className="w-3 h-3" />
+                EDITAR
+              </button>
+            )}
             <button
               onClick={() => {
                 const name = fullName || 'Alumno'
@@ -378,16 +393,19 @@ function DesktopCard({
                 const phone = m.phone?.replace(/\D/g, '') || ''
                 window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank')
               }}
-              className="p-2.5 rounded-xl border border-carbon-200 text-carbon-400 hover:text-kuro-500 hover:border-kuro-200 hover:bg-kuro-50 transition-all"
+              className={`${canManage ? 'p-2.5' : 'flex-1 justify-center gap-2 py-2.5'} flex items-center rounded-xl border border-carbon-200 text-carbon-400 hover:text-kuro-500 hover:border-kuro-200 hover:bg-kuro-50 transition-all`}
             >
               <MessageCircle className="w-4 h-4" />
+              {!canManage && <span className="text-xs font-bold">WHATSAPP</span>}
             </button>
-            <button
-              onClick={() => onDelete(m.user_id)}
-              className="p-2.5 rounded-xl border border-carbon-200 text-carbon-400 hover:text-alert-500 hover:border-alert-200 hover:bg-alert-50 transition-all"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            {canManage && (
+              <button
+                onClick={() => onDelete(m.user_id)}
+                className="p-2.5 rounded-xl border border-carbon-200 text-carbon-400 hover:text-alert-500 hover:border-alert-200 hover:bg-alert-50 transition-all"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>

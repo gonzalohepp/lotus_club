@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import AdminLayout from '../layouts/AdminLayout'
-import { Search, Check, Users, UserPlus, Filter, X, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Check, Users, UserPlus, Filter, X, Trash2, ChevronLeft, ChevronRight, Eye } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { useSearchParams } from 'next/navigation'
@@ -47,8 +47,13 @@ function SuccessToast({ message, onClose }: { message: string, onClose: () => vo
 function MembersContent() {
   const searchParams = useSearchParams()
   // Sede activa: todo lo de esta pantalla se lee y escribe scopeado a ella.
-  const { activeDojo } = useTenant()
+  const { activeDojo, allows } = useTenant()
   const dojoId = activeDojo?.id
+
+  // Alta, edición, renovación y baja son del administrador de la sede. Mestre y
+  // Coordinador regional ven el padrón de todas sus sedes, en modo lectura.
+  const canManage = allows('manageMembers')
+
   const [members, setMembers] = useState<Row[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -384,23 +389,33 @@ function MembersContent() {
               </h1>
               <p className="mt-1 text-carbon-500 dark:text-carbon-400 font-medium text-sm md:text-base">
                 {activeDojo
-                  ? <>Alumnos de <span className="font-black text-carbon-700 dark:text-carbon-200">{activeDojo.name}</span>. Los que des de alta quedan asociados a esta sede.</>
+                  ? <>Alumnos de <span className="font-black text-carbon-700 dark:text-carbon-200">{activeDojo.name}</span>.{' '}
+                    {canManage
+                      ? 'Los que des de alta quedan asociados a esta sede.'
+                      : 'Cambiá de sede desde el selector de arriba para ver las demás.'}</>
                   : 'Visualiza, filtra y gestiona todos los alumnos del Dojo al instante.'}
               </p>
             </div>
 
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={onCreate}
-              className="group relative overflow-hidden rounded-2xl bg-kuro-600 px-6 py-4 text-white shadow-xl shadow-kuro-500/30 transition-all hover:bg-kuro-700 w-full md:w-auto"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-kuro-400/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
-              <span className="relative flex items-center justify-center gap-3 font-black uppercase tracking-wider text-sm">
-                <UserPlus className="h-5 w-5" />
-                Nuevo Alumno
-              </span>
-            </motion.button>
+            {canManage ? (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onCreate}
+                className="group relative overflow-hidden rounded-2xl bg-kuro-600 px-6 py-4 text-white shadow-xl shadow-kuro-500/30 transition-all hover:bg-kuro-700 w-full md:w-auto"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-kuro-400/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
+                <span className="relative flex items-center justify-center gap-3 font-black uppercase tracking-wider text-sm">
+                  <UserPlus className="h-5 w-5" />
+                  Nuevo Alumno
+                </span>
+              </motion.button>
+            ) : (
+              <div className="flex items-center gap-2.5 rounded-2xl border border-carbon-200 bg-carbon-50 px-4 py-3 text-carbon-500 dark:border-carbon-700 dark:bg-carbon-800/60 dark:text-carbon-400">
+                <Eye className="h-4 w-4 shrink-0" />
+                <span className="text-xs font-bold">Sólo lectura · el padrón lo administra cada sede</span>
+              </div>
+            )}
           </header>
 
           {/* Buscador y Filtros */}

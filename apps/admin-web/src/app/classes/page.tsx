@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import AdminLayout from '../layouts/AdminLayout'
-import { Plus, Search, BookOpen, Layers } from 'lucide-react'
+import { Plus, Search, BookOpen, Layers, Eye } from 'lucide-react'
 import ClassForm, { ClassRow } from '../components/classes/ClassForm'
 import ClassCard from '../components/classes/ClassCard'
 import StyledSelect from '../components/common/StyledSelect'
@@ -15,8 +15,12 @@ export default function ClassesPage() {
   // Sede activa: las clases son de un dojo, no de la marca. RLS deja ver todas
   // las sedes a las que tenés acceso, así que sin este filtro un superadmin
   // vería las clases de todas sus sucursales mezcladas en una sola grilla.
-  const { activeDojo } = useTenant()
+  const { activeDojo, allows } = useTenant()
   const dojoId = activeDojo?.id
+
+  // Alta, edición y borrado son del administrador de la sede. Mestre y
+  // Coordinador regional ven las clases de todas sus sedes, pero no las tocan.
+  const canManage = allows('manageMembers')
 
   const [items, setItems] = useState<ClassRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -85,6 +89,9 @@ export default function ClassesPage() {
   const onEdit = (row: ClassRow) => { setEditing(row); setShowForm(true) }
 
   const onDelete = async (id: number) => {
+    // Redundante con la UI y con RLS, pero el costo es una línea y evita que un
+    // cambio de layout vuelva a exponer el borrado sin que nadie lo note.
+    if (!canManage) return
     if (!confirm('¿Eliminar esta clase?')) return
     // El `.eq('dojo_id')` es redundante con RLS pero explicita el alcance: esta
     // pantalla sólo borra clases de la sede en la que estás parado.
@@ -126,18 +133,25 @@ export default function ClassesPage() {
             </p>
           </motion.div>
 
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onCreate}
-            className="group relative flex items-center gap-3 overflow-hidden rounded-xl bg-kuro-600 px-6 py-3 text-white shadow-xl shadow-kuro-500/25 transition-all hover:bg-kuro-700"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-            <Plus className="h-6 w-6" />
-            <span className="text-sm font-black uppercase tracking-widest">Nueva Clase</span>
-          </motion.button>
+          {canManage ? (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onCreate}
+              className="group relative flex items-center gap-3 overflow-hidden rounded-xl bg-kuro-600 px-6 py-3 text-white shadow-xl shadow-kuro-500/25 transition-all hover:bg-kuro-700"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+              <Plus className="h-6 w-6" />
+              <span className="text-sm font-black uppercase tracking-widest">Nueva Clase</span>
+            </motion.button>
+          ) : (
+            <div className="flex items-center gap-2.5 rounded-xl border border-carbon-200 bg-carbon-50 px-4 py-2.5 text-carbon-500 dark:border-carbon-700 dark:bg-carbon-800/60 dark:text-carbon-400">
+              <Eye className="h-4 w-4 shrink-0" />
+              <span className="text-xs font-bold">Sólo lectura · las clases las administra cada sede</span>
+            </div>
+          )}
         </header>
 
         {/* Filters Section */}
@@ -219,7 +233,11 @@ export default function ClassesPage() {
                 <BookOpen className="w-8 h-8" />
               </div>
               <h3 className="text-xl font-bold text-carbon-900">No se encontraron clases</h3>
-              <p className="text-carbon-500 max-w-xs mt-1">Ajusta los filtros o crea una nueva clase para empezar.</p>
+              <p className="text-carbon-500 max-w-xs mt-1">
+                {canManage
+                  ? 'Ajustá los filtros o creá una nueva clase para empezar.'
+                  : 'Ajustá los filtros. Las clases las carga el administrador de la sede.'}
+              </p>
             </motion.div>
           ) : (
             <div className="space-y-12">
@@ -238,6 +256,7 @@ export default function ClassesPage() {
                   >
                     <ClassCard
                       classItem={item}
+                      canManage={canManage}
                       onEdit={() => onEdit(item)}
                       onDelete={() => onDelete(item.id!)}
                     />

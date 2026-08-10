@@ -10,6 +10,7 @@ import {
     isManager,
     isStaff,
     type Dojo,
+    type DojoMembershipView,
     type DojoRole,
     type Organization,
     type OrgRole,
@@ -45,7 +46,7 @@ export async function getServerSupabase() {
     })
 }
 
-type DojoWithOrg = Dojo & { role: DojoRole; org: Organization }
+type DojoWithOrg = DojoMembershipView
 
 /**
  * Fila cruda de la query de pertenencias. Supabase devuelve el join anidado,
@@ -54,6 +55,12 @@ type DojoWithOrg = Dojo & { role: DojoRole; org: Organization }
  */
 type MembershipRow = {
     role: DojoRole
+    /**
+     * true = el rol NO sale de `dojo_members`, lo hereda de la marca. Lo usan
+     * las capacidades para distinguir al administrador real de una sede del
+     * Mestre que la está mirando desde arriba.
+     */
+    inherited?: boolean
     dojos: (Omit<Dojo, 'org_id'> & {
         org_id: string
         organizations: Organization | Organization[] | null
@@ -84,6 +91,7 @@ function normalizeDojo(row: MembershipRow): DojoWithOrg | null {
         qr_fixed: d.qr_fixed ?? false,
         is_active: d.is_active ?? true,
         role: row.role,
+        roleInherited: row.inherited ?? false,
         org: {
             ...org,
             features: org.features ?? {},
@@ -178,14 +186,17 @@ export async function getTenantContext(): Promise<TenantContext | null> {
         const own = new Map(dojos.map((d) => [d.id, d]))
 
         const extra = (all ?? [])
-            .map((d) =>
-                normalizeDojo({
-                    // Rol efectivo en la sede: el explícito si lo tiene, si no el
-                    // que hereda de la marca.
-                    role: own.get(d.id)?.role ?? (orgRoleByOrg.get(d.org_id) === 'manager' ? 'instructor' : 'admin'),
+            .map((d) => {
+                // Rol efectivo en la sede: el explícito si lo tiene, si no el
+                // que hereda de la marca. `inherited` marca cuál de los dos fue,
+                // porque el heredado da lectura pero no escritura.
+                const explicit = own.get(d.id)?.role
+                return normalizeDojo({
+                    role: explicit ?? (orgRoleByOrg.get(d.org_id) === 'manager' ? 'instructor' : 'admin'),
+                    inherited: !explicit,
                     dojos: d as MembershipRow['dojos'],
                 })
-            )
+            })
             .filter((d): d is DojoWithOrg => d !== null)
 
         const merged = new Map(extra.map((d) => [d.id, d]))
@@ -229,8 +240,21 @@ export async function getTenantContext(): Promise<TenantContext | null> {
 // Guards para API routes
 // ---------------------------------------------------------------------------
 
-type TenantGuardOk = { ctx: TenantContext; dojoId: string; role: DojoRole; error?: undefined }
-type TenantGuardErr = { error: NextResponse; ctx?: undefined; dojoId?: undefined; role?: undefined }
+type TenantGuardOk = {
+    ctx: TenantContext
+    dojoId: string
+    role: DojoRole
+    /** El rol lo hereda de la marca, no tiene fila propia en esta sede. */
+    roleInherited: boolean
+    error?: undefined
+}
+type TenantGuardErr = {
+    error: NextResponse
+    ctx?: undefined
+    dojoId?: undefined
+    role?: undefined
+    roleInherited?: undefined
+}
 export type TenantGuard = TenantGuardOk | TenantGuardErr
 
 /**
@@ -252,7 +276,7 @@ export async function requireDojo(dojoId?: string): Promise<TenantGuard> {
         return { error: NextResponse.json({ error: 'Dojo no encontrado o sin acceso' }, { status: 403 }) }
     }
 
-    return { ctx, dojoId: target.id, role: target.role }
+    return { ctx, dojoId: target.id, role: target.role, roleInherited: target.roleInherited }
 }
 
 /** Exige rol de staff (admin/instructor) en el dojo. */
@@ -266,12 +290,20 @@ export async function requireDojoStaff(dojoId?: string): Promise<TenantGuard> {
     return guard
 }
 
-/** Exige rol de gestión (admin): plata y configuración del dojo. */
+/**
+ * Exige ser administrador REAL de la sede: plata, alumnos y configuración.
+ *
+ * El rol heredado no alcanza. Mestre y Coordinador regional entran a cada sede
+ * con un rol sintético `admin` (ver `getTenantContext`), y estas rutas corren
+ * con service role, que se saltea RLS por completo: sin este corte, la marca
+ * podía dar de alta y borrar alumnos por API aunque la base se lo prohibiera y
+ * la pantalla no le mostrara el botón.
+ */
 export async function requireDojoManager(dojoId?: string): Promise<TenantGuard> {
     const guard = await requireDojo(dojoId)
     if (guard.error) return guard
 
-    if (!guard.ctx.isPlatformAdmin && !isManager(guard.role)) {
+    if (!guard.ctx.isPlatformAdmin && (!isManager(guard.role) || guard.roleInherited)) {
         return { error: NextResponse.json({ error: 'No autorizado' }, { status: 403 }) }
     }
     return guard

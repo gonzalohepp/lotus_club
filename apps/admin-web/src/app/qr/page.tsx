@@ -54,7 +54,7 @@ export default function QRAcceso() {
   // El QR de acceso es de una sede concreta: un token generado en Lanús no
   // debe abrirle la puerta a nadie en Quilmes. El rol también sale de la sede
   // activa, no de `profiles.role`, para que sólo su admin cambie la config.
-  const { activeDojo, role } = useTenant()
+  const { activeDojo, allows } = useTenant()
   const dojoId = activeDojo?.id
 
   const [token, setToken] = useState<string>('')
@@ -62,12 +62,21 @@ export default function QRAcceso() {
   const [now, setNow] = useState(Date.now())
   const [autoRefresh, setAutoRefresh] = useState(true)
 
-  const isAdmin = role === 'admin'
+  /**
+   * Quién puede cambiar el modo del QR y regenerarlo: el administrador de ESTA
+   * sede. Antes era `role === 'admin'`, y el rol de sede de un Mestre o un
+   * Coordinador regional es un `admin` sintético heredado de la marca, así que
+   * les aparecía el interruptor de fijo/rotativo de todas las sucursales.
+   * Decidir si el código de la puerta se imprime o se renueva es de quien
+   * atiende esa puerta.
+   */
+  const isAdmin = allows('manageQrMode')
 
   // Confirmación antes de cambiar el modo del QR: es una decisión operativa que
   // deja inservible el código anterior, así que no debe pasar de un click suelto.
   const [showModeConfirm, setShowModeConfirm] = useState(false)
   const [switchingMode, setSwitchingMode] = useState(false)
+  const [modeError, setModeError] = useState<string | null>(null)
 
   /**
    * Aplica el cambio de modo. Se llama sólo desde la confirmación.
@@ -82,16 +91,32 @@ export default function QRAcceso() {
     setSwitchingMode(true)
 
     try {
-      const { error: modeErr } = await supabase
-        .from('dojos')
-        .update({ qr_fixed: !nextAuto })
-        .eq('id', dojoId ?? NO_DOJO)
+      /*
+       * Vía RPC y no `update` directo sobre `dojos`. La tabla está cerrada al
+       * desarrollador (la ficha de la sede la maneja la marca), así que el
+       * update se filtraba por RLS y PostgREST devolvía 204 SIN error: el
+       * interruptor se movía en pantalla y la base quedaba igual, y recién se
+       * notaba al recargar. `set_qr_mode` valida el permiso y falla fuerte.
+       */
+      const { error: modeErr } = await supabase.rpc('set_qr_mode', {
+        target: dojoId ?? NO_DOJO,
+        fixed: !nextAuto,
+      })
 
       if (modeErr) {
         console.error('[qr] no se pudo guardar el modo en la sede:', modeErr)
+        setModeError(
+          modeErr.code === '42501'
+            ? 'Sólo el administrador de esta sede puede cambiar el modo del QR.'
+            : 'No se pudo guardar el cambio. Probá de nuevo.'
+        )
+        // Sin cerrar el diálogo: si se cierra, el mensaje se va con él y el
+        // cambio parece haber funcionado.
+        setSwitchingMode(false)
         return
       }
 
+      setModeError(null)
       setAutoRefresh(nextAuto)
 
       if (!nextAuto) {
@@ -678,6 +703,12 @@ export default function QRAcceso() {
                 </>
               )}
             </div>
+
+            {modeError && (
+              <p className="mt-6 rounded-xl border border-alert-500/30 bg-alert-500/10 px-4 py-3 text-sm font-medium text-alert-300">
+                {modeError}
+              </p>
+            )}
 
             <DialogFooter className="flex-col gap-3 sm:flex-col mt-8">
               <Button

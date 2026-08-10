@@ -23,10 +23,10 @@ import {
  */
 
 const ROLES = [
-    { key: 'superadmin', label: 'Superadmin', hint: 'Dueño de la marca' },
-    { key: 'head_coach', label: 'Head coach', hint: 'Todas las sedes, sin finanzas' },
-    { key: 'admin', label: 'Academy manager', hint: 'Su sede, completo' },
-    { key: 'instructor', label: 'Instructor', hint: 'Alumnos y asistencia' },
+    { key: 'superadmin', label: 'Mestre', hint: 'Todas las sedes, incluida la plata' },
+    { key: 'head_coach', label: 'Coordinador regional', hint: 'Todas las sedes, sin finanzas' },
+    { key: 'admin', label: 'Responsable de academia', hint: 'Su sede, completo' },
+    { key: 'instructor', label: 'Profesor / Instructor', hint: 'Alumnos y asistencia' },
     { key: 'member', label: 'Alumno', hint: 'Sólo lo propio' },
 ] as const
 
@@ -37,11 +37,17 @@ const CAP_LABEL: Record<EditableCapability, { label: string; hint: string }> = {
     viewFinance: { label: 'Ver finanzas', hint: 'Pagos, métricas y recaudación' },
 }
 
-/** Defaults del código. Tienen que coincidir con `default_capability()` en la base. */
+/**
+ * Defaults del código. Tienen que coincidir con `default_capability()` en la base.
+ *
+ * `manageMembers` es false para los roles de MARCA: ven el padrón y las clases
+ * de todas sus sedes, pero no las escriben. Lo escribe el responsable de la
+ * academia, que tiene su fila en `dojo_members`. Ver `can_manage_roster()`.
+ */
 const DEFAULTS: Record<string, Record<EditableCapability, boolean>> = {
-    superadmin: { viewDojos: true, manageDojoSettings: true, manageMembers: true, viewFinance: true },
-    head_coach: { viewDojos: true, manageDojoSettings: true, manageMembers: true, viewFinance: false },
-    manager: { viewDojos: false, manageDojoSettings: false, manageMembers: true, viewFinance: false },
+    superadmin: { viewDojos: true, manageDojoSettings: true, manageMembers: false, viewFinance: true },
+    head_coach: { viewDojos: true, manageDojoSettings: true, manageMembers: false, viewFinance: false },
+    manager: { viewDojos: false, manageDojoSettings: false, manageMembers: false, viewFinance: false },
     admin: { viewDojos: false, manageDojoSettings: false, manageMembers: true, viewFinance: true },
     instructor: { viewDojos: false, manageDojoSettings: false, manageMembers: false, viewFinance: false },
     member: { viewDojos: false, manageDojoSettings: false, manageMembers: false, viewFinance: false },

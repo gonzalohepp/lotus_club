@@ -20,15 +20,27 @@
 export type OrgRole = 'superadmin' | 'head_coach' | 'manager'
 
 /**
- * Head coach: ve TODAS las sedes y TODOS los alumnos de la marca, pero nada de
- * finanzas. Es el único rol con alcance de marca sin acceso a plata, y está
- * reforzado en la base: `payments` se lee con `can_read_finance()` en vez de
- * `can_read_dojo()`, así que no alcanza con esconderle el menú.
+ * Nombres de la pirámide del manual de marca. Son los que ve el usuario: nadie
+ * dentro de la organización se reconoce como "superadmin", se reconoce como
+ * Mestre. Los valores internos siguen siendo los del enum de Postgres.
+ *
+ * Head coach / Coordinador regional: ve TODAS las sedes y TODOS los alumnos de
+ * la marca, pero nada de finanzas. Es el único rol con alcance de marca sin
+ * acceso a plata, y está reforzado en la base: `payments` se lee con
+ * `can_read_finance()` en vez de `can_read_dojo()`, así que no alcanza con
+ * esconderle el menú.
  */
 export const ORG_ROLE_LABEL: Record<OrgRole, string> = {
-    superadmin: 'Superadmin',
-    head_coach: 'Head coach',
+    superadmin: 'Mestre',
+    head_coach: 'Coordinador regional',
     manager: 'Staff de marca',
+}
+
+/** Qué alcance tiene cada rol de marca. Para los textos de la UI. */
+export const ORG_ROLE_SCOPE: Record<OrgRole, string> = {
+    superadmin: 'ves todas tus sedes',
+    head_coach: 'ves todas tus sedes, sin finanzas',
+    manager: 'ves las sedes de tu marca',
 }
 
 /** Rol DENTRO de un dojo. Espeja el enum `public.dojo_role`. */
@@ -182,6 +194,18 @@ export type Dojo = {
 
 
 /**
+ * Una sede como la ve una persona: la sede, su marca, y con qué rol entra.
+ *
+ * `roleInherited` distingue al administrador real de la sucursal (fila propia
+ * en `dojo_members`) del rol que la marca hereda sobre todas sus sedes.
+ */
+export type DojoMembershipView = Dojo & {
+    role: DojoRole
+    roleInherited: boolean
+    org: Organization
+}
+
+/**
  * Lo que la app necesita saber en cada request: quién sos, en qué dojo estás
  * parado, qué podés hacer ahí y con qué marca se pinta la pantalla.
  */
@@ -198,9 +222,9 @@ export type TenantContext = {
     /** Organizaciones donde tiene rol de marca. */
     orgIds: string[]
     /** Todos los dojos visibles (arma el switcher). */
-    dojos: (Dojo & { role: DojoRole; org: Organization })[]
+    dojos: DojoMembershipView[]
     /** Dojo actualmente seleccionado. null sólo si la persona no pertenece a ninguno. */
-    activeDojo: (Dojo & { role: DojoRole; org: Organization }) | null
+    activeDojo: DojoMembershipView | null
     /** Overrides de permisos de la organización activa. Vacío = defaults. */
     capabilityOverrides: CapabilityOverrides
 }
@@ -236,8 +260,22 @@ export type Capability =
      * Reforzado en la base por el trigger `enforce_billing_dev_only()`.
      */
     | 'manageBilling'
-    /** Alta y edición de alumnos, clases y pagos de la sede. */
+    /**
+     * Alta, edición y baja de alumnos y clases de la sede.
+     *
+     * Es de quien opera la academia todos los días — el administrador de la
+     * sede— y de nadie más. Los roles de MARCA (Mestre, Coordinador regional)
+     * ven todo el padrón y todas las clases de todas sus sedes, pero en modo
+     * lectura: no dan de alta, no editan y no borran. Ver `roleInherited`.
+     */
     | 'manageMembers'
+    /**
+     * Cambiar el QR de la puerta entre fijo (se imprime y se pega) y rotativo
+     * (se renueva solo). Es una decisión operativa de la sede: quien la toma es
+     * quien está parado en la puerta, no la marca. Reforzado en la base por el
+     * trigger `enforce_qr_mode_sede_admin()`.
+     */
+    | 'manageQrMode'
     /**
      * Ver plata: pagos, recaudación, métricas económicas.
      *
@@ -267,10 +305,21 @@ export function capabilities(ctx: {
     isPlatformAdmin: boolean
     orgRole: OrgRole | null
     role: DojoRole | null
+    /**
+     * El rol de sede NO viene de una fila en `dojo_members`: lo hereda de la
+     * marca. Pasa con Mestre y Coordinador regional, que ven todas las sedes de
+     * su organización sin ser miembros de ninguna y a los que `server.ts` les
+     * asigna un rol sintético para que la UI sepa qué mostrarles.
+     *
+     * La distinción importa porque ese rol sintético es `admin`: sin este dato,
+     * un Mestre pasaba por administrador de cada sede y le aparecían los botones
+     * de alta, edición y borrado de alumnos y clases.
+     */
+    roleInherited?: boolean
     /** Overrides de la organización. Sin esto rigen los defaults de acá abajo. */
     overrides?: CapabilityOverrides
 }): Record<Capability, boolean> {
-    const { isPlatformAdmin, orgRole, role, overrides } = ctx
+    const { isPlatformAdmin, orgRole, role, roleInherited, overrides } = ctx
 
     /**
      * Permiso efectivo de una capacidad editable: gana el override de la
@@ -287,13 +336,24 @@ export function capabilities(ctx: {
     }
 
     const isOrgAdmin = orgRole === 'superadmin'
-    const isOrgStaff = orgRole !== null
+
+    /**
+     * Administrador REAL de esta sede: tiene su fila en `dojo_members`, no un
+     * rol heredado de la marca. Es el único que escribe alumnos y clases.
+     */
+    const isSedeAdmin = role === 'admin' && !roleInherited
 
     return {
         platformConsole: isPlatformAdmin,
-        // El superadmin ve las sedes de su marca; el admin de una sucursal no
-        // ve esta sección. Darlas de alta es del desarrollador.
-        viewDojos: isPlatformAdmin || withOverride('viewDojos', isOrgAdmin),
+        // Los roles de marca ven el listado de sedes; el admin de una sucursal
+        // no ve esta sección. Darlas de alta es del desarrollador.
+        //
+        // El Coordinador regional entra acá igual que el Mestre: su definición es
+        // "ve todas las sedes y todos los alumnos, sin finanzas", y escondiéndole
+        // Academias no podía ni ver la lista. Decía `isOrgAdmin` y por eso le
+        // faltaba el ítem, mientras `default_capability()` en Postgres ya lo
+        // incluía: las dos fuentes decían cosas distintas.
+        viewDojos: isPlatformAdmin || withOverride('viewDojos', isOrgAdmin || orgRole === 'head_coach'),
         manageDojos: isPlatformAdmin,
         // Quién es superadmin de una marca lo decide el desarrollador: si un
         // superadmin pudiera nombrar a otro, el control de la cuenta se
@@ -304,7 +364,17 @@ export function capabilities(ctx: {
         manageDojoSettings: isPlatformAdmin || withOverride('manageDojoSettings', isOrgAdmin),
         // La lógica de cobro no: es del desarrollador y de nadie más.
         manageBilling: isPlatformAdmin,
-        manageMembers: isPlatformAdmin || withOverride('manageMembers', isOrgStaff || role === 'admin'),
+        /*
+         * Alumnos y clases: los escribe el administrador de la sede.
+         *
+         * Antes el default era `orgRole !== null || role === 'admin'`, y eso le
+         * daba escritura a toda la marca. Se sacó a pedido: Mestre y Coordinador
+         * regional ven el padrón y las clases de todas las sedes, pero no las
+         * tocan. La base lo refuerza con `can_manage_roster()`, así que no
+         * alcanza con volver a mostrar el botón.
+         */
+        manageMembers: isPlatformAdmin || withOverride('manageMembers', isSedeAdmin),
+        manageQrMode: isPlatformAdmin || isSedeAdmin,
         /*
          * Plata: superadmin de la marca o admin de la sede.
          *
