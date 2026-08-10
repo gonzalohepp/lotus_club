@@ -29,7 +29,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ENV = os.path.join(ROOT, "apps", "admin-web", ".env.local")
 
 ORG_SLUG = "lotus"
-PASSWORD = "TestDojo2026!"
+PASSWORD = os.environ.get("TEST_USERS_PASSWORD", "TestDojo2026!")
 KEEP = "--keep" in sys.argv
 random.seed(7)  # reproducible
 
@@ -46,24 +46,44 @@ ACADEMIES = [
     },
 ]
 
+# Padrón por academia. Nombres DISTINTOS en cada una a propósito: con los
+# mismos en las dos era imposible ver, mirando el selector de instructor, si
+# estaba filtrando por sede o mostrando todo.
+#
 # (sufijo, nombre, apellido, rol, estado de cuota)
 #   al_dia  → vence el mes que viene
 #   gracia  → venció el mes pasado (recargo según el día de hoy)
 #   vencido → tres meses de atraso (bloquea el QR)
-PEOPLE = [
-    ("manager",  "Diego",    "Márquez",  "admin",      None),
-    ("profe1",   "Sofía",    "Rinaldi",  "instructor", None),
-    ("profe2",   "Nicolás",  "Ferreyra", "instructor", None),
-    ("alu1",     "Martina",  "Sánchez",  "member",     "al_dia"),
-    ("alu2",     "Joaquín",  "Fernández","member",     "al_dia"),
-    ("alu3",     "Valentina","Rodríguez","member",     "al_dia"),
-    ("alu4",     "Bautista", "López",    "member",     "al_dia"),
-    ("alu5",     "Camila",   "Díaz",     "member",     "gracia"),
-    ("alu6",     "Thiago",   "Pérez",    "member",     "gracia"),
-    ("alu7",     "Emilia",   "Torres",   "member",     "vencido"),
-    ("alu8",     "Lucas",    "Gómez",    "member",     "vencido"),
-    ("becado",   "Julieta",  "Romero",   "becado",     None),
-]
+PEOPLE_BY_ACADEMY = {
+    "demo-norte": [
+        ("manager", "Diego",     "Márquez",   "admin",      None),
+        ("profe1",  "Sofía",     "Rinaldi",   "instructor", None),
+        ("profe2",  "Nicolás",   "Ferreyra",  "instructor", None),
+        ("alu1",    "Martina",   "Sánchez",   "member",     "al_dia"),
+        ("alu2",    "Joaquín",   "Fernández", "member",     "al_dia"),
+        ("alu3",    "Valentina", "Rodríguez", "member",     "al_dia"),
+        ("alu4",    "Bautista",  "López",     "member",     "al_dia"),
+        ("alu5",    "Camila",    "Díaz",      "member",     "gracia"),
+        ("alu6",    "Thiago",    "Pérez",     "member",     "gracia"),
+        ("alu7",    "Emilia",    "Torres",    "member",     "vencido"),
+        ("alu8",    "Lucas",     "Gómez",     "member",     "vencido"),
+        ("becado",  "Julieta",   "Romero",    "becado",     None),
+    ],
+    "demo-sur": [
+        ("manager", "Ramiro",    "Bianchi",   "admin",      None),
+        ("profe1",  "Agustina",  "Vega",      "instructor", None),
+        ("profe2",  "Federico",  "Ocampo",    "instructor", None),
+        ("alu1",    "Renata",    "Quiroga",   "member",     "al_dia"),
+        ("alu2",    "Ignacio",   "Sosa",      "member",     "al_dia"),
+        ("alu3",    "Delfina",   "Ibarra",    "member",     "al_dia"),
+        ("alu4",    "Santino",   "Peralta",   "member",     "al_dia"),
+        ("alu5",    "Morena",    "Cabrera",   "member",     "gracia"),
+        ("alu6",    "Benicio",   "Navarro",   "member",     "gracia"),
+        ("alu7",    "Guadalupe", "Ledesma",   "member",     "vencido"),
+        ("alu8",    "Simón",     "Aguirre",   "member",     "vencido"),
+        ("becado",  "Milagros",  "Paz",       "becado",     None),
+    ],
+}
 
 CLASSES = [
     # (nombre, días, inicio, fin, precio principal, adicional, color, cupo)
@@ -167,7 +187,7 @@ for spec in ACADEMIES:
 
     # --- personas -----------------------------------------------------------
     staff, students = [], []
-    for suf, first, last, role, estado in PEOPLE:
+    for suf, first, last, role, estado in PEOPLE_BY_ACADEMY[spec['slug']]:
         email = f"{suf}.{spec['slug']}@test.local"
         uid = ensure_user(email, first, last)
         api("POST", "/rest/v1/dojo_members?on_conflict=dojo_id,user_id",
