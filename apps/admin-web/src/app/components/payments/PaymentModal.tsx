@@ -273,7 +273,7 @@ export default function PaymentModal({
                 </label>
                 <StyledSelect
                   icon={User}
-                  placeholder="Seleccionar miembro..."
+                  placeholder="Seleccionar alumno..."
                   triggerClassName="h-14 rounded-2xl bg-carbon-50 dark:bg-carbon-800 text-lg font-bold focus-visible:ring-kuro-500/10 focus-visible:border-kuro-500/50"
                   value={userId}
                   onChange={setUserId}
@@ -394,7 +394,7 @@ export default function PaymentModal({
                     <div className="flex items-center gap-2 mt-2">
                       <div className={`w-2 h-2 rounded-full animate-pulse ${selectedMember?.is_new_member ? 'bg-kuro-400' : multiplier > 1 ? 'bg-warn-500' : 'bg-kuro-500'}`} />
                       <span className={`text-[10px] font-black uppercase tracking-widest ${selectedMember?.is_new_member ? 'text-kuro-400' : multiplier > 1 ? 'text-warn-500' : 'text-kuro-500'}`}>
-                        {selectedMember?.is_new_member ? '✨ Precio Flat (Nuevo)' : multiplier > 1 ? 'Incluye 20% Recargo' : 'Precio Estándar'}
+                        {selectedMember?.is_new_member ? 'Precio Flat (Nuevo)' : multiplier > 1 ? 'Incluye 20% Recargo' : 'Precio Estándar'}
                       </span>
                     </div>
                   </div>
@@ -411,11 +411,11 @@ export default function PaymentModal({
                     contentClassName="bg-carbon-900 dark:bg-carbon-900 border-white/10 dark:border-white/10"
                     itemClassName="text-white dark:text-white focus:bg-white/10 dark:focus:bg-white/10"
                     options={[
-                      { value: 'efectivo', label: 'Efectivo 💵' },
-                      { value: 'transferencia', label: 'Transferencia 🏦' },
+                      { value: 'efectivo', label: 'Efectivo' },
+                      { value: 'transferencia', label: 'Transferencia' },
                       // Mercado Pago solo aparece si el cobro online está prendido
                       // en la instancia (NEXT_PUBLIC_MERCADOPAGO=on).
-                      ...(mercadoPago ? [{ value: 'mercadopago', label: 'Mercado Pago 📱' }] : []),
+                      ...(mercadoPago ? [{ value: 'mercadopago', label: 'Mercado Pago' }] : []),
                     ]}
                   />
 

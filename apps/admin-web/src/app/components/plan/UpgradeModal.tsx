@@ -9,7 +9,7 @@ const UPGRADE_CONTACT_URL = 'mailto:contacto@tu-dominio.com?subject=Quiero%20act
 
 const FEATURE_LABELS: Record<FeatureKey, string> = {
     qr: 'QR de acceso',
-    members: 'Gestión de miembros',
+    members: 'Gestión de alumnos',
     classes: 'Gestión de clases',
     accessLog: 'Historial de accesos',
     dojos: 'Sedes',

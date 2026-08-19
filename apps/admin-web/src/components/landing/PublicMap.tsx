@@ -65,7 +65,16 @@ const createCustomIcon = (isSelected: boolean) => {
             <div class="relative flex items-center justify-center">
                 ${isSelected ? '<div class="absolute w-14 h-14 bg-black/30 rounded-full animate-ping"></div>' : ''}
                 <div class="relative w-12 h-12 ${isSelected ? 'scale-110 z-10' : ''} bg-black rounded-full border-[3px] border-white shadow-xl flex items-center justify-center transition-all duration-300 overflow-hidden">
-                    <span class="text-2xl leading-none pt-1">🥋</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+                        <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/>
+                        <line x1="13" x2="19" y1="19" y2="13"/>
+                        <line x1="16" x2="20" y1="16" y2="20"/>
+                        <line x1="19" x2="21" y1="21" y2="19"/>
+                        <polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/>
+                        <line x1="5" x2="9" y1="14" y2="18"/>
+                        <line x1="7" x2="4" y1="17" y2="20"/>
+                        <line x1="3" x2="5" y1="19" y2="21"/>
+                    </svg>
                 </div>
                 ${isSelected ? '<div class="absolute -bottom-2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-black"></div>' : ''}
             </div>

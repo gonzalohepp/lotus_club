@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { X, Save, BookOpen, Clock, Calendar, Users, DollarSign, Type, Palette, AlignLeft, User } from 'lucide-react'
+import { X, Save, BookOpen, Clock, Calendar, Users, DollarSign, Type, AlignLeft, User } from 'lucide-react'
 import { supabase } from '@/lib/supabaseClient'
 import { useTenant } from '@/lib/tenant/context'
 import StyledSelect from '../common/StyledSelect'
@@ -34,22 +34,6 @@ type Props = {
 }
 
 const DAY_OPTIONS = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sáb', 'Dom']
-/* Colores de DATO: es la paleta que el admin elige por clase y que se guarda en
-   la base. No siguen la marca — el swatch tiene que mostrar el color que dice
-   la etiqueta. */
-const COLOR_OPTIONS = [
-  { label: 'Azul', value: 'blue', bg: 'bg-blue-500' },
-  { label: 'Rojo', value: 'red', bg: 'bg-red-500' },
-  { label: 'Verde', value: 'green', bg: 'bg-emerald-500' },
-  { label: 'Violeta', value: 'purple', bg: 'bg-purple-500' },
-  { label: 'Naranja', value: 'orange', bg: 'bg-orange-500' },
-  { label: 'Rosa', value: 'pink', bg: 'bg-pink-500' },
-  { label: 'Ámbar', value: 'amber', bg: 'bg-amber-500' },
-  { label: 'Teal', value: 'teal', bg: 'bg-teal-500' },
-  { label: 'Cian', value: 'cyan', bg: 'bg-cyan-500' },
-  { label: 'Indigo', value: 'indigo', bg: 'bg-indigo-500' },
-  { label: 'Rose', value: 'rose', bg: 'bg-rose-500' },
-]
 
 function getInitialForm(initial?: ClassRow | null): ClassRow {
   if (initial) {
@@ -64,7 +48,7 @@ function getInitialForm(initial?: ClassRow | null): ClassRow {
       end_time: initial.end_time ?? '',
       capacity: initial.capacity ?? initial.max_students ?? null,
       max_students: initial.max_students ?? initial.capacity ?? null,
-      color: initial.color ?? 'blue',
+      color: initial.color ?? null,
       category: initial.category ?? 'artes-marciales',
       description: initial.description ?? '',
       price_principal: initial.price_principal ?? initial.price ?? null,
@@ -83,7 +67,7 @@ function getInitialForm(initial?: ClassRow | null): ClassRow {
     end_time: '',
     capacity: null,
     max_students: null,
-    color: 'blue',
+    color: null,
     category: 'artes-marciales',
     description: '',
     price_principal: null,
@@ -318,7 +302,7 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
                       : 'bg-white border border-carbon-200 text-carbon-500'
                       }`}
                   >
-                    Fisico
+                    Físico
                   </button>
                 </div>
               </div>
@@ -379,24 +363,6 @@ export default function ClassForm({ initial, onCancel, onSaved }: Props) {
                 </div>
               </div>
 
-              <div className="relative group p-4 rounded-2xl border border-carbon-100">
-                <div className="flex items-center gap-2 mb-3">
-                  <Palette className="w-4 h-4 text-carbon-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-carbon-400 leading-none">Cromática</span>
-                </div>
-                <div className="flex gap-2">
-                  {COLOR_OPTIONS.map((c) => (
-                    <button
-                      key={c.value}
-                      type="button"
-                      onClick={() => setForm({ ...form, color: c.value })}
-                      className={`w-8 h-8 rounded-full ${c.bg} transition-all ${form.color === c.value ? 'ring-4 ring-offset-2 ring-carbon-900 scale-110 shadow-lg' : 'opacity-40 hover:opacity-100 scale-90'
-                        }`}
-                      title={c.label}
-                    />
-                  ))}
-                </div>
-              </div>
             </div>
           </section>
 

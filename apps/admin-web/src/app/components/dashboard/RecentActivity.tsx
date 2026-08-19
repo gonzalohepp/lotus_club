@@ -44,7 +44,7 @@ export default function RecentActivity({ rows, loading }: { rows: Row[]; loading
                 <Image
                   src={r.profiles.avatar_url}
                   className="object-cover"
-                  alt={r.profiles?.first_name || 'Miembro'}
+                  alt={r.profiles?.first_name || 'Alumno'}
                   fill
                 />
               ) : (
@@ -55,7 +55,7 @@ export default function RecentActivity({ rows, loading }: { rows: Row[]; loading
               <div className="font-black text-carbon-900 dark:text-white leading-tight">
                 {r.profiles?.first_name || r.profiles?.last_name
                   ? `${r.profiles?.first_name ?? ''} ${r.profiles?.last_name ?? ''}`.trim()
-                  : 'Miembro'}
+                  : 'Alumno'}
               </div>
               <div className="text-xs font-bold text-carbon-400 uppercase tracking-widest mt-0.5">
                 {/* Con toLocaleDateString() sin locale salía en formato del

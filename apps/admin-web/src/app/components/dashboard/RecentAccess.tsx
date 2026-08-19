@@ -51,7 +51,7 @@ export default function RecentAccess({ rows, loading }: { rows: AccessRow[]; loa
         const name =
           r.profiles?.first_name || r.profiles?.last_name
             ? `${r.profiles?.first_name ?? ''} ${r.profiles?.last_name ?? ''}`.trim()
-            : 'Miembro'
+            : 'Alumno'
 
         return (
           <motion.div
@@ -90,7 +90,7 @@ export default function RecentAccess({ rows, loading }: { rows: AccessRow[]; loa
 
             <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${ok ? 'bg-kuro-100 text-kuro-700 dark:bg-kuro-900/30 dark:text-kuro-400' : 'bg-alert-100 text-alert-700 dark:bg-alert-900/30 dark:text-alert-400'
               }`}>
-              {ok ? 'Valido' : 'No valido'}
+              {ok ? 'Válido' : 'No válido'}
             </div>
           </motion.div>
         )

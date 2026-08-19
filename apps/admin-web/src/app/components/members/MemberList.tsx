@@ -53,7 +53,7 @@ function ActionSheet({
   const isActive = member.status === 'activo'
 
   const handleWhatsApp = () => {
-    const msg = `Hola ${fullName || 'Alumno'}! Te escribimos de ${marca}. 🥋`
+    const msg = `Hola ${fullName || 'Alumno'}! Te escribimos de ${marca}.`
     const phone = member.phone?.replace(/\D/g, '') || ''
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank')
     onClose()
@@ -127,7 +127,7 @@ function ActionSheet({
                     className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl bg-carbon-900 dark:bg-kuro-600 text-white font-bold text-sm active:scale-95 transition-all"
                   >
                     <Pencil className="w-4 h-4" />
-                    Editar miembro
+                    Editar alumno
                   </button>
                 </>
               )}
@@ -144,7 +144,7 @@ function ActionSheet({
                   className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl bg-alert-50 dark:bg-alert-500/10 text-alert-600 dark:text-alert-400 font-bold text-sm border border-alert-100 dark:border-alert-500/20 active:scale-95 transition-all"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Eliminar miembro
+                  Eliminar alumno
                 </button>
               )}
             </div>
@@ -274,14 +274,14 @@ function DesktopCard({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: idx * 0.05 }}
-      className="group relative overflow-hidden rounded-3xl bg-white border border-carbon-200 shadow-sm hover:shadow-xl hover:shadow-kuro-500/5 hover:-translate-y-1 transition-all duration-300"
+      className="group relative overflow-hidden rounded-3xl bg-white dark:bg-carbon-800 border border-carbon-200 dark:border-carbon-700 shadow-sm hover:shadow-xl hover:shadow-kuro-500/5 hover:-translate-y-1 transition-all duration-300"
     >
       <div className={`h-1.5 w-full ${isActive ? 'bg-kuro-500' : 'bg-alert-500'}`} />
 
       <div className="p-6">
         <div className="flex items-start gap-4 mb-6">
           <div className="relative">
-            <div className="w-16 h-16 rounded-2xl overflow-hidden bg-carbon-100 border border-carbon-200 flex items-center justify-center shadow-inner">
+            <div className="w-16 h-16 rounded-2xl overflow-hidden bg-carbon-100 dark:bg-carbon-700 border border-carbon-200 dark:border-carbon-600 flex items-center justify-center shadow-inner">
               {m.avatar_url ? (
                 <div className="relative w-full h-full">
                   <Image src={m.avatar_url} alt={fullName} className="object-cover" fill />
@@ -290,13 +290,13 @@ function DesktopCard({
                 <UserIcon className="w-8 h-8 text-carbon-400" />
               )}
             </div>
-            <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-lg border-2 border-white flex items-center justify-center shadow-sm ${isActive ? 'bg-kuro-500' : 'bg-alert-500'}`}>
+            <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-lg border-2 border-white dark:border-carbon-800 flex items-center justify-center shadow-sm ${isActive ? 'bg-kuro-500' : 'bg-alert-500'}`}>
               <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
             </div>
           </div>
 
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-lg font-black text-carbon-900 tracking-tight leading-tight group-hover:text-kuro-600 transition-colors">
+            <h3 className="truncate text-lg font-black text-carbon-900 dark:text-white tracking-tight leading-tight group-hover:text-kuro-600 transition-colors">
               {fullName || 'Sin Nombre'}
             </h3>
             <div className="mt-1 flex items-center gap-1.5 text-xs font-bold text-carbon-400 tracking-widest uppercase">
@@ -308,46 +308,46 @@ function DesktopCard({
 
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${isActive ? 'bg-kuro-50 text-kuro-600 border-kuro-100' : 'bg-alert-50 text-alert-600 border-alert-100'}`}>
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${isActive ? 'bg-kuro-50 dark:bg-kuro-500/15 text-kuro-600 dark:text-kuro-400 border-kuro-100 dark:border-kuro-500/25' : 'bg-alert-50 dark:bg-alert-500/15 text-alert-600 dark:text-alert-400 border-alert-100 dark:border-alert-500/25'}`}>
               {isActive ? 'Activo' : 'Vencido'}
             </div>
             {m.role && m.role !== 'member' && (
-              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${m.role === 'admin' ? 'bg-kuro-50 text-kuro-600 border-kuro-100' :
-                  m.role === 'instructor' ? 'bg-kuro-50 text-kuro-600 border-kuro-100' :
-                    'bg-warn-50 text-warn-600 border-warn-100'
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${m.role === 'admin' ? 'bg-kuro-50 dark:bg-kuro-500/15 text-kuro-600 dark:text-kuro-400 border-kuro-100 dark:border-kuro-500/25' :
+                  m.role === 'instructor' ? 'bg-kuro-50 dark:bg-kuro-500/15 text-kuro-600 dark:text-kuro-400 border-kuro-100 dark:border-kuro-500/25' :
+                    'bg-warn-50 dark:bg-warn-500/15 text-warn-600 dark:text-warn-400 border-warn-100 dark:border-warn-500/25'
                 }`}>
                 {m.role}
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-3 pt-4 border-t border-carbon-100">
-            <div className="flex items-center gap-3 text-sm font-medium text-carbon-600">
-              <div className="w-8 h-8 rounded-lg bg-carbon-50 flex items-center justify-center text-carbon-400 border border-carbon-100">
+          <div className="grid grid-cols-1 gap-3 pt-4 border-t border-carbon-100 dark:border-carbon-700">
+            <div className="flex items-center gap-3 text-sm font-medium text-carbon-600 dark:text-carbon-300">
+              <div className="w-8 h-8 rounded-lg bg-carbon-50 dark:bg-white/5 flex items-center justify-center text-carbon-400 border border-carbon-100 dark:border-white/10">
                 <Mail className="w-4 h-4" />
               </div>
               <span className="truncate">{m.email || '---'}</span>
             </div>
-            <div className="flex items-center gap-3 text-sm font-medium text-carbon-600">
-              <div className="w-8 h-8 rounded-lg bg-carbon-50 flex items-center justify-center text-carbon-400 border border-carbon-100">
+            <div className="flex items-center gap-3 text-sm font-medium text-carbon-600 dark:text-carbon-300">
+              <div className="w-8 h-8 rounded-lg bg-carbon-50 dark:bg-white/5 flex items-center justify-center text-carbon-400 border border-carbon-100 dark:border-white/10">
                 <Phone className="w-4 h-4" />
               </div>
               <span>{m.phone || '---'}</span>
             </div>
-            <div className="flex items-center gap-3 text-sm font-medium text-carbon-600">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${isActive ? 'bg-kuro-50 text-kuro-500 border-kuro-100' : 'bg-alert-50 text-alert-500 border-alert-100'}`}>
+            <div className="flex items-center gap-3 text-sm font-medium text-carbon-600 dark:text-carbon-300">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${isActive ? 'bg-kuro-50 dark:bg-kuro-500/15 text-kuro-500 border-kuro-100 dark:border-kuro-500/25' : 'bg-alert-50 dark:bg-alert-500/15 text-alert-500 border-alert-100 dark:border-alert-500/25'}`}>
                 <Calendar className="w-4 h-4" />
               </div>
               <div className="flex flex-col">
                 <span className="text-[10px] font-black text-carbon-400 uppercase leading-none mb-0.5">Vencimiento</span>
-                <span className={isActive ? 'text-carbon-900' : 'text-alert-600 font-bold'}>
+                <span className={isActive ? 'text-carbon-900 dark:text-white' : 'text-alert-600 dark:text-alert-400 font-bold'}>
                   {m.next_payment_due === '2099-12-31' ? 'VITALICIA' : fmtDate(m.next_payment_due)}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-carbon-100">
+          <div className="pt-4 border-t border-carbon-100 dark:border-carbon-700">
             <div className="flex items-center gap-2 mb-2">
               <Clock className="w-3 h-3 text-carbon-400" />
               <span className="text-[10px] font-black text-carbon-400 uppercase tracking-widest">Clases Inscritas</span>
@@ -355,7 +355,7 @@ function DesktopCard({
             {m.class_names && m.class_names.length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
                 {m.class_names.map((cn, i) => (
-                  <span key={i} className="px-2 py-0.5 rounded-md bg-kuro-50 text-kuro-600 text-[10px] font-bold border border-kuro-100">
+                  <span key={i} className="px-2 py-0.5 rounded-md bg-kuro-50 dark:bg-kuro-500/15 text-kuro-600 dark:text-kuro-400 text-[10px] font-bold border border-kuro-100 dark:border-kuro-500/25">
                     {cn}
                   </span>
                 ))}
@@ -380,7 +380,7 @@ function DesktopCard({
             {canManage && (
               <button
                 onClick={() => onEdit(m)}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-carbon-900 text-white font-bold text-xs hover:bg-kuro-600 transition-colors shadow-lg shadow-carbon-900/10"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-carbon-900 dark:bg-white/10 text-white font-bold text-xs hover:bg-kuro-600 dark:hover:bg-kuro-600 transition-colors shadow-lg shadow-carbon-900/10"
               >
                 <Pencil className="w-3 h-3" />
                 EDITAR
@@ -389,11 +389,11 @@ function DesktopCard({
             <button
               onClick={() => {
                 const name = fullName || 'Alumno'
-                const msg = `Hola ${name}! Te escribimos de ${marca}. 🥋`
+                const msg = `Hola ${name}! Te escribimos de ${marca}.`
                 const phone = m.phone?.replace(/\D/g, '') || ''
                 window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank')
               }}
-              className={`${canManage ? 'p-2.5' : 'flex-1 justify-center gap-2 py-2.5'} flex items-center rounded-xl border border-carbon-200 text-carbon-400 hover:text-kuro-500 hover:border-kuro-200 hover:bg-kuro-50 transition-all`}
+              className={`${canManage ? 'p-2.5' : 'flex-1 justify-center gap-2 py-2.5'} flex items-center rounded-xl border border-carbon-200 dark:border-carbon-700 text-carbon-400 hover:text-kuro-500 hover:border-kuro-200 hover:bg-kuro-50 dark:hover:bg-kuro-500/10 transition-all`}
             >
               <MessageCircle className="w-4 h-4" />
               {!canManage && <span className="text-xs font-bold">WHATSAPP</span>}
@@ -401,7 +401,7 @@ function DesktopCard({
             {canManage && (
               <button
                 onClick={() => onDelete(m.user_id)}
-                className="p-2.5 rounded-xl border border-carbon-200 text-carbon-400 hover:text-alert-500 hover:border-alert-200 hover:bg-alert-50 transition-all"
+                className="p-2.5 rounded-xl border border-carbon-200 dark:border-carbon-700 text-carbon-400 hover:text-alert-500 hover:border-alert-200 hover:bg-alert-50 dark:hover:bg-alert-500/10 transition-all"
               >
                 <Trash2 className="w-4 h-4" />
               </button>

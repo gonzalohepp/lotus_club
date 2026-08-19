@@ -59,7 +59,7 @@ function calcPriceFromClasses(classes: ClassCandidate[]): number | null {
 }
 
 const fullName = (m: MemberRow | null) =>
-  m ? [m.first_name ?? '', m.last_name ?? ''].join(' ').trim() || 'Miembro' : 'Miembro'
+  m ? [m.first_name ?? '', m.last_name ?? ''].join(' ').trim() || 'Alumno' : 'Alumno'
 
 function ValidateContent() {
   const { mercadoPago, activeDojo } = useTenant()
@@ -412,7 +412,7 @@ function ValidateContent() {
             <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-carbon-900 dark:text-white">
               Validar <span className="text-kuro-600 dark:text-kuro-400">Acceso</span>
             </h1>
-            <p className="text-carbon-500 dark:text-carbon-400">Escanea tu código QR para ingresar al Dojo</p>
+            <p className="text-carbon-500 dark:text-carbon-400">Escaneá tu código QR para ingresar al Dojo</p>
           </motion.div>
 
           <motion.div

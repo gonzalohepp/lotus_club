@@ -25,7 +25,6 @@ export default function ClassesPage() {
   const [items, setItems] = useState<ClassRow[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
-  const [colorFilter, setColorFilter] = useState<string>('all')
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'artes-marciales' | 'acondicionamiento-fisico'>('all')
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<ClassRow | null>(null)
@@ -70,11 +69,10 @@ export default function ClassesPage() {
         c.name?.toLowerCase().includes(q) ||
         (c.instructor ?? '').toLowerCase().includes(q) ||
         (c.description ?? '').toLowerCase().includes(q)
-      const colorOk = colorFilter === 'all' || (c.color ?? 'blue') === colorFilter
       const categoryOk = categoryFilter === 'all' || (c.category ?? 'artes-marciales') === categoryFilter
-      return inQuery && colorOk && categoryOk
+      return inQuery && categoryOk
     })
-  }, [items, query, colorFilter, categoryFilter])
+  }, [items, query, categoryFilter])
 
   // No separate useEffect needed for pagination reset
 
@@ -182,28 +180,7 @@ export default function ClassesPage() {
               options={[
                 { value: 'all', label: 'Todas las Categorías' },
                 { value: 'artes-marciales', label: 'Artes Marciales' },
-                { value: 'acondicionamiento-fisico', label: 'Fisico' },
-              ]}
-            />
-
-            <StyledSelect
-              wrapperClassName="min-w-[180px]"
-              triggerClassName="h-14 rounded-2xl"
-              value={colorFilter}
-              onChange={(v) => { setColorFilter(v); setCurrentPage(1) }}
-              options={[
-                { value: 'all', label: 'Todos los colores' },
-                { value: 'blue', label: 'Azul' },
-                { value: 'red', label: 'Rojo' },
-                { value: 'green', label: 'Verde' },
-                { value: 'purple', label: 'Violeta' },
-                { value: 'orange', label: 'Naranja' },
-                { value: 'pink', label: 'Rosa' },
-                { value: 'amber', label: 'Ámbar' },
-                { value: 'teal', label: 'Teal' },
-                { value: 'cyan', label: 'Cian' },
-                { value: 'indigo', label: 'Indigo' },
-                { value: 'rose', label: 'Rose' },
+                { value: 'acondicionamiento-fisico', label: 'Físico' },
               ]}
             />
           </div>

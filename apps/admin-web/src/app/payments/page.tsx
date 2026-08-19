@@ -181,7 +181,7 @@ export default function PaymentsPage() {
   }, [filtered, currentPage]);
 
   const onExport = () => {
-    const header = ['Fecha', 'Miembro', 'Monto', 'Método', 'Periodo Desde', 'Periodo Hasta', 'Notas'];
+    const header = ['Fecha', 'Alumno', 'Monto', 'Método', 'Periodo Desde', 'Periodo Hasta', 'Notas'];
     const lines = filtered.map((r) => [
       fmtDate(r.paid_at),
       r.member_name,
@@ -289,7 +289,7 @@ export default function PaymentsPage() {
               <thead>
                 <tr className="bg-carbon-900 dark:bg-carbon-950">
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-carbon-400">Fecha</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-carbon-400">Miembro</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-carbon-400">Alumno</th>
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-carbon-400">Monto</th>
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-carbon-400">Método de Pago</th>
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-carbon-400">Período de Cobertura</th>

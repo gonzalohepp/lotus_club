@@ -119,7 +119,7 @@ export default function AcademiesPage() {
                                 Gestión de sedes
                             </span>
                             <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-carbon-900 dark:text-white">
-                                Administrar <span className="text-kuro-600 dark:text-kuro-400">Academias</span>
+                                Administrar <span className="text-kuro-600 dark:text-kuro-400">Sedes</span>
                             </h1>
                             <p className="mt-1 text-carbon-500 dark:text-carbon-400 font-medium text-sm md:text-base">
                                 Sedes de{' '}

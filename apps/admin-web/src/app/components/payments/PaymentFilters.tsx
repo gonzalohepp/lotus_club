@@ -22,7 +22,7 @@ export default function PaymentFilters({ members, classes, months, value, onChan
         triggerClassName={triggerClass}
         value={value.member}
         onChange={(v) => onChange({ ...value, member: v })}
-        options={[{ value: 'all', label: 'Todos los Miembros' }, ...members]}
+        options={[{ value: 'all', label: 'Todos los Alumnos' }, ...members]}
       />
 
       <StyledSelect

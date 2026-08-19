@@ -168,7 +168,7 @@ export default function AdminDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dojoId])
 
-  /** Porcentaje de socios al día. Se muestra en el tile para no obligar al
+  /** Porcentaje de alumnos al día. Se muestra en el tile para no obligar al
    *  admin a comparar dos números de tarjetas distintas. */
   const activeRatio = useMemo(() => {
     const total = stats?.members_total ?? 0
@@ -204,7 +204,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* CTA primario negro y secundario Palm Leaf, como define el manual.
-                "Nuevo Miembro" es un atajo a un alta, así que sigue el mismo
+                "Nuevo Alumno" es un atajo a un alta, así que sigue el mismo
                 permiso que la pantalla a la que lleva: sin él, el Mestre veía
                 acá el botón que ya no tiene en /members. */}
             <div className="flex flex-wrap gap-2">
@@ -212,11 +212,11 @@ export default function AdminDashboard() {
                 <Link href="/members" className="flex-1 md:flex-none">
                   <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#121113] dark:bg-[#F7F7F2] text-[#F7F7F2] dark:text-[#121113] font-bold active:scale-95 transition-all hover:brightness-150 dark:hover:brightness-95">
                     <Plus className="w-5 h-5" />
-                    Nuevo Miembro
+                    Nuevo Alumno
                   </button>
                 </Link>
               )}
-              {/* Igual que "Nuevo Miembro": es un atajo a cobrar, así que pide
+              {/* Igual que "Nuevo Alumno": es un atajo a cobrar, así que pide
                   el permiso de cobrar y no el de ver plata. El Mestre ve la
                   recaudación de toda la marca pero no registra pagos. */}
               {allows('managePayments') && (
@@ -260,14 +260,14 @@ export default function AdminDashboard() {
             )}
 
             <StatsCard
-              title="Socios al día"
+              title="Alumnos al día"
               value={stats?.members_active ?? 0}
               icon={<UserCheck className="w-5 h-5" />}
               tone="brand"
               /* El ratio activos/total antes había que sacarlo de cabeza
                  comparando dos tarjetas separadas. */
               meter={activeRatio}
-              hint={`de ${stats?.members_total ?? 0} socios · ${activeRatio}%`}
+              hint={`de ${stats?.members_total ?? 0} alumnos · ${activeRatio}%`}
               loading={loading}
             />
 
@@ -297,7 +297,7 @@ export default function AdminDashboard() {
 
             {!showMoney && (
               <StatsCard
-                title="Total socios"
+                title="Total alumnos"
                 value={stats?.members_total ?? 0}
                 icon={<Users className="w-5 h-5" />}
                 tone="neutral"

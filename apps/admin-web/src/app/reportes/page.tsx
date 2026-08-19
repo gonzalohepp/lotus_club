@@ -25,15 +25,6 @@ import { Button } from '@/components/ui/button'
 import StyledSelect from '../components/common/StyledSelect'
 import { exportToExcel } from '@/lib/excelExport'
 
-// Esta página usa una paleta oscura fija (no sigue el toggle de tema global),
-// así que los StyledSelect acá se estilizan explícitamente para matchear ese
-// fondo siempre-oscuro en vez de usar los tokens toggle-aware por default.
-const darkSelectProps = {
-    triggerClassName: 'bg-background border-carbon-200 dark:border-white/10 text-carbon-900 dark:text-white font-bold appearance-none hover:bg-carbon-950 focus-visible:ring-kuro-500/50',
-    contentClassName: 'bg-white dark:bg-white/5 border-carbon-200 dark:border-white/10',
-    itemClassName: 'text-carbon-900 dark:text-white focus:bg-carbon-800',
-}
-
 /* ================= Tipos ================= */
 interface AttendanceRecord {
     id: number; date: string; created_at: string; user_id: string
@@ -83,11 +74,11 @@ export default function ReportesPage() {
                             Panel de <span className="text-kuro-600 dark:text-kuro-400">Reportes</span>
                         </h1>
                         <p className="text-carbon-500 dark:text-carbon-400 font-medium text-sm">
-                            {activeTab === 'asistencia' ? 'Historial de asistencia con filtros avanzados.' : 'Miembros activos sin asistencia reciente.'}
+                            {activeTab === 'asistencia' ? 'Historial de asistencia con filtros avanzados.' : 'Alumnos activos sin asistencia reciente.'}
                         </p>
                     </div>
 
-                    <div className="flex bg-white dark:bg-white/5/50 p-1 rounded-xl border border-carbon-200 dark:border-white/10 self-start md:self-center">
+                    <div className="flex bg-white dark:bg-white/5 p-1 rounded-xl border border-carbon-200 dark:border-white/10 self-start md:self-center">
                         <button
                             onClick={() => setActiveTab('asistencia')}
                             className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'asistencia'
@@ -312,7 +303,6 @@ function AsistenciaReport() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
                     <StyledSelect
                         icon={Layers}
-                        {...darkSelectProps}
                         value={filterClass}
                         onChange={(v) => { setFilterClass(v); setVisibleCount(50) }}
                         options={[
@@ -322,7 +312,6 @@ function AsistenciaReport() {
                     />
                     <StyledSelect
                         icon={Filter}
-                        {...darkSelectProps}
                         value={filterMember}
                         onChange={(v) => { setFilterMember(v); setVisibleCount(50) }}
                         options={[
@@ -359,7 +348,7 @@ function AsistenciaReport() {
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead className="hidden sm:table-header-group">
-                                <tr className="border-b border-carbon-200 dark:border-white/10 bg-carbon-100 dark:bg-white/10/50">
+                                <tr className="border-b border-carbon-200 dark:border-white/10 bg-carbon-100 dark:bg-white/10">
                                     <th className="px-3 md:px-4 py-3 text-[10px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest">Fecha / Hora</th>
                                     <th className="px-3 md:px-4 py-3 text-[10px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest">Alumno</th>
                                     <th className="px-3 md:px-4 py-3 text-[10px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest">Clase</th>
@@ -367,7 +356,7 @@ function AsistenciaReport() {
                             </thead>
                             <tbody className="divide-y divide-carbon-800/50">
                                 {visibleRecords.map((r) => (
-                                    <tr key={r.id} className="hover:bg-carbon-800/30 transition-colors block sm:table-row border-b border-carbon-200 dark:border-white/10/50 sm:border-0 py-2 sm:py-0">
+                                    <tr key={r.id} className="hover:bg-carbon-800/30 transition-colors block sm:table-row border-b border-carbon-200 dark:border-white/10 sm:border-0 py-2 sm:py-0">
                                         <td className="px-3 md:px-4 py-2 sm:py-3 block sm:table-cell">
                                             <span className="text-[9px] font-black text-carbon-600 dark:text-carbon-300 uppercase tracking-widest sm:hidden">Fecha</span>
                                             <div className="flex flex-col">
@@ -531,7 +520,7 @@ function AusenciaReport() {
                     <p className="text-3xl font-black text-carbon-900 dark:text-white">
                         {members.length > 0 ? Math.round((absentMembers.length / members.length) * 100) : 0}%
                     </p>
-                    <p className="text-[10px] text-kuro-400 font-bold mt-1">Sobre miembros activos</p>
+                    <p className="text-[10px] text-kuro-400 font-bold mt-1">Sobre alumnos activos</p>
                 </div>
                 <div className="p-4 rounded-xl bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 relative overflow-hidden">
                     <div className="absolute top-2 right-3 opacity-10"><Calendar className="w-12 h-12 text-kuro-500" /></div>
@@ -552,7 +541,7 @@ function AusenciaReport() {
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead className="hidden sm:table-header-group">
-                                <tr className="border-b border-carbon-200 dark:border-white/10 bg-carbon-100 dark:bg-white/10/50">
+                                <tr className="border-b border-carbon-200 dark:border-white/10 bg-carbon-100 dark:bg-white/10">
                                     <th className="px-3 md:px-4 py-3 text-[10px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest">Alumno</th>
                                     <th className="px-3 md:px-4 py-3 text-[10px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest">Última Asistencia</th>
                                     <th className="px-3 md:px-4 py-3 text-[10px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest text-right">Acciones</th>
@@ -560,7 +549,7 @@ function AusenciaReport() {
                             </thead>
                             <tbody className="divide-y divide-carbon-800/50">
                                 {absentMembers.map((m) => (
-                                    <tr key={m.user_id} className="hover:bg-carbon-800/30 transition-colors group block sm:table-row border-b border-carbon-200 dark:border-white/10/50 sm:border-0 py-2 sm:py-0">
+                                    <tr key={m.user_id} className="hover:bg-carbon-800/30 transition-colors group block sm:table-row border-b border-carbon-200 dark:border-white/10 sm:border-0 py-2 sm:py-0">
                                         <td className="px-3 md:px-4 py-2 sm:py-4 block sm:table-cell">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-8 h-8 rounded-full bg-carbon-100 dark:bg-white/10 border border-carbon-200 dark:border-white/15 flex items-center justify-center font-bold text-kuro-400 text-xs flex-shrink-0">{m.first_name?.[0]}{m.last_name?.[0]}</div>
@@ -585,7 +574,7 @@ function AusenciaReport() {
                                                 variant="ghost"
                                                 className="bg-kuro-500/10 hover:bg-kuro-500 text-kuro-400 hover:text-white border border-kuro-500/20 rounded-xl px-3 sm:px-4 py-3 sm:py-4 font-bold text-xs uppercase tracking-widest transition-all gap-1.5"
                                                 onClick={() => {
-                                                    const msg = encodeURIComponent(`Hola ${m.first_name}, te extrañamos en ${marca}! 🥋 Notamos que hace unos días no venís a entrenar. ¿Todo bien?`)
+                                                    const msg = encodeURIComponent(`Hola ${m.first_name}, te extrañamos en ${marca}! Notamos que hace unos días no venís a entrenar. ¿Todo bien?`)
                                                     const phone = m.phone?.replace(/\D/g, '') || ''
                                                     window.open(`https://wa.me/${phone}?text=${msg}`, '_blank')
                                                 }}

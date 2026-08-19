@@ -302,7 +302,7 @@ export default function SubscriptionModal({
                                     <div className="flex items-center gap-2 mt-2">
                                         <div className={`w-2 h-2 rounded-full animate-pulse ${isNewMember ? 'bg-kuro-400' : multiplier > 1 ? 'bg-warn-500' : 'bg-kuro-500'}`} />
                                         <span className={`text-[10px] font-black uppercase tracking-widest ${isNewMember ? 'text-kuro-400' : multiplier > 1 ? 'text-warn-500' : 'text-kuro-500'}`}>
-                                            {isNewMember ? '✨ Beneficio Alumno Nuevo (Precio Flat)' : multiplier > 1 ? 'Incluye 20% Recargo (Post día 10)' : 'Cálculo Automático'}
+                                            {isNewMember ? 'Beneficio Alumno Nuevo (Precio Flat)' : multiplier > 1 ? 'Incluye 20% Recargo (Post día 10)' : 'Cálculo Automático'}
                                         </span>
                                     </div>
                                 </div>

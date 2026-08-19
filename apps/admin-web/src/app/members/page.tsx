@@ -183,7 +183,7 @@ function MembersContent() {
   const onDelete = async (user_id: string) => { setConfirmingId(user_id) }
 
   const onQuickRenew = async (m: Row) => {
-    const fullName = [m.first_name, m.last_name].filter(Boolean).join(' ').trim() || 'Socio'
+    const fullName = [m.first_name, m.last_name].filter(Boolean).join(' ').trim() || 'Alumno'
     const confirm = window.confirm(`¿Confirmar renovación rápida de vencimiento para ${fullName}?`)
     if (!confirm) return
 
@@ -251,12 +251,12 @@ function MembersContent() {
       if (!res.ok) throw new Error(data.error || 'Error desconocido')
       setConfirmingId(null)
       await load()
-      setSuccessMsg('Miembro eliminado correctamente')
-      toast.success('Miembro eliminado correctamente')
+      setSuccessMsg('Alumno eliminado correctamente')
+      toast.success('Alumno eliminado correctamente')
     } catch (error: unknown) {
       console.error('[Members] onDelete error:', error)
       const message = error instanceof Error ? error.message : 'Error desconocido'
-      toast.error('Error eliminando miembro: ' + message)
+      toast.error('Error eliminando alumno: ' + message)
     } finally {
       setDeletingId(null)
     }
@@ -354,7 +354,7 @@ function MembersContent() {
         })
         if (!res.ok) {
           const data = await res.json()
-          throw new Error(data.error || 'Error al crear el miembro')
+          throw new Error(data.error || 'Error al crear el alumno')
         }
         toast.success('Usuario creado correctamente')
       }
@@ -385,7 +385,7 @@ function MembersContent() {
                 ADMINISTRACIÓN
               </div>
               <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-carbon-900 dark:text-white">
-                Gestión de <span className="text-kuro-600 dark:text-kuro-400">Miembros</span>
+                Gestión de <span className="text-kuro-600 dark:text-kuro-400">Alumnos</span>
               </h1>
               <p className="mt-1 text-carbon-500 dark:text-carbon-400 font-medium text-sm md:text-base">
                 {activeDojo
@@ -511,7 +511,7 @@ function MembersContent() {
           {!loading && filtered.length > 0 && (
             <div className="mt-4 text-center">
               <p className="text-sm text-carbon-500 dark:text-carbon-400 font-medium">
-                Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} de {filtered.length} miembros
+                Mostrando {((currentPage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} de {filtered.length} alumnos
               </p>
             </div>
           )}
@@ -540,7 +540,7 @@ function MembersContent() {
               </div>
               <h3 className="text-2xl font-black text-carbon-900 dark:text-white tracking-tight mb-2 uppercase">¿Estás seguro?</h3>
               <p className="text-carbon-500 dark:text-carbon-400 text-sm font-medium mb-8">
-                Esta acción eliminará permanentemente al miembro, sus inscripciones y su historial. No se puede deshacer.
+                Esta acción eliminará permanentemente al alumno, sus inscripciones y su historial. No se puede deshacer.
               </p>
               <div className="flex flex-col gap-3">
                 <button

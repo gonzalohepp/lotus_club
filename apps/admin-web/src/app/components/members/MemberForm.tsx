@@ -277,11 +277,11 @@ export default function MemberForm({
             />
           </div>
 
-          <div className="relative group md:col-span-2">
-            <div className="absolute -top-6 left-0 text-[10px] font-black text-carbon-400 uppercase tracking-widest">Rol de Usuario</div>
+          <div className="group md:col-span-2">
+            <div className="mb-2 text-[10px] font-black text-carbon-400 uppercase tracking-widest">Rol de Usuario</div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {[
-                { id: 'member', label: 'Socio', icon: User },
+                { id: 'member', label: 'Alumno', icon: User },
                 { id: 'instructor', label: 'Instructor', icon: Shield },
                 { id: 'becado', label: 'Becado', icon: Award },
                 { id: 'admin', label: 'Admin', icon: UserPlus }
@@ -314,51 +314,57 @@ export default function MemberForm({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="relative group col-span-1 md:col-span-1">
-            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-kuro-500 transition-colors" />
-            <input
-              className={`${inputClass} focus:ring-kuro-500/10 focus:border-kuro-500/50`}
-              type="date"
-              lang="es"
-              value={form.last_payment_date}
-              onChange={(e) => {
-                const val = e.target.value
-                const baseDate = new Date(val + 'T12:00:00')
-                const expiration = lastDayOfMonth(baseDate).toISOString().slice(0, 10)
-                setForm(prev => ({
-                  ...prev,
-                  last_payment_date: val,
-                  next_payment_due: expiration
-                }))
-              }}
-            />
-            <div className="absolute -top-6 left-0 text-[10px] font-black text-carbon-400 uppercase tracking-widest">Último Pago / Renovación</div>
+          <div className="group col-span-1 md:col-span-1">
+            <div className="mb-2 text-[10px] font-black text-carbon-400 uppercase tracking-widest">Último Pago / Renovación</div>
+            <div className="relative">
+              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-kuro-500 transition-colors" />
+              <input
+                className={`${inputClass} focus:ring-kuro-500/10 focus:border-kuro-500/50`}
+                type="date"
+                lang="es"
+                value={form.last_payment_date}
+                onChange={(e) => {
+                  const val = e.target.value
+                  const baseDate = new Date(val + 'T12:00:00')
+                  const expiration = lastDayOfMonth(baseDate).toISOString().slice(0, 10)
+                  setForm(prev => ({
+                    ...prev,
+                    last_payment_date: val,
+                    next_payment_due: expiration
+                  }))
+                }}
+              />
+            </div>
           </div>
 
-          <div className="relative group col-span-1 md:col-span-1">
-            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-kuro-500 transition-colors" />
-            <input
-              className={`${inputClass} bg-carbon-100 dark:bg-carbon-900 text-carbon-500 dark:text-carbon-400 cursor-not-allowed`}
-              type="date"
-              lang="es"
-              value={form.start_date}
-              readOnly
-            />
-            <div className="absolute -top-6 left-0 text-[10px] font-black text-carbon-400 uppercase tracking-widest">Fecha de Alta (Antigüedad)</div>
+          <div className="group col-span-1 md:col-span-1">
+            <div className="mb-2 text-[10px] font-black text-carbon-400 uppercase tracking-widest">Fecha de Alta (Antigüedad)</div>
+            <div className="relative">
+              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400 group-focus-within:text-kuro-500 transition-colors" />
+              <input
+                className={`${inputClass} bg-carbon-100 dark:bg-carbon-900 text-carbon-500 dark:text-carbon-400 cursor-not-allowed`}
+                type="date"
+                lang="es"
+                value={form.start_date}
+                readOnly
+              />
+            </div>
           </div>
 
-          <div className="relative group col-span-1 md:col-span-1 opacity-60">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400">
-              <Calendar className="w-5 h-5" />
+          <div className="group col-span-1 md:col-span-1 opacity-60">
+            <div className="mb-2 text-[10px] font-black text-carbon-400 uppercase tracking-widest">Vence Automáticamente</div>
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-carbon-400">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div className={`${inputClass} flex items-center bg-carbon-100 dark:bg-carbon-900 cursor-not-allowed`}>
+                {form.next_payment_due === '2099-12-31'
+                  ? 'VITALICIA'
+                  : form.next_payment_due
+                    ? new Date(form.next_payment_due + 'T12:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                    : '—'}
+              </div>
             </div>
-            <div className={`${inputClass} flex items-center bg-carbon-100 dark:bg-carbon-900 cursor-not-allowed`}>
-              {form.next_payment_due === '2099-12-31'
-                ? 'VITALICIA'
-                : form.next_payment_due
-                  ? new Date(form.next_payment_due + 'T12:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-                  : '—'}
-            </div>
-            <div className="absolute -top-6 left-0 text-[10px] font-black text-carbon-400 uppercase tracking-widest">Vence Automáticamente</div>
           </div>
         </div>
       </section>

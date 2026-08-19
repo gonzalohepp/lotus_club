@@ -26,6 +26,10 @@ type Props =
   | { data: ClassRow; classItem?: never; canManage?: boolean; onEdit: () => void; onDelete: () => void }
 
 const colorSchemes: Record<string, { bg: string, text: string, border: string, glow: string, icon: string, color: string }> = {
+  // Token de marca: es el que usan las clases nuevas desde que se sacó el
+  // selector de cromática. Los nombres de abajo quedan para las clases
+  // que ya tenían un color elegido con el selector viejo.
+  kuro: { bg: 'bg-kuro-50', text: 'text-kuro-700', border: 'border-kuro-200', glow: 'shadow-kuro-500/40', icon: 'text-kuro-500', color: '#899878' },
   blue: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', glow: 'shadow-blue-500/40', icon: 'text-blue-500', color: '#3b82f6' },
   red: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', glow: 'shadow-red-500/40', icon: 'text-red-500', color: '#ef4444' },
   green: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', glow: 'shadow-emerald-500/40', icon: 'text-emerald-500', color: '#10b981' },
@@ -47,7 +51,7 @@ function fmtTime(t?: string | null) {
 
 export default function ClassCard(props: Props) {
   const item: ClassRow = (('classItem' in props ? props.classItem : props.data) as ClassRow)!
-  const scheme = colorSchemes[item?.color ?? 'blue'] ?? colorSchemes.blue
+  const scheme = colorSchemes[item?.color ?? 'kuro'] ?? colorSchemes.kuro
   const canManage = props.canManage ?? true
 
   const days = item?.days && item.days.length ? item.days.join(' · ') : 'Sin días'
@@ -84,7 +88,7 @@ export default function ClassCard(props: Props) {
             </h3>
           </div>
           <p className="mt-2 pl-4 text-[10px] font-black uppercase tracking-widest text-carbon-400">
-            {item?.category === 'acondicionamiento-fisico' ? 'Fisico' : 'Artes Marciales'}
+            {item?.category === 'acondicionamiento-fisico' ? 'Físico' : 'Artes Marciales'}
           </p>
         </div>
 

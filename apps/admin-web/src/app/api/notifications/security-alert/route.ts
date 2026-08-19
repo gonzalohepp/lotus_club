@@ -89,7 +89,7 @@ export async function POST(req: Request) {
         )
 
         const payload = JSON.stringify({
-            title: isFraudAttempt ? '⚠️ ALERTA DE SEGURIDAD' : '🚩 Alerta de Acceso',
+            title: isFraudAttempt ? 'ALERTA DE SEGURIDAD' : 'Alerta de Acceso',
             body: isFraudAttempt
                 ? `REPETIDAS NEGATIVAS: ${memberName} ha fallado múltiples intentos.`
                 : `${memberName}: ${record.reason || 'Acceso denegado'}`,

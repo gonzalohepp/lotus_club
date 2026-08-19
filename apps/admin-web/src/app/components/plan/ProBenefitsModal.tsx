@@ -7,7 +7,7 @@ import { useTenant } from '@/lib/tenant/context'
 
 const FEATURE_LABELS: Record<FeatureKey, string> = {
     qr: 'QR de acceso',
-    members: 'Gestión de miembros',
+    members: 'Gestión de alumnos',
     classes: 'Gestión de clases',
     accessLog: 'Historial de accesos',
     dojos: 'Sedes',

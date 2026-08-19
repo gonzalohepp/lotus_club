@@ -67,7 +67,7 @@ function buildMessage(
         const pct = firstCharged?.surcharge_pct
 
         return {
-            title: '📢 ¡Evitá recargos!',
+            title: '¡Evitá recargos!',
             message:
                 limit && pct
                     ? `Acordate de abonar tu cuota antes del día ${limit} para evitar el ${pct}% de recargo. ¡Te esperamos!`
@@ -79,7 +79,7 @@ function buildMessage(
         const blockDay = blockingTier?.from_day
 
         return {
-            title: '⚠️ Tu pase está por vencer',
+            title: 'Tu pase está por vencer',
             message: blockDay
                 ? `Últimos días para regularizar tu cuota. A partir del día ${blockDay} el acceso se bloquea automáticamente.`
                 : 'Últimos días para regularizar tu cuota antes de que se bloquee el acceso.',

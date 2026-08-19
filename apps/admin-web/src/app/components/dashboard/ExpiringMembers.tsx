@@ -32,7 +32,7 @@ export default function ExpiringMembers({ rows, loading }: { rows: Expiring[]; l
     const name = m.first_name || 'Alumno'
     // La firma sale de la marca activa: mandarle a un alumno de Lotus un
     // mensaje que dice "Beleza Dojo" es peor que no mandarlo.
-    const msg = `Hola ${name}! Te escribimos de ${marca} para recordarte que tu membresía vence el ${fmtDate(m.end_date)}. ¡Te esperamos! 🥋`
+    const msg = `Hola ${name}! Te escribimos de ${marca} para recordarte que tu membresía vence el ${fmtDate(m.end_date)}. ¡Te esperamos!`
     const phone = m.phone?.replace(/\D/g, '') || ''
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank')
   }

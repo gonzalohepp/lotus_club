@@ -161,7 +161,7 @@ export default function GuestAccessDialog({
                     <Users className="w-5 h-5" />
                   </span>
                   <span>
-                    <span className="block font-bold">Viene de otra academia</span>
+                    <span className="block font-bold">Viene de otra sede</span>
                     <span className="block text-xs text-carbon-500 dark:text-carbon-400">
                       Alumno de otra sede de la marca
                     </span>
@@ -210,13 +210,13 @@ export default function GuestAccessDialog({
               <DialogHeader>
                 <DialogTitle className="text-2xl font-black text-center">Visita de otra sede</DialogTitle>
                 <DialogDescription className="text-center text-sm mt-2">
-                  Elegí la academia y después el alumno.
+                  Elegí la sede y después el alumno.
                 </DialogDescription>
               </DialogHeader>
 
               <div className="mt-6 space-y-3">
                 <StyledSelect
-                  placeholder="Academia de origen"
+                  placeholder="Sede de origen"
                   value={originDojo}
                   onChange={pickDojo}
                   options={dojos.map(d => ({ value: d.id, label: d.name }))}

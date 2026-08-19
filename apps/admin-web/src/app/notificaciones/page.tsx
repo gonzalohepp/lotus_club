@@ -305,7 +305,7 @@ export default function NotificationsPage() {
                         <div>
                             <div className="flex items-center gap-2 mb-3">
                                 <span className="inline-flex items-center rounded-full bg-kuro-100 dark:bg-kuro-900/40 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-kuro-600 dark:text-kuro-400">
-                                    Communications Hub
+                                    Comunicaciones
                                 </span>
                             </div>
                             <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-carbon-900 dark:text-white">

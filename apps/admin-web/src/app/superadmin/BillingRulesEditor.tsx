@@ -263,7 +263,7 @@ function Simulator({ config }: { config: BillingConfig }) {
                                 <td className="py-1.5 text-right">
                                     ${Math.round(base * r.multiplier).toLocaleString('es-AR')}
                                 </td>
-                                <td className="py-1.5 text-center">{r.blocksAccess ? '🔴' : '🟢'}</td>
+                                <td className="py-1.5 text-center">{r.blocksAccess ? 'Bloquea' : 'Permite'}</td>
                             </tr>
                         )
                     })}

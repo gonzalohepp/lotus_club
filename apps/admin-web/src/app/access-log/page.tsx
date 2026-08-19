@@ -146,7 +146,7 @@ export default function AccessLogPage() {
       log.reason ?? '',
     ])
 
-    const headers = ['Fecha y Hora', 'Miembro', 'Resultado', 'Razón']
+    const headers = ['Fecha y Hora', 'Alumno', 'Resultado', 'Razón']
     const csv = [headers, ...rows].map((r) => r.map(escapeCsv).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
@@ -239,7 +239,7 @@ export default function AccessLogPage() {
                 type="text"
                 value={q}
                 onChange={(e) => setQWrapper(e.target.value)}
-                placeholder="Buscar por nombre de socio..."
+                placeholder="Buscar por nombre de alumno..."
                 className="w-full h-12 bg-carbon-50 dark:bg-carbon-900 border border-carbon-200 dark:border-carbon-700 rounded-2xl px-4 pl-11 text-sm font-bold text-carbon-700 dark:text-carbon-200 outline-none focus:ring-4 focus:ring-kuro-500/10 focus:border-kuro-500/50 transition-all"
               />
             </div>
@@ -290,7 +290,7 @@ export default function AccessLogPage() {
               <thead>
                 <tr className="bg-carbon-50/50 dark:bg-carbon-900/50 border-b border-carbon-100 dark:border-carbon-700">
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-carbon-400">Fecha y Hora</th>
-                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-carbon-400">Socio</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-carbon-400">Alumno</th>
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-carbon-400">Resultado</th>
                   <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-carbon-400">Razón / Notas</th>
                 </tr>

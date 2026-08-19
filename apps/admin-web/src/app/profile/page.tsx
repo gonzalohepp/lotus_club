@@ -28,6 +28,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import SubscriptionModal from '../components/profile/SubscriptionModal'
+import { ClassIcon } from '../components/kuro/ClassIcon'
 import PhotoCropper from '../components/profile/PhotoCropper'
 import MemberGrades from '../components/profile/MemberGrades'
 import { fmtARS, fmtDate, fmtSchedule } from '@/lib/format'
@@ -69,15 +70,6 @@ type AttendanceRow = {
   result: string
   reason: string | null
   classes?: { name: string }[]
-}
-
-function getClassEmoji(name: string) {
-  const n = name.toLowerCase()
-  if (n.includes('fisico') || n.includes('acondicionamiento')) return '💪'
-  if (n.includes('mma')) return '🥊'
-  if (n.includes('grappling')) return '🤼'
-  if (n.includes('bjj') || n.includes('jiu') || n.includes('judo') || n.includes('kids')) return '🥋'
-  return '🥋'
 }
 
 function daysDiff(a: Date, b: Date) {
@@ -190,7 +182,7 @@ function ClassItem({ c, idx }: { c: ClassRow; idx: number }) {
     >
       <div className="flex items-center gap-3 mb-3">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shadow-sm bg-white dark:bg-carbon-700">
-          {getClassEmoji(c.name)}
+          <ClassIcon name={c.name} className="w-4 h-4 text-carbon-700 dark:text-carbon-200" />
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-black text-carbon-900 dark:text-white uppercase tracking-tight leading-tight truncate text-sm">{c.name}</h3>
@@ -479,7 +471,7 @@ export default function ProfilePage() {
                     </div>
 
                     <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-carbon-900 dark:text-white">
-                      {fullName || member.first_name || 'Miembro'}
+                      {fullName || member.first_name || 'Alumno'}
                     </h1>
                     <p className="text-sm text-carbon-400 font-medium mb-3">{member.email}</p>
 
@@ -488,7 +480,7 @@ export default function ProfilePage() {
                       <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-kuro-100 dark:bg-kuro-900/40 text-kuro-600 dark:text-kuro-400 text-xs font-black uppercase tracking-wider">
                         {member.role === 'admin' ? 'Administrador' :
                           member.role === 'instructor' ? 'Instructor' :
-                            member.role === 'becado' ? 'Becado' : 'Socio'}
+                            member.role === 'becado' ? 'Becado' : 'Alumno'}
                       </span>
                       <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${isActive ? 'bg-kuro-100 dark:bg-kuro-900/40 text-kuro-600 dark:text-kuro-400' : 'bg-alert-100 dark:bg-alert-900/40 text-alert-600 dark:text-alert-400'}`}>
                         {isActive ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
@@ -630,13 +622,13 @@ export default function ProfilePage() {
                       </div>
                       <div>
                         <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-carbon-900 dark:text-white">
-                          Hola, <span className="text-kuro-600 dark:text-kuro-400">{member.first_name || 'Miembro'}</span>
+                          Hola, <span className="text-kuro-600 dark:text-kuro-400">{member.first_name || 'Alumno'}</span>
                         </h1>
                         <p className="text-carbon-500 dark:text-carbon-400 text-lg font-medium flex items-center gap-2">
                           <span>{member.email}</span>
                           <span>•</span>
                           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-kuro-100 dark:bg-kuro-900/40 text-kuro-600 dark:text-kuro-400 text-xs font-black uppercase tracking-wider">
-                            {member.role === 'admin' ? 'Administrador' : member.role === 'instructor' ? 'Instructor' : member.role === 'becado' ? 'Becado' : 'Socio Activo'}
+                            {member.role === 'admin' ? 'Administrador' : member.role === 'instructor' ? 'Instructor' : member.role === 'becado' ? 'Becado' : 'Alumno Activo'}
                           </span>
                         </p>
                       </div>

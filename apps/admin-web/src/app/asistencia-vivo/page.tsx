@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { evaluateBilling } from '@/lib/billing'
 import type { BillingConfig } from '@/lib/tenant/types'
 import { todayAR } from '@/lib/dateUtils'
+import { ClassIcon } from '../components/kuro/ClassIcon'
 
 type ClassRow = {
     id: number
@@ -55,15 +56,6 @@ type AttendanceRaw = {
 }
 
 const DAY_MAP = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sáb']
-
-function getClassEmoji(name: string) {
-    const n = name.toLowerCase()
-    if (n.includes('fisico') || n.includes('acondicionamiento')) return '💪'
-    if (n.includes('mma')) return '🥊'
-    if (n.includes('grappling')) return '🤼'
-    if (n.includes('bjj') || n.includes('jiu') || n.includes('judo') || n.includes('kids')) return '🥋'
-    return '🥋'
-}
 
 /**
   * Etiquetas de estado del alumno. `billing` llega por parámetro porque esta es
@@ -157,7 +149,7 @@ function BottomSheet({
                                     className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shadow shrink-0"
                                     style={{ backgroundColor: cl.color || '#899878' }}
                                 >
-                                    {getClassEmoji(cl.name)}
+                                    <ClassIcon name={cl.name} className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
                                     <p className="text-sm font-black text-carbon-900 dark:text-white uppercase tracking-tight">{cl.name}</p>
@@ -239,7 +231,6 @@ function MobileClassCard({
     currentTime: Date
     onTap: () => void
 }) {
-    const emoji = getClassEmoji(cl.name)
     const [sH, sM] = (cl.start_time || '00:00').split(':').map(Number)
     const currMins = currentTime.getHours() * 60 + currentTime.getMinutes()
     const isAboutToStart = currMins < sH * 60 + sM
@@ -250,13 +241,13 @@ function MobileClassCard({
             animate={{ opacity: 1, y: 0 }}
             whileTap={{ scale: 0.97 }}
             onClick={onTap}
-            className="w-full text-left bg-white dark:bg-white/5/60 border border-carbon-200 dark:border-white/10 rounded-2xl p-4 flex items-center gap-4 active:bg-carbon-50 dark:bg-white/5 transition-colors"
+            className="w-full text-left bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 rounded-2xl p-4 flex items-center gap-4 active:bg-carbon-50 dark:active:bg-white/10 transition-colors"
         >
             <div
                 className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0 shadow"
                 style={{ backgroundColor: cl.color || '#899878' }}
             >
-                {emoji}
+                <ClassIcon name={cl.name} className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -414,7 +405,7 @@ export default function AsistenciaVivoPage() {
                     </div>
 
                     <div className="flex items-center gap-3 w-full md:w-auto">
-                        <div className="flex-1 md:flex-none bg-white dark:bg-white/5/80 backdrop-blur-xl border border-carbon-200 dark:border-white/10 px-5 py-3 rounded-2xl flex items-center gap-3 shadow-2xl">
+                        <div className="flex-1 md:flex-none bg-white dark:bg-white/5 backdrop-blur-xl border border-carbon-200 dark:border-white/10 px-5 py-3 rounded-2xl flex items-center gap-3 shadow-2xl">
                             <Clock className="w-4 h-4 text-kuro-500 shrink-0" />
                             <div>
                                 <p className="text-[9px] font-black text-carbon-500 dark:text-carbon-400 uppercase tracking-widest leading-none mb-0.5">Hora Actual</p>
@@ -484,13 +475,13 @@ export default function AsistenciaVivoPage() {
                                         {futureClasses.map(fcl => (
                                             <div
                                                 key={fcl.id}
-                                                className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-white/5/40 border border-carbon-200 dark:border-white/5"
+                                                className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/5"
                                             >
                                                 <div
                                                     className="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0"
                                                     style={{ backgroundColor: fcl.color || '#899878' }}
                                                 >
-                                                    {getClassEmoji(fcl.name)}
+                                                    <ClassIcon name={fcl.name} className="w-4 h-4 text-white" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-xs font-black text-carbon-900 dark:text-white uppercase tracking-tight truncate">{fcl.name}</p>
@@ -527,14 +518,13 @@ export default function AsistenciaVivoPage() {
                                         {activeClasses.map((cl) => {
                                             const attendees = attendance.filter(a => a.class_id === cl.id)
                                             const isExpanded = expandedClasses.includes(cl.id)
-                                            const emoji = getClassEmoji(cl.name)
                                             return (
                                                 <motion.div
                                                     key={cl.id}
                                                     layout
                                                     initial={{ opacity: 0, y: 10 }}
                                                     animate={{ opacity: 1, y: 0 }}
-                                                    className="bg-white dark:bg-white/5/50 border border-carbon-200 dark:border-white/10 backdrop-blur-xl rounded-2xl overflow-hidden shadow-xl"
+                                                    className="bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/10 backdrop-blur-xl rounded-2xl overflow-hidden shadow-xl"
                                                 >
                                                     <button
                                                         onClick={() => toggleExpand(cl.id)}
@@ -545,7 +535,7 @@ export default function AsistenciaVivoPage() {
                                                                 className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 shadow-lg"
                                                                 style={{ backgroundColor: cl.color || '#899878' }}
                                                             >
-                                                                {emoji}
+                                                                <ClassIcon name={cl.name} className="w-5 h-5 text-white" />
                                                             </div>
                                                             <div className="min-w-0">
                                                                 <div className="flex items-center gap-2">
@@ -663,13 +653,13 @@ export default function AsistenciaVivoPage() {
                                         futureClasses.map((fcl) => (
                                             <div
                                                 key={fcl.id}
-                                                className="p-5 rounded-3xl bg-white dark:bg-white/5/30 border border-carbon-200 dark:border-white/5 flex items-center gap-4 group hover:bg-white/5 transition-all"
+                                                className="p-5 rounded-3xl bg-white dark:bg-white/5 border border-carbon-200 dark:border-white/5 flex items-center gap-4 group hover:bg-white/5 transition-all"
                                             >
                                                 <div
                                                     className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl shrink-0 shadow-lg"
                                                     style={{ backgroundColor: fcl.color || '#899878' }}
                                                 >
-                                                    {getClassEmoji(fcl.name)}
+                                                    <ClassIcon name={fcl.name} className="w-5 h-5 text-white" />
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-xs font-black text-carbon-900 dark:text-white uppercase tracking-tight truncate">{fcl.name}</p>

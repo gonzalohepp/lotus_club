@@ -34,10 +34,35 @@ const startOfMonth = (d = new Date()) => new Date(d.getFullYear(), d.getMonth(),
 const endOfMonth = (d = new Date()) => new Date(d.getFullYear(), d.getMonth() + 1, 0)
 const shortDay = (d: Date) => d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })
 
+/**
+ * Nombre para los exports. Sin esto el Excel salía con el UUID del usuario: las
+ * consultas traían `user_id` pelado y `exportToExcel` vuelca el objeto tal cual,
+ * así que la columna quedaba inservible para quien abre el archivo.
+ */
+const nombreDe = (
+  p: { first_name: string | null; last_name: string | null }
+   | { first_name: string | null; last_name: string | null }[]
+   | null | undefined
+) => {
+  const perfil = Array.isArray(p) ? p[0] : p
+  if (!perfil) return 'Sin nombre'
+  return `${perfil.first_name ?? ''} ${perfil.last_name ?? ''}`.trim() || 'Sin nombre'
+}
+
+const fmtFecha = (v: string | null | undefined) =>
+  v ? new Date(v).toLocaleDateString('es-AR') : ''
+
+const fmtHora = (v: string | null | undefined) =>
+  v ? new Date(v).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : ''
+
 /* =============== tipos =============== */
+/** El embed de PostgREST devuelve objeto o array según la cardinalidad. */
+type ProfileRef = { first_name: string | null; last_name: string | null }
+
 interface Payment {
   user_id: string; amount: number; method: string | null
   paid_at: string | null; period_from: string | null; period_to: string | null
+  profiles?: ProfileRef | ProfileRef[] | null
 }
 interface Membership {
   member_id: string; start_date: string | null; end_date: string | null; type: string | null
@@ -129,7 +154,18 @@ export default function MetricasPage() {
       const ninetyDaysAgo = addDays(today(), -90)
       const { data: pays } = await supabase
         .from('payments')
-        .select('user_id,amount,method,paid_at,period_from,period_to')
+        .select(`
+          user_id,
+          amount,
+          method,
+          paid_at,
+          period_from,
+          period_to,
+          profiles:user_id (
+            first_name,
+            last_name
+          )
+        `)
         .eq('dojo_id', dojoId ?? NO_DOJO)
         .gte('paid_at', ninetyDaysAgo.toISOString())
         .order('paid_at', { ascending: true })
@@ -257,9 +293,7 @@ export default function MetricasPage() {
     filteredUsersForRanking.forEach(a => {
       if (!a.user_id) return
       if (!counts[a.user_id]) {
-        const p = Array.isArray(a.profiles) ? a.profiles[0] : a.profiles
-        const name = p ? `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() : 'Sin nombre'
-        counts[a.user_id] = { count: 0, name: name || 'Sin nombre' }
+        counts[a.user_id] = { count: 0, name: nombreDe(a.profiles) }
       }
       counts[a.user_id].count++
     })
@@ -288,6 +322,42 @@ export default function MetricasPage() {
       amount: v,
     }))
   }, [payments])
+
+  /* ================= Exports ================= */
+  /*
+   * Se arman las filas a mano en vez de pasarle el array crudo a
+   * `exportToExcel`: esa función usa `XLSX.json_to_sheet`, que toma las claves
+   * del objeto como encabezados. Volcando la fila de la base salían columnas
+   * `user_id` y `profiles` (esta última, "[object Object]") y ninguna con el
+   * nombre del alumno.
+   */
+  const hoy = () => new Date().toISOString().slice(0, 10)
+
+  const exportarPagos = () => {
+    exportToExcel(
+      payments.map((p) => ({
+        Alumno: nombreDe(p.profiles),
+        Monto: Number(p.amount) || 0,
+        'Método': p.method ?? '',
+        'Fecha de pago': fmtFecha(p.paid_at),
+        'Periodo desde': fmtFecha(p.period_from),
+        'Periodo hasta': fmtFecha(p.period_to),
+      })),
+      `Pagos_${hoy()}`
+    )
+  }
+
+  const exportarAsistencia = () => {
+    exportToExcel(
+      recentAccesses.map((a) => ({
+        Alumno: nombreDe(a.profiles),
+        Fecha: fmtFecha(a.scanned_at),
+        Hora: fmtHora(a.scanned_at),
+        Resultado: a.result === 'autorizado' ? 'Autorizado' : 'Denegado',
+      })),
+      `Asistencia_${hoy()}`
+    )
+  }
 
   const attendanceByClass = useMemo(() => {
     const actives: Record<number, number> = {}
@@ -338,14 +408,14 @@ export default function MetricasPage() {
 
             <div className="flex gap-2">
               <button
-                onClick={() => exportToExcel(payments, `Pagos_${new Date().toISOString().slice(0, 10)}`)}
+                onClick={exportarPagos}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-carbon-100 dark:bg-white/10 border border-carbon-200 dark:border-white/15 text-xs font-bold uppercase tracking-widest text-carbon-600 dark:text-carbon-300 hover:bg-carbon-200 dark:hover:bg-white/15 transition-all"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Pagos</span>
               </button>
               <button
-                onClick={() => exportToExcel(recentAccesses, `Asistencia_${new Date().toISOString().slice(0, 10)}`)}
+                onClick={exportarAsistencia}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-carbon-100 dark:bg-white/10 border border-carbon-200 dark:border-white/15 text-xs font-bold uppercase tracking-widest text-carbon-600 dark:text-carbon-300 hover:bg-carbon-200 dark:hover:bg-white/15 transition-all"
               >
                 <FileDown className="w-3.5 h-3.5" />
@@ -357,7 +427,7 @@ export default function MetricasPage() {
           {/* KPIs principales */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <KpiCard
-              label="Socios Activos"
+              label="Alumnos Activos"
               value={activeMembers}
               icon={<Users className="w-5 h-5" />}
               color="indigo"
@@ -383,7 +453,7 @@ export default function MetricasPage() {
 
           {/* KPIs secundarios */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-            <MiniKpi icon={<DollarSign className="w-4 h-4" />} label="Promedio/Socio" value={fmtMoney(averagePerMember)} loading={loading} />
+            <MiniKpi icon={<DollarSign className="w-4 h-4" />} label="Promedio/Alumno" value={fmtMoney(averagePerMember)} loading={loading} />
             <MiniKpi icon={<Clock className="w-4 h-4" />} label="Venc. próx. 7d" value={expiring7d} loading={loading} color="amber" />
             <MiniKpi icon={<AlertTriangle className="w-4 h-4" />} label="En Riesgo" value={membersAtRisk} loading={loading} color={membersAtRisk > 0 ? 'red' : 'emerald'} />
             <MiniKpi icon={<CalendarCheck className="w-4 h-4" />} label="Total Histórico" value={totalMembers} loading={loading} />
@@ -452,10 +522,14 @@ export default function MetricasPage() {
 
               <div className="space-y-2.5">
                 {topUsers.map((u, i) => (
-                  <div key={u.id} className="flex items-center justify-between p-3 rounded-xl bg-carbon-100 dark:bg-white/10/50 hover:bg-carbon-800 transition-colors">
+                  <div key={u.id} className="flex items-center justify-between p-3 rounded-xl bg-carbon-100 dark:bg-white/10 hover:bg-carbon-200 dark:hover:bg-white/15 transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-full bg-carbon-700 flex items-center justify-center font-bold text-xs">
-                        {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-xs shrink-0 ${
+                        i === 0
+                          ? 'bg-kuro-500 text-white'
+                          : 'bg-carbon-200 text-carbon-600 dark:bg-white/10 dark:text-carbon-300'
+                      }`}>
+                        {i + 1}
                       </div>
                       <span className="text-sm font-bold text-carbon-800 dark:text-carbon-200 truncate max-w-[180px]">
                         {u.name}

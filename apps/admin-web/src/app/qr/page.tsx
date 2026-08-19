@@ -312,7 +312,7 @@ export default function QRAcceso() {
 
       ctx.fillStyle = '#A4A5A0'
       ctx.font = '20px sans-serif'
-      ctx.fillText('Escanea este código para ingresar', canvas.width / 2, 115)
+      ctx.fillText('Escaneá este código para ingresar', canvas.width / 2, 115)
 
       // QR Container
       ctx.fillStyle = '#ffffff'
@@ -378,7 +378,7 @@ export default function QRAcceso() {
         <body>
           <div class="container">
             <h1>ACCESO A ${(activeDojo?.name ?? 'TU DOJO').toUpperCase()}</h1>
-            <p>Escanea el código para validar tu ingreso</p>
+            <p>Escaneá el código para validar tu ingreso</p>
             <img src="${qrApiUrl}" alt="QR de Acceso" />
             <div class="brand">${activeDojo?.name ?? 'Dojo'}</div>
             <div class="meta">
@@ -421,7 +421,7 @@ export default function QRAcceso() {
                 Código <span className="text-kuro-600 dark:text-kuro-400">QR</span>
               </h1>
               <p className="max-w-md text-carbon-500 dark:text-carbon-400 font-medium italic">
-                Punto de acceso seguro para miembros del dojo.
+                Punto de acceso seguro para alumnos del dojo.
               </p>
             </motion.div>
 
@@ -593,7 +593,7 @@ export default function QRAcceso() {
                       },
                       {
                         icon: <Smartphone className="w-5 h-5" />,
-                        title: 'Validación de Miembros',
+                        title: 'Validación de Alumnos',
                         desc: 'Los alumnos deberán escanear este código con su cámara. El sistema validará su estado de pago automáticamente.'
                       },
                     ].map((step, idx) => (

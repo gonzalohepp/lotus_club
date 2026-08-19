@@ -53,7 +53,7 @@ export default function MemberFilters({
         onChange={(v) => onChange({ ...value, role: v as Filters['role'] })}
         options={[
           { value: 'todos', label: 'Todos los Roles' },
-          { value: 'member', label: 'Socios' },
+          { value: 'member', label: 'Alumnos' },
           { value: 'instructor', label: 'Instructores' },
           { value: 'becado', label: 'Becados' },
           { value: 'admin', label: 'Administrador' },
