@@ -33,6 +33,7 @@ import { type FeatureKey } from '@/lib/features'
 import { ORG_ROLE_LABEL, type Capability } from '@/lib/tenant/types'
 import { useTenant } from '@/lib/tenant/context'
 import DojoSwitcher from '@/components/tenant/DojoSwitcher'
+import ProfileSwitcher from '@/components/tenant/ProfileSwitcher'
 import UpgradeModal from '../components/plan/UpgradeModal'
 import ProBenefitsModal from '../components/plan/ProBenefitsModal'
 
@@ -75,7 +76,7 @@ const NAV_ITEMS: {
   feature?: FeatureKey
   /**
    * Capacidad requerida por ROL (distinto de `feature`, que depende del PLAN).
-   * "Academias" es de la marca: el administrador de una sucursal no da de alta
+   * "Sedes" es de la marca: el administrador de una sucursal no da de alta
    * sedes, eso lo hace el superadmin de la organización.
    */
   capability?: Capability
@@ -84,13 +85,13 @@ const NAV_ITEMS: {
   { href: '/qr', label: 'QR de Acceso', icon: QrCode, roles: ['admin', 'instructor'], feature: 'qr' },
   { href: '/validate', label: 'Validar Acceso', icon: QrCode, roles: ['admin', 'instructor', 'becado', 'member'] },
   { href: '/profile', label: 'Mi Perfil', icon: UserIcon, roles: ['admin', 'instructor', 'becado', 'member'] },
-  { href: '/members', label: 'Miembros', icon: Users, roles: ['admin'], feature: 'members' },
-  { href: '/admin/academies', label: 'Academias', icon: Building2, roles: ['admin'], feature: 'dojos', capability: 'viewDojos' },
+  { href: '/members', label: 'Alumnos', icon: Users, roles: ['admin'], feature: 'members' },
+  { href: '/admin/academies', label: 'Sedes', icon: Building2, roles: ['admin'], feature: 'dojos', capability: 'viewDojos' },
   { href: '/classes', label: 'Clases', icon: GraduationCap, roles: ['admin'], feature: 'classes' },
   // Pagos y Métricas muestran plata: van con `viewFinance`, que deja afuera
   // al head coach (ve todas las sedes y alumnos, pero no finanzas).
   { href: '/payments', label: 'Pagos', icon: DollarSign, roles: ['admin'], feature: 'payments', capability: 'viewFinance' },
-  { href: '/metricas', label: 'Metricas', icon: ChartLine, roles: ['admin'], feature: 'metrics', capability: 'viewFinance' },
+  { href: '/metricas', label: 'Métricas', icon: ChartLine, roles: ['admin'], feature: 'metrics', capability: 'viewFinance' },
   { href: '/reportes', label: 'Reportes', icon: ClipboardList, roles: ['admin'], feature: 'reports' },
   // El instructor veía quién entrenaba EN ESE MOMENTO, pero no el historial de
   // sus propias clases: eso vivía en /reportes, que es sólo de admin.
@@ -456,7 +457,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/kuro-wordmark.png" alt="Kuro" className="h-9 w-auto" />
             <p className="mt-2 text-[10px] text-[#A7ACA2] font-bold uppercase tracking-widest">
-              {role === 'admin' ? 'Admin Panel' : role === 'instructor' ? 'Instructor Panel' : 'Portal de Alumno'}
+              {role === 'admin' ? 'Panel de Administración' : role === 'instructor' ? 'Panel de Instructor' : 'Portal de Alumno'}
             </p>
           </div>
           {/* Mobile Close Button */}
@@ -498,7 +499,7 @@ export default function AdminLayout({ children, active }: { children: React.Reac
         </div>
 
         {/* Consola de plataforma — sólo el desarrollador. El superadmin de una
-            marca administra sus sedes desde "Academias", pero nunca ve esto:
+            marca administra sus sedes desde "Sedes", pero nunca ve esto:
             acá se listan las demás organizaciones y sus planes. */}
         {isPlatformAdmin && (
           <div className="px-4 pb-3">
@@ -568,6 +569,9 @@ export default function AdminLayout({ children, active }: { children: React.Reac
               )}
             </div>
           </div>
+
+          {/* Con qué sombrero entrás. Se esconde solo si tenés uno solo. */}
+          <ProfileSwitcher />
 
           <button
             onClick={logout}

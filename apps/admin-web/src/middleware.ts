@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { featureForPath, resolveFeatures } from '@/lib/features'
-import { ACTIVE_DOJO_COOKIE } from '@/lib/tenant/constants'
+import { ACTIVE_DOJO_COOKIE, ACTIVE_PROFILE_COOKIE, PROFILE_SEDE } from '@/lib/tenant/constants'
 
 /**
  * middleware.ts — Puerta de entrada multi-tenant.
@@ -124,18 +124,44 @@ export async function middleware(request: NextRequest) {
     ])
 
     const isPlatformAdmin = !!platformAdmin
+
+    /*
+     * Perfil activo. Si la persona eligió entrar como miembro de UNA sede
+     * (`sede:<id>`), el rol de marca no cuenta en esta request: se la trata
+     * exactamente como a alguien que sólo pertenece a esa sucursal.
+     *
+     * Sin esto, un Mestre que entra "como alumno de Quilmes" seguía pasando el
+     * portón por `isOrgStaff` y podía escribir /payments en la barra de
+     * direcciones. RLS no le devolvía nada, así que no era un agujero, pero
+     * tampoco era lo que el selector promete.
+     */
+    const profile = request.cookies.get(ACTIVE_PROFILE_COOKIE)?.value ?? ''
+    const requestedSede = profile.startsWith(`${PROFILE_SEDE}:`)
+        ? profile.slice(PROFILE_SEDE.length + 1)
+        : null
+
+    // Sólo vale si de verdad tiene una fila en esa sede. Una cookie vieja —de
+    // una sede dada de baja, o de otra cuenta en el mismo navegador— tiene que
+    // ser inocua y no dejar a nadie afuera. `server.ts` la trata igual.
+    const sedeProfileId =
+        requestedSede && (memberships ?? []).some((m) => m.dojo_id === requestedSede)
+            ? requestedSede
+            : null
+
     // Superadmin de marca: es staff de todas las sedes de su organización sin
     // necesitar una fila en dojo_members. Sin este chequeo quedaría rebotado a
     // /validate igual que un alumno.
-    const isOrgStaff = (orgRoles ?? []).length > 0
+    const isOrgStaff = !sedeProfileId && (orgRoles ?? []).length > 0
 
     // El dojo activo sale de la cookie que escribe el switcher; si apunta a algo
-    // que ya no existe o al que perdió acceso, cae al primero disponible.
-    const requestedDojo = request.cookies.get(ACTIVE_DOJO_COOKIE)?.value
+    // que ya no existe o al que perdió acceso, cae al primero disponible. En
+    // perfil de sede manda el perfil, no el switcher.
+    const requestedDojo = sedeProfileId ?? request.cookies.get(ACTIVE_DOJO_COOKIE)?.value
     const active =
-        (memberships ?? []).find((m) => m.dojo_id === requestedDojo) ?? (memberships ?? [])[0] ?? null
+        (memberships ?? []).find((m) => m.dojo_id === requestedDojo) ??
+        (sedeProfileId ? null : (memberships ?? [])[0] ?? null)
 
-    if (!isPlatformAdmin && !isOrgStaff) {
+    if ((!isPlatformAdmin || sedeProfileId) && !isOrgStaff) {
         if (!active) {
             console.warn(`[middleware] ${user.email} sin dojo activo intentó entrar a ${pathname}`)
             return NextResponse.redirect(new URL('/validate', origin))

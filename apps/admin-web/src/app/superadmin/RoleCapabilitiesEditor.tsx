@@ -43,10 +43,16 @@ const CAP_LABEL: Record<EditableCapability, { label: string; hint: string }> = {
  * `manageMembers` es false para los roles de MARCA: ven el padrón y las clases
  * de todas sus sedes, pero no las escriben. Lo escribe el responsable de la
  * academia, que tiene su fila en `dojo_members`. Ver `can_manage_roster()`.
+ *
+ * `viewFinance` también es false para los roles de marca: la plata es de la
+ * sede y la ve quien la administra. Un Mestre la ve sólo en las sedes donde
+ * además tiene fila propia como `admin`.
  */
 const DEFAULTS: Record<string, Record<EditableCapability, boolean>> = {
-    superadmin: { viewDojos: true, manageDojoSettings: true, manageMembers: false, viewFinance: true },
-    head_coach: { viewDojos: true, manageDojoSettings: true, manageMembers: false, viewFinance: false },
+    superadmin: { viewDojos: true, manageDojoSettings: true, manageMembers: false, viewFinance: false },
+    // manageDojoSettings decía true y estaba desincronizado desde la migración
+    // 20260810150000, que lo dejó sólo para el Mestre.
+    head_coach: { viewDojos: true, manageDojoSettings: false, manageMembers: false, viewFinance: false },
     manager: { viewDojos: false, manageDojoSettings: false, manageMembers: false, viewFinance: false },
     admin: { viewDojos: false, manageDojoSettings: false, manageMembers: true, viewFinance: true },
     instructor: { viewDojos: false, manageDojoSettings: false, manageMembers: false, viewFinance: false },

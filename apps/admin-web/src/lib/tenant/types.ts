@@ -46,6 +46,14 @@ export const ORG_ROLE_SCOPE: Record<OrgRole, string> = {
 /** Rol DENTRO de un dojo. Espeja el enum `public.dojo_role`. */
 export type DojoRole = 'admin' | 'instructor' | 'member' | 'becado'
 
+/** Nombres de los roles de sede tal como los ve el usuario. */
+export const DOJO_ROLE_LABEL: Record<DojoRole, string> = {
+    admin: 'Responsable de academia',
+    instructor: 'Profesor',
+    member: 'Alumno',
+    becado: 'Becado',
+}
+
 /** Roles que pueden ver datos de terceros (padrón, asistencia, logs). */
 export const STAFF_ROLES: readonly DojoRole[] = ['admin', 'instructor']
 
@@ -194,6 +202,26 @@ export type Dojo = {
 
 
 /**
+ * Un "sombrero": con qué rol entra la persona a la app.
+ *
+ * Existe porque una misma cuenta puede ser Mestre de la red Y alumno de una
+ * sucursal. Antes eso obligaba a tener dos mails: parado en la sucursal, el rol
+ * explícito de `dojo_members` ganaba y el Mestre perdía su menú de marca.
+ *
+ *   · `marca` → ve TODAS las sedes de esa organización, con el rol de marca.
+ *   · `sede`  → ve SÓLO esa sede, con el rol que tiene ahí, sin rol de marca.
+ */
+export type ProfileOption = {
+    /** Valor que va a la cookie: `marca:<org_id>` o `sede:<dojo_id>`. */
+    id: string
+    kind: 'marca' | 'sede'
+    /** Qué abarca: el nombre de la marca o el de la sede. */
+    scopeName: string
+    /** Cómo se llama el rol en la pirámide ("Mestre", "Alumno"…). */
+    roleLabel: string
+}
+
+/**
  * Una sede como la ve una persona: la sede, su marca, y con qué rol entra.
  *
  * `roleInherited` distingue al administrador real de la sucursal (fila propia
@@ -227,6 +255,13 @@ export type TenantContext = {
     activeDojo: DojoMembershipView | null
     /** Overrides de permisos de la organización activa. Vacío = defaults. */
     capabilityOverrides: CapabilityOverrides
+    /**
+     * Los sombreros que esta persona puede ponerse. Uno por rol de marca y uno
+     * por pertenencia propia a una sede. Con uno solo, el selector no se muestra.
+     */
+    profiles: ProfileOption[]
+    /** El perfil activo, en el formato de la cookie. */
+    activeProfile: string
 }
 
 /**
@@ -279,18 +314,19 @@ export type Capability =
     /**
      * Ver plata: pagos, recaudación, métricas económicas.
      *
-     * Separado de `manageMembers` porque el head coach ve todos los alumnos de
-     * la marca y NO tiene que ver la plata, y el instructor ve la asistencia de
-     * su sede y tampoco. Reforzado en la base por `can_read_finance()`.
+     * La plata es DE LA SEDE y la ve quien la administra. Ningún rol de marca
+     * la tiene por serlo: un Mestre ve la recaudación únicamente de las sedes
+     * donde además es administrador con fila propia en `dojo_members`.
+     * Reforzado en la base por `can_read_finance()`.
      */
     | 'viewFinance'
     /**
      * Registrar, editar y borrar pagos.
      *
-     * Separado de `viewFinance` porque no son lo mismo: el Mestre VE toda la
-     * recaudación de la marca —la necesita para dirigir— pero no cobra. Cobrar
-     * es del mostrador de la academia. Reforzado en la base por
-     * `can_manage_payments()`.
+     * Sigue separado de `viewFinance` aunque hoy coincidan: ver y cobrar son
+     * permisos distintos y la consola puede quitarle uno sin el otro (destildar
+     * "ver finanzas" a `admin` le corta también el cobro, no al revés).
+     * Reforzado en la base por `can_manage_payments()`.
      */
     | 'managePayments'
 
@@ -352,11 +388,14 @@ export function capabilities(ctx: {
      */
     const isSedeAdmin = role === 'admin' && !roleInherited
 
-    /** Ver plata. Se calcula acá arriba porque `managePayments` lo necesita. */
-    const canViewFinance = isPlatformAdmin || withOverride(
-        'viewFinance',
-        orgRole === 'head_coach' ? false : orgRole === 'superadmin' || role === 'admin'
-    )
+    /**
+     * Ver plata. Se calcula acá arriba porque `managePayments` lo necesita.
+     *
+     * `isSedeAdmin` y no `role === 'admin'`: el rol de sede heredado de la marca
+     * también es `admin`, así que sin la distinción todo rol de marca entraba
+     * por la puerta de atrás.
+     */
+    const canViewFinance = isPlatformAdmin || withOverride('viewFinance', isSedeAdmin)
 
     return {
         platformConsole: isPlatformAdmin,
@@ -391,13 +430,17 @@ export function capabilities(ctx: {
         manageMembers: isPlatformAdmin || withOverride('manageMembers', isSedeAdmin),
         manageQrMode: isPlatformAdmin || isSedeAdmin,
         /*
-         * VER plata: superadmin de la marca o admin de la sede.
+         * VER plata: sólo el administrador REAL de la sede.
          *
-         * El head coach se excluye ANTES de mirar el rol de sede, y esto no es
-         * redundante: un org member sin pertenencia explícita hereda rol de sede
-         * `admin` (ver `server.ts`, "rol efectivo en la sede"). Sin este corte,
-         * el head coach entraba por `role === 'admin'` y le aparecían Pagos y
-         * Métricas en el menú.
+         * Antes decía `orgRole === 'superadmin' || role === 'admin'` y el Mestre
+         * veía Pagos y Métricas de las 34 sucursales. Se cambió por decisión de
+         * producto (29/07/2026): la plata es de la sede. El Mestre que dirige su
+         * propia academia la sigue viendo ahí, porque tiene fila propia en
+         * `dojo_members` y entonces `isSedeAdmin` es true para esa sede.
+         *
+         * La base lo refuerza en `default_capability()`
+         * (migración 20260811120000), así que esconder el menú no es lo único
+         * que lo frena.
          *
          * La base ya lo bloquea igual (`can_read_finance`), así que era una
          * sección vacía, pero no tiene por qué verla.

@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useMemo } from 'react'
 
 import { getDojoLimit, mercadoPagoEnabled, resolveFeatures } from '../features'
-import { ACTIVE_DOJO_COOKIE, ACTIVE_DOJO_MAX_AGE } from './constants'
+import { ACTIVE_DOJO_COOKIE, ACTIVE_DOJO_MAX_AGE, ACTIVE_PROFILE_COOKIE } from './constants'
 import {
     capabilities,
     DEFAULT_BRANDING,
@@ -64,6 +64,20 @@ export function useTenant() {
         window.location.reload()
     }, [])
 
+    /**
+     * Cambia de PERFIL (el sombrero), no de sede.
+     *
+     * Borra de paso la sede activa: la que estaba elegida puede no existir en el
+     * perfil nuevo —un perfil de sede ve una sola sucursal— y sin esto el
+     * servidor caería al primer dojo de la lista con la cookie vieja pegada,
+     * que después reaparece al volver al perfil de marca.
+     */
+    const switchProfile = useCallback((profileId: string) => {
+        document.cookie = `${ACTIVE_PROFILE_COOKIE}=${profileId}; path=/; max-age=${ACTIVE_DOJO_MAX_AGE}; samesite=lax`
+        document.cookie = `${ACTIVE_DOJO_COOKIE}=; path=/; max-age=0; samesite=lax`
+        window.location.reload()
+    }, [])
+
     const orgRole = ctx?.orgRole ?? null
 
     // Qué puede HACER esta persona, según su rol. Ortogonal a `features`, que
@@ -92,6 +106,8 @@ export function useTenant() {
             dojos: [],
             activeDojo: null,
             capabilityOverrides: {},
+            profiles: [],
+            activeProfile: '',
         }),
         activeDojo,
         org,
@@ -105,6 +121,7 @@ export function useTenant() {
         features,
         can,
         switchDojo,
+        switchProfile,
         isStaff: isStaff(role),
         isManager: isManager(role),
         billing: activeDojo?.billing ?? null,

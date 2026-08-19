@@ -35,12 +35,12 @@ random.seed(7)  # reproducible
 
 ACADEMIES = [
     {
-        "slug": "demo-norte", "name": "Kuro Demo Norte",
+        "slug": "demo-norte", "name": "Lotus Demo Norte",
         "city": "Vicente López", "address": "Av. Maipú 1420",
         "lat": -34.5265, "lng": -58.4780,
     },
     {
-        "slug": "demo-sur", "name": "Kuro Demo Sur",
+        "slug": "demo-sur", "name": "Lotus Demo Sur",
         "city": "Quilmes", "address": "Rivadavia 480",
         "lat": -34.7203, "lng": -58.2540,
     },

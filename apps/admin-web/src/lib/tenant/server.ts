@@ -4,7 +4,7 @@ import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 
-import { ACTIVE_DOJO_COOKIE } from './constants'
+import { ACTIVE_DOJO_COOKIE, ACTIVE_PROFILE_COOKIE, PROFILE_BRAND, PROFILE_SEDE } from './constants'
 import {
     DEFAULT_BILLING,
     isManager,
@@ -14,7 +14,10 @@ import {
     type DojoRole,
     type Organization,
     type OrgRole,
+    type ProfileOption,
     type TenantContext,
+    DOJO_ROLE_LABEL,
+    ORG_ROLE_LABEL,
     CapabilityOverrides,
     EditableCapability,
 } from './types'
@@ -157,6 +160,12 @@ export async function getTenantContext(): Promise<TenantContext | null> {
         .map(normalizeDojo)
         .filter((d): d is DojoWithOrg => d !== null && d.is_active)
 
+    // Las pertenencias PROPIAS (fila en `dojo_members`), separadas antes de que
+    // el merge de abajo les sume las sedes heredadas de la marca. Son las que
+    // ofrecen un perfil de sede: sobre las heredadas no hay nada que elegir,
+    // ya se ven desde el perfil de marca.
+    const ownDojos = [...dojos]
+
     // Dos casos donde la lista NO sale de `dojo_members`:
     //   · platform admin → todas las sedes de todas las organizaciones
     //   · superadmin de marca → todas las sedes de SU organización, sin
@@ -205,6 +214,69 @@ export async function getTenantContext(): Promise<TenantContext | null> {
     }
 
     const cookieStore = await cookies()
+
+    /*
+     * Perfiles disponibles: un sombrero por rol de marca y uno por pertenencia
+     * propia a una sede.
+     *
+     * El nombre de la marca sale de las sedes ya cargadas en vez de una consulta
+     * aparte. Si una organización no tiene ninguna sede visible no genera perfil,
+     * que es correcto: no habría nada para mostrar adentro.
+     */
+    const orgNameById = new Map(dojos.map((d) => [d.org_id, d.org.name]))
+
+    /*
+     * Sin rol de marca NO hay perfiles.
+     *
+     * El selector existe para desambiguar "¿entro como Mestre o como alumno?".
+     * Un alumno de dos sedes no tiene esa ambigüedad —en las dos es alumno— y
+     * para moverse entre ellas ya está el selector de sede. Ofrecerle perfiles
+     * de sede sería peor: cada uno acota la vista a UNA sucursal y le dejaría
+     * el selector de sede sin nada que elegir.
+     */
+    const profiles: ProfileOption[] =
+        orgIds.length === 0
+            ? []
+            : [
+                  ...orgIds
+                      .filter((orgId) => orgNameById.has(orgId))
+                      .map((orgId) => ({
+                          id: `${PROFILE_BRAND}:${orgId}`,
+                          kind: 'marca' as const,
+                          scopeName: orgNameById.get(orgId)!,
+                          roleLabel: ORG_ROLE_LABEL[orgRoleByOrg.get(orgId)!],
+                      })),
+                  ...ownDojos.map((d) => ({
+                      id: `${PROFILE_SEDE}:${d.id}`,
+                      kind: 'sede' as const,
+                      scopeName: d.name,
+                      roleLabel: DOJO_ROLE_LABEL[d.role],
+                  })),
+              ]
+
+    const requestedProfile = cookieStore.get(ACTIVE_PROFILE_COOKIE)?.value
+    const activeProfile = profiles.find((p) => p.id === requestedProfile)?.id ?? profiles[0]?.id ?? ''
+
+    /*
+     * En perfil de SEDE la vista se acota: sólo esa sucursal, con el rol propio
+     * y sin rol de marca. Es lo que hace que el Mestre pueda entrar como alumno
+     * de una sucursal y ver exactamente lo que ve un alumno —antes eso requería
+     * una segunda cuenta.
+     *
+     * `orgRoleForActive` queda en null en ese modo para que `capabilities()` no
+     * le devuelva los permisos de marca por la puerta de atrás.
+     */
+    let orgRoleForActive: (orgId: string) => OrgRole | null = (orgId) => orgRoleByOrg.get(orgId) ?? null
+
+    if (activeProfile.startsWith(`${PROFILE_SEDE}:`)) {
+        const sedeId = activeProfile.slice(PROFILE_SEDE.length + 1)
+        const own = ownDojos.find((d) => d.id === sedeId)
+        if (own) {
+            dojos = [own]
+            orgRoleForActive = () => null
+        }
+    }
+
     const requested = cookieStore.get(ACTIVE_DOJO_COOKIE)?.value
 
     const activeDojo = dojos.find((d) => d.id === requested) ?? dojos[0] ?? null
@@ -228,11 +300,13 @@ export async function getTenantContext(): Promise<TenantContext | null> {
     return {
         userId: user.id,
         isPlatformAdmin,
-        orgRole: activeDojo ? orgRoleByOrg.get(activeDojo.org_id) ?? null : null,
+        orgRole: activeDojo ? orgRoleForActive(activeDojo.org_id) : null,
         orgIds,
         dojos,
         activeDojo,
         capabilityOverrides,
+        profiles,
+        activeProfile,
     }
 }
 
